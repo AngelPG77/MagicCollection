@@ -1,0 +1,3 @@
+package pga.magiccollectionspring.auth.application.command.UpdateUser;
+
+public record UpdateUserResponse(boolean success, String message, String newUsername) {}
