@@ -1,3 +1,4 @@
+# Spring Boot / Maven
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
@@ -13,11 +14,44 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
+### IntelliJ IDEA / Android Studio ###
 .idea
 *.iws
 *.iml
 *.ipr
+*.apk
+*.ap_
+
+### Android Studio ###
+# Gradle files
+.gradle
+/build/
+/local.properties
+/captures/
+/gradlew
+/gradlew.bat
+
+# Android Studio
+.DS_Store
+AndroidStudioProjects/
+
+# NDK
+obj/
+libs/
+
+# built application files
+*.apk
+*.ap_
+
+# files for the dex VM
+*.dex
+
+# Java class files
+*.class
+
+# generated files
+bin/
+gen/
 
 ### NetBeans ###
 /nbproject/private/
