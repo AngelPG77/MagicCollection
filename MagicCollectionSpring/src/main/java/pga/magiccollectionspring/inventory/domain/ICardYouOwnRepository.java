@@ -7,10 +7,34 @@ import pga.magiccollectionspring.shared.abstractions.IRepository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Repository interface for CardYouOwn aggregate.
+ * Handles queries about owned card instances, not the card catalog.
+ */
 public interface ICardYouOwnRepository extends IRepository<CardYouOwn, Long> {
+    // Collection-based queries
     List<CardYouOwn> findByCollection_Id(Long collectionId);
-    List<CardYouOwn> searchInMyGlobalInventory(Long userId, String term);
-    List<CardYouOwn> searchInSpecificCollection(Long collId, String term);
-    List<CardYouOwn> searchMyCardsByType(Long userId, String type);
-    Optional<CardYouOwn> findExactCardInCollection(Long collectionId, Long cardId, CardCondition condition, boolean foil, Language language);
+
+    // Find specific card variant (same condition, foil, language)
+    Optional<CardYouOwn> findExactCardInCollection(
+            Long collectionId,
+            Long cardId,
+            CardCondition condition,
+            boolean foil,
+            Language language
+    );
+
+    // Filter by instance properties
+    List<CardYouOwn> findByCollectionAndCondition(Long collectionId, CardCondition condition);
+
+    List<CardYouOwn> findFoilCardsInCollection(Long collectionId);
+
+    List<CardYouOwn> findByCollectionAndLanguage(Long collectionId, Language language);
+
+    // Statistics
+    Integer getTotalCardsQuantity(Long collectionId);
+
+    Integer getUniqueCardsCount(Long collectionId);
+
+    // Note: Searches by card type/text/name should use CardRepository instead
 }

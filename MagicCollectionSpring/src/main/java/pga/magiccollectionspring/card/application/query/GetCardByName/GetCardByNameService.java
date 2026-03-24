@@ -39,6 +39,8 @@ public class GetCardByNameService implements IQueryServiceAsync<GetCardByNameQue
             card.setSetCode(dto.getSetCode());
             card.setOracleText(dto.getOracleText());
             card.setTypeLine(dto.getTypeLine());
+            card.setManaCost(dto.getManaCost());
+            card.setConvertedManaCost(dto.getCmc() != null ? (int) Math.floor(dto.getCmc()) : null);
             Card saved = cardRepository.save(card);
             return new GetCardByNameResponse(cardMapper.map(saved));
         });

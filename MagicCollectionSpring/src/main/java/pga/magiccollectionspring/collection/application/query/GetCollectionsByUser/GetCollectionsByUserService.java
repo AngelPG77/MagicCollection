@@ -3,7 +3,7 @@ package pga.magiccollectionspring.collection.application.query.GetCollectionsByU
 import pga.magiccollectionspring.collection.api.CollectionMapper;
 import pga.magiccollectionspring.collection.domain.ICollectionRepository;
 import pga.magiccollectionspring.shared.abstractions.IQueryService;
-import org.springframework.security.core.context.SecurityContextHolder;
+import pga.magiccollectionspring.shared.security.CurrentUserProvider;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,15 +11,19 @@ public class GetCollectionsByUserService implements IQueryService<GetCollections
 
     private final ICollectionRepository collectionRepository;
     private final CollectionMapper collectionMapper;
+    private final CurrentUserProvider currentUserProvider;
 
-    public GetCollectionsByUserService(ICollectionRepository collectionRepository, CollectionMapper collectionMapper) {
+    public GetCollectionsByUserService(ICollectionRepository collectionRepository,
+                                       CollectionMapper collectionMapper,
+                                       CurrentUserProvider currentUserProvider) {
         this.collectionRepository = collectionRepository;
         this.collectionMapper = collectionMapper;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @Override
     public GetCollectionsByUserResponse execute(GetCollectionsByUserQuery query) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = currentUserProvider.getCurrentUsername();
         return new GetCollectionsByUserResponse(
                 collectionMapper.mapList(collectionRepository.findByOwner_Username(username))
         );

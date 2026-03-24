@@ -7,8 +7,8 @@ import pga.magiccollectionspring.shared.abstractions.ICommandService;
 import pga.magiccollectionspring.shared.exception.ConflictException;
 import pga.magiccollectionspring.shared.exception.ResourceNotFoundException;
 import pga.magiccollectionspring.shared.exception.UnauthorizedException;
+import pga.magiccollectionspring.shared.security.CurrentUserProvider;
 import jakarta.transaction.Transactional;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,16 +16,20 @@ public class UpdateCollectionService implements ICommandService<UpdateCollection
 
     private final ICollectionRepository collectionRepository;
     private final CollectionMapper collectionMapper;
+    private final CurrentUserProvider currentUserProvider;
 
-    public UpdateCollectionService(ICollectionRepository collectionRepository, CollectionMapper collectionMapper) {
+    public UpdateCollectionService(ICollectionRepository collectionRepository,
+                                   CollectionMapper collectionMapper,
+                                   CurrentUserProvider currentUserProvider) {
         this.collectionRepository = collectionRepository;
         this.collectionMapper = collectionMapper;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @Override
     @Transactional
     public UpdateCollectionResponse execute(UpdateCollectionCommand command) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = currentUserProvider.getCurrentUsername();
         Collection collection = collectionRepository.findById(command.id())
                 .orElseThrow(() -> new ResourceNotFoundException("Coleccion", command.id()));
 

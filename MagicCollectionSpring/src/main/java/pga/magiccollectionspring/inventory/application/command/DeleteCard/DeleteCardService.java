@@ -5,21 +5,23 @@ import pga.magiccollectionspring.inventory.domain.ICardYouOwnRepository;
 import pga.magiccollectionspring.shared.abstractions.ICommandService;
 import pga.magiccollectionspring.shared.exception.ResourceNotFoundException;
 import pga.magiccollectionspring.shared.exception.UnauthorizedException;
-import org.springframework.security.core.context.SecurityContextHolder;
+import pga.magiccollectionspring.shared.security.CurrentUserProvider;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DeleteCardService implements ICommandService<DeleteCardCommand, DeleteCardResponse> {
 
     private final ICardYouOwnRepository inventoryRepo;
+    private final CurrentUserProvider currentUserProvider;
 
-    public DeleteCardService(ICardYouOwnRepository inventoryRepo) {
+    public DeleteCardService(ICardYouOwnRepository inventoryRepo, CurrentUserProvider currentUserProvider) {
         this.inventoryRepo = inventoryRepo;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @Override
     public DeleteCardResponse execute(DeleteCardCommand command) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = currentUserProvider.getCurrentUsername();
         CardYouOwn record = inventoryRepo.findById(command.id())
                 .orElseThrow(() -> new ResourceNotFoundException("Registro", command.id()));
 

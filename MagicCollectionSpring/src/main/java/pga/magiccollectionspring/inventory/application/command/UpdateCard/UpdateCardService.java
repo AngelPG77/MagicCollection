@@ -9,8 +9,8 @@ import pga.magiccollectionspring.inventory.domain.enums.Language;
 import pga.magiccollectionspring.shared.abstractions.ICommandService;
 import pga.magiccollectionspring.shared.exception.ResourceNotFoundException;
 import pga.magiccollectionspring.shared.exception.UnauthorizedException;
+import pga.magiccollectionspring.shared.security.CurrentUserProvider;
 import jakarta.transaction.Transactional;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,16 +18,20 @@ public class UpdateCardService implements ICommandService<UpdateCardCommand, Upd
 
     private final ICardYouOwnRepository inventoryRepo;
     private final CardYouOwnMapper mapper;
+    private final CurrentUserProvider currentUserProvider;
 
-    public UpdateCardService(ICardYouOwnRepository inventoryRepo, CardYouOwnMapper mapper) {
+    public UpdateCardService(ICardYouOwnRepository inventoryRepo,
+                             CardYouOwnMapper mapper,
+                             CurrentUserProvider currentUserProvider) {
         this.inventoryRepo = inventoryRepo;
         this.mapper = mapper;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @Override
     @Transactional
     public UpdateCardResponse execute(UpdateCardCommand command) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = currentUserProvider.getCurrentUsername();
         CardYouOwn original = inventoryRepo.findById(command.id())
                 .orElseThrow(() -> new ResourceNotFoundException("Registro", command.id()));
 

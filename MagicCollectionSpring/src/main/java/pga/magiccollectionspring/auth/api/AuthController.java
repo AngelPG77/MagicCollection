@@ -20,10 +20,10 @@ import pga.magiccollectionspring.auth.application.query.Login.LoginQuery;
 import pga.magiccollectionspring.auth.application.query.Login.LoginResponse;
 import pga.magiccollectionspring.auth.application.query.Login.LoginService;
 import pga.magiccollectionspring.shared.exception.ResourceNotFoundException;
+import pga.magiccollectionspring.shared.security.CurrentUserProvider;
 import pga.magiccollectionspring.user.domain.User;
 import pga.magiccollectionspring.user.domain.IUserRepository;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -36,16 +36,19 @@ public class AuthController {
     private final UpdatePasswordService updatePasswordService;
     private final DeleteUserService deleteUserService;
     private final IUserRepository userRepository;
+    private final CurrentUserProvider currentUserProvider;
 
     public AuthController(RegisterService registerService, LoginService loginService, 
                           UpdateUserService updateUserService, UpdatePasswordService updatePasswordService,
-                          DeleteUserService deleteUserService, IUserRepository userRepository) {
+                          DeleteUserService deleteUserService, IUserRepository userRepository,
+                          CurrentUserProvider currentUserProvider) {
         this.registerService = registerService;
         this.loginService = loginService;
         this.updateUserService = updateUserService;
         this.updatePasswordService = updatePasswordService;
         this.deleteUserService = deleteUserService;
         this.userRepository = userRepository;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @PostMapping("/register")
@@ -62,7 +65,7 @@ public class AuthController {
 
     @PutMapping("/update-username")
     public ResponseEntity<UpdateUserResponse> updateUsername(@RequestBody UpdateUserRequest request) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = currentUserProvider.getCurrentUsername();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", username));
         
@@ -73,7 +76,7 @@ public class AuthController {
 
     @PutMapping("/update-password")
     public ResponseEntity<UpdatePasswordResponse> updatePassword(@RequestBody UpdatePasswordRequest request) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = currentUserProvider.getCurrentUsername();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", username));
         
@@ -84,7 +87,7 @@ public class AuthController {
 
     @DeleteMapping("/delete")
     public ResponseEntity<DeleteUserResponse> deleteUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = currentUserProvider.getCurrentUsername();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", username));
         

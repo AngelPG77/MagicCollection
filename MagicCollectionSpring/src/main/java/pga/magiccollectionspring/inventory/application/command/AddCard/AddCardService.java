@@ -14,8 +14,8 @@ import pga.magiccollectionspring.inventory.domain.enums.Language;
 import pga.magiccollectionspring.shared.abstractions.ICommandService;
 import pga.magiccollectionspring.shared.exception.ResourceNotFoundException;
 import pga.magiccollectionspring.shared.exception.UnauthorizedException;
+import pga.magiccollectionspring.shared.security.CurrentUserProvider;
 import jakarta.transaction.Transactional;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -26,23 +26,26 @@ public class AddCardService implements ICommandService<AddCardCommand, AddCardRe
     private final ICardRepository cardRepository;
     private final ScryfallPort scryfallPort;
     private final CardYouOwnMapper mapper;
+    private final CurrentUserProvider currentUserProvider;
 
     public AddCardService(ICardYouOwnRepository inventoryRepo,
                           ICollectionRepository collectionRepository,
                           ICardRepository cardRepository,
                           ScryfallPort scryfallPort,
-                          CardYouOwnMapper mapper) {
+                          CardYouOwnMapper mapper,
+                          CurrentUserProvider currentUserProvider) {
         this.inventoryRepo = inventoryRepo;
         this.collectionRepository = collectionRepository;
         this.cardRepository = cardRepository;
         this.scryfallPort = scryfallPort;
         this.mapper = mapper;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @Override
     @Transactional
     public AddCardResponse execute(AddCardCommand command) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = currentUserProvider.getCurrentUsername();
         Collection collection = collectionRepository.findById(command.collectionId())
                 .orElseThrow(() -> new ResourceNotFoundException("Coleccion", command.collectionId()));
 
@@ -86,6 +89,8 @@ public class AddCardService implements ICommandService<AddCardCommand, AddCardRe
         card.setSetCode(dto.getSetCode());
         card.setOracleText(dto.getOracleText());
         card.setTypeLine(dto.getTypeLine());
+        card.setManaCost(dto.getManaCost());
+        card.setConvertedManaCost(dto.getCmc() != null ? (int) Math.floor(dto.getCmc()) : null);
         return cardRepository.save(card);
     }
 

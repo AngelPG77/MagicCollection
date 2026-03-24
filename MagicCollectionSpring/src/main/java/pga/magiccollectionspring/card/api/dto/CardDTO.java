@@ -7,16 +7,20 @@ public class CardDTO {
     private String scryfallId;
     private String oracleText;
     private String typeLine;
+    private String manaCost;
+    private Integer convertedManaCost;
 
     public CardDTO() {}
 
-    public CardDTO(Long id, String name, String setCode, String scryfallId, String oracleText, String typeLine) {
+    public CardDTO(Long id, String name, String setCode, String scryfallId, String oracleText, String typeLine, String manaCost, Integer convertedManaCost) {
         this.id = id;
         this.name = name;
         this.setCode = setCode;
         this.scryfallId = scryfallId;
         this.oracleText = oracleText;
         this.typeLine = typeLine;
+        this.manaCost = manaCost;
+        this.convertedManaCost = convertedManaCost;
     }
 
     public Long getId() { return id; }
@@ -31,4 +35,8 @@ public class CardDTO {
     public void setOracleText(String oracleText) { this.oracleText = oracleText; }
     public String getTypeLine() { return typeLine; }
     public void setTypeLine(String typeLine) { this.typeLine = typeLine; }
+    public String getManaCost() { return manaCost; }
+    public void setManaCost(String manaCost) { this.manaCost = manaCost; }
+    public Integer getConvertedManaCost() { return convertedManaCost; }
+    public void setConvertedManaCost(Integer convertedManaCost) { this.convertedManaCost = convertedManaCost; }
 }

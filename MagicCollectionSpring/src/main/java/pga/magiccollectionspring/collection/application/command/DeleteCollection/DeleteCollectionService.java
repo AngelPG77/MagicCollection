@@ -5,23 +5,25 @@ import pga.magiccollectionspring.collection.domain.ICollectionRepository;
 import pga.magiccollectionspring.shared.abstractions.ICommandService;
 import pga.magiccollectionspring.shared.exception.ResourceNotFoundException;
 import pga.magiccollectionspring.shared.exception.UnauthorizedException;
+import pga.magiccollectionspring.shared.security.CurrentUserProvider;
 import jakarta.transaction.Transactional;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DeleteCollectionService implements ICommandService<DeleteCollectionCommand, DeleteCollectionResponse> {
 
     private final ICollectionRepository collectionRepository;
+    private final CurrentUserProvider currentUserProvider;
 
-    public DeleteCollectionService(ICollectionRepository collectionRepository) {
+    public DeleteCollectionService(ICollectionRepository collectionRepository, CurrentUserProvider currentUserProvider) {
         this.collectionRepository = collectionRepository;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @Override
     @Transactional
     public DeleteCollectionResponse execute(DeleteCollectionCommand command) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = currentUserProvider.getCurrentUsername();
         Collection collection = collectionRepository.findById(command.id())
                 .orElseThrow(() -> new ResourceNotFoundException("Coleccion", command.id()));
 

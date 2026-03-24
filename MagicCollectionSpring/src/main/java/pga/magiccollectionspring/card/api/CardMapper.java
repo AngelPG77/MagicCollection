@@ -17,7 +17,9 @@ public class CardMapper implements IMapper<Card, CardDTO> {
                 card.getSetCode(),
                 card.getScryfallId(),
                 card.getOracleText(),
-                card.getTypeLine()
+                card.getTypeLine(),
+                card.getManaCost(),
+                card.getConvertedManaCost()
         );
     }
 }

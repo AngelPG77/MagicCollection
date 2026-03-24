@@ -6,7 +6,7 @@ import pga.magiccollectionspring.collection.domain.ICollectionRepository;
 import pga.magiccollectionspring.shared.abstractions.IQueryService;
 import pga.magiccollectionspring.shared.exception.ResourceNotFoundException;
 import pga.magiccollectionspring.shared.exception.UnauthorizedException;
-import org.springframework.security.core.context.SecurityContextHolder;
+import pga.magiccollectionspring.shared.security.CurrentUserProvider;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,15 +14,19 @@ public class GetCollectionByIdService implements IQueryService<GetCollectionById
 
     private final ICollectionRepository collectionRepository;
     private final CollectionMapper collectionMapper;
+    private final CurrentUserProvider currentUserProvider;
 
-    public GetCollectionByIdService(ICollectionRepository collectionRepository, CollectionMapper collectionMapper) {
+    public GetCollectionByIdService(ICollectionRepository collectionRepository,
+                                    CollectionMapper collectionMapper,
+                                    CurrentUserProvider currentUserProvider) {
         this.collectionRepository = collectionRepository;
         this.collectionMapper = collectionMapper;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @Override
     public GetCollectionByIdResponse execute(GetCollectionByIdQuery query) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = currentUserProvider.getCurrentUsername();
         Collection collection = collectionRepository.findById(query.id())
                 .orElseThrow(() -> new ResourceNotFoundException("Coleccion", query.id()));
         if (!collection.getOwner().getUsername().equals(username)) {

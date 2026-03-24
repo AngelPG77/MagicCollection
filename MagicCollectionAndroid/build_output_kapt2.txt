@@ -1,0 +1,555 @@
+Initialized native services in: C:\Users\angel\.gradle\native
+Initialized jansi services in: C:\Users\angel\.gradle\native
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.3.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Starting process 'Gradle build daemon'. Working directory: C:\Users\angel\.gradle\daemon\9.3.1 Command: C:\Program Files\Java\jdk-23\bin\java.exe --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-opens=java.base/java.nio.charset=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.xml/javax.xml.namespace=ALL-UNNAMED --add-opens=java.base/java.time=ALL-UNNAMED -Xmx2048m -Dfile.encoding=UTF-8 -Duser.country=ES -Duser.language=es -Duser.variant -cp C:\Users\angel\.gradle\wrapper\dists\gradle-9.3.1-bin\23ovyewtku6u96viwx3xl3oks\gradle-9.3.1\lib\gradle-daemon-main-9.3.1.jar -javaagent:C:\Users\angel\.gradle\wrapper\dists\gradle-9.3.1-bin\23ovyewtku6u96viwx3xl3oks\gradle-9.3.1\lib\agents\gradle-instrumentation-agent-9.3.1.jar org.gradle.launcher.daemon.bootstrap.GradleDaemon 9.3.1
+Successfully started process 'Gradle build daemon'
+An attempt to start the daemon took 1.175 secs.
+The client will now receive all logging from the daemon (pid: 27344). The daemon log file: C:\Users\angel\.gradle\daemon\9.3.1\daemon-27344.out.log
+Daemon will be stopped at the end of the build 
+Using 24 worker leases.
+Operational build model parameters: {requiresToolingModels=false, parallelProjectExecution=false, configureOnDemand=false, configurationCache=false, configurationCacheParallelStore=false, configurationCacheParallelLoad=true, isolatedProjects=false, parallelProjectConfiguration=false, intermediateModelCache=false, parallelToolingApiActions=false, invalidateCoupledProjects=false, modelAsProjectDependency=false, resilientModelBuilding=false}
+Received JVM installation metadata from 'C:\Program Files\Java\jdk-23': {JAVA_HOME=C:\Program Files\Java\jdk-23, JAVA_VERSION=23.0.1, JAVA_VENDOR=Oracle Corporation, RUNTIME_NAME=Java(TM) SE Runtime Environment, RUNTIME_VERSION=23.0.1+11-39, VM_NAME=Java HotSpot(TM) 64-Bit Server VM, VM_VERSION=23.0.1+11-39, VM_VENDOR=Oracle Corporation, OS_ARCH=amd64}
+Watching the file system is configured to be enabled if available
+Now considering [E:\MagicCollection\MagicCollectionAndroid] as hierarchies to watch
+File system watching is active
+Starting Build
+Resolved plugin [id: 'org.gradle.toolchains.foojay-resolver-convention', version: '0.10.0']
+Settings evaluated using settings file 'E:\MagicCollection\MagicCollectionAndroid\settings.gradle.kts'.
+Projects loaded. Root project using build file 'E:\MagicCollection\MagicCollectionAndroid\build.gradle.kts'.
+Included projects: [root project 'MagicCollectionApp', project ':app']
+
+> Configure project :
+Evaluating root project 'MagicCollectionApp' using build file 'E:\MagicCollection\MagicCollectionAndroid\build.gradle.kts'.
+Resolved plugin [id: 'com.android.application', version: '9.1.0', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.android', version: '2.2.10', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.compose', version: '2.2.10', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.kapt', version: '2.2.10', apply: false]
+Resolved plugin [id: 'com.google.dagger.hilt.android', version: '2.51.1', apply: false]
+
+> Configure project :app
+Evaluating project ':app' using build file 'E:\MagicCollection\MagicCollectionAndroid\app\build.gradle.kts'.
+Resolved plugin [id: 'com.android.application', version: '9.1.0']
+Resolved plugin [id: 'org.jetbrains.kotlin.android', version: '2.2.10']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.compose', version: '2.2.10']
+Resolved plugin [id: 'org.jetbrains.kotlin.kapt', version: '2.2.10']
+Resolved plugin [id: 'com.google.dagger.hilt.android', version: '2.51.1']
+WARNING: The option setting 'android.usesSdkInManifest.disallowed=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.sdk.defaultTargetSdkToCompileSdkIfUnset=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.enableAppCompileTimeRClass=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.builtInKotlin=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.newDsl=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.r8.optimizedResourceShrinking=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.defaults.buildfeatures.resvalues=true' is deprecated.
+The current default is 'false'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+Using default execution profile
+Build 202d6cdb-d166-471e-8fea-c3623ad90430 is started
+Using Kotlin Gradle Plugin gradle813 variant
+WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
+To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
+WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
+To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
+WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
+To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
+WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
+To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+All projects evaluated.
+Task path ':app:kaptDebugKotlin' matched project ':app'
+Task name matched 'kaptDebugKotlin'
+Selected primary task 'kaptDebugKotlin' from project :app
+Tasks to be executed: [task ':app:checkKotlinGradlePluginConfigurationErrors', task ':app:preBuild', task ':app:preDebugBuild', task ':app:checkDebugAarMetadata', task ':app:generateDebugResValues', task ':app:mapDebugSourceSetPaths', task ':app:processDebugNavigationResources', task ':app:compileDebugNavigationResources', task ':app:generateDebugResources', task ':app:mergeDebugResources', task ':app:packageDebugResources', task ':app:parseDebugLocalResources', task ':app:createDebugCompatibleScreenManifests', task ':app:extractDeepLinksDebug', task ':app:processDebugMainManifest', task ':app:processDebugManifest', task ':app:processDebugManifestForPackage', task ':app:processDebugResources', task ':app:kaptGenerateStubsDebugKotlin', task ':app:kaptDebugKotlin']
+Tasks that were excluded: []
+Resolve mutations for :app:checkKotlinGradlePluginConfigurationErrors (Thread[#154,Execution worker,5,main]) started.
+:app:checkKotlinGradlePluginConfigurationErrors (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+Skipping task ':app:checkKotlinGradlePluginConfigurationErrors' as task onlyIf 'errorDiagnostics are present' is false.
+Resolve mutations for :app:preBuild (Thread[#154,Execution worker,5,main]) started.
+:app:preBuild (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:preBuild UP-TO-DATE
+Skipping task ':app:preBuild' as it has no actions.
+Resolve mutations for :app:preDebugBuild (Thread[#154,Execution worker,5,main]) started.
+:app:preDebugBuild (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:preDebugBuild UP-TO-DATE
+Skipping task ':app:preDebugBuild' as it has no actions.
+Resolve mutations for :app:checkDebugAarMetadata (Thread[#154,Execution worker,5,main]) started.
+:app:checkDebugAarMetadata (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+Caching disabled for task ':app:checkDebugAarMetadata' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:checkDebugAarMetadata' as it is up-to-date.
+Resolve mutations for :app:generateDebugResValues (Thread[#154,Execution worker,5,main]) started.
+:app:generateDebugResValues (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:generateDebugResValues UP-TO-DATE
+Caching disabled for task ':app:generateDebugResValues' because:
+  Build cache is disabled
+Skipping task ':app:generateDebugResValues' as it is up-to-date.
+Resolve mutations for :app:mapDebugSourceSetPaths (Thread[#154,Execution worker,5,main]) started.
+:app:mapDebugSourceSetPaths (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+Caching disabled for task ':app:mapDebugSourceSetPaths' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:mapDebugSourceSetPaths' as it is up-to-date.
+Resolve mutations for :app:processDebugNavigationResources (Thread[#154,Execution worker,5,main]) started.
+:app:processDebugNavigationResources (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:processDebugNavigationResources UP-TO-DATE
+Caching disabled for task ':app:processDebugNavigationResources' because:
+  Build cache is disabled
+Skipping task ':app:processDebugNavigationResources' as it is up-to-date.
+Resolve mutations for :app:compileDebugNavigationResources (Thread[#154,Execution worker,5,main]) started.
+:app:compileDebugNavigationResources (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+Caching disabled for task ':app:compileDebugNavigationResources' because:
+  Build cache is disabled
+Skipping task ':app:compileDebugNavigationResources' as it is up-to-date.
+Resolve mutations for :app:generateDebugResources (Thread[#154,Execution worker,5,main]) started.
+:app:generateDebugResources (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:generateDebugResources UP-TO-DATE
+Caching disabled for task ':app:generateDebugResources' because:
+  Build cache is disabled
+Skipping task ':app:generateDebugResources' as it is up-to-date.
+Resolve mutations for :app:mergeDebugResources (Thread[#154,Execution worker,5,main]) started.
+:app:mergeDebugResources (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:mergeDebugResources UP-TO-DATE
+Caching disabled for task ':app:mergeDebugResources' because:
+  Build cache is disabled
+Skipping task ':app:mergeDebugResources' as it is up-to-date.
+Resolve mutations for :app:packageDebugResources (Thread[#154,Execution worker,5,main]) started.
+:app:packageDebugResources (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:packageDebugResources UP-TO-DATE
+Caching disabled for task ':app:packageDebugResources' because:
+  Build cache is disabled
+Skipping task ':app:packageDebugResources' as it is up-to-date.
+Resolve mutations for :app:parseDebugLocalResources (Thread[#154,Execution worker,5,main]) started.
+:app:parseDebugLocalResources (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:parseDebugLocalResources UP-TO-DATE
+Caching disabled for task ':app:parseDebugLocalResources' because:
+  Build cache is disabled
+Skipping task ':app:parseDebugLocalResources' as it is up-to-date.
+Resolve mutations for :app:createDebugCompatibleScreenManifests (Thread[#154,Execution worker,5,main]) started.
+:app:createDebugCompatibleScreenManifests (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+Caching disabled for task ':app:createDebugCompatibleScreenManifests' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:createDebugCompatibleScreenManifests' as it is up-to-date.
+Resolve mutations for :app:extractDeepLinksDebug (Thread[#154,Execution worker,5,main]) started.
+:app:extractDeepLinksDebug (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+Caching disabled for task ':app:extractDeepLinksDebug' because:
+  Build cache is disabled
+Skipping task ':app:extractDeepLinksDebug' as it is up-to-date.
+Resolve mutations for :app:processDebugMainManifest (Thread[#154,Execution worker,5,main]) started.
+:app:processDebugMainManifest (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:processDebugMainManifest UP-TO-DATE
+Caching disabled for task ':app:processDebugMainManifest' because:
+  Build cache is disabled
+Skipping task ':app:processDebugMainManifest' as it is up-to-date.
+Resolve mutations for :app:processDebugManifest (Thread[#154,Execution worker,5,main]) started.
+:app:processDebugManifest (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:processDebugManifest UP-TO-DATE
+Caching disabled for task ':app:processDebugManifest' because:
+  Build cache is disabled
+Skipping task ':app:processDebugManifest' as it is up-to-date.
+Resolve mutations for :app:processDebugManifestForPackage (Thread[#154,Execution worker,5,main]) started.
+:app:processDebugManifestForPackage (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+Custom actions are attached to task ':app:processDebugManifestForPackage'.
+Caching disabled for task ':app:processDebugManifestForPackage' because:
+  Build cache is disabled
+Skipping task ':app:processDebugManifestForPackage' as it is up-to-date.
+Resolve mutations for :app:processDebugResources (Thread[#154,Execution worker,5,main]) started.
+:app:processDebugResources (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:processDebugResources UP-TO-DATE
+Caching disabled for task ':app:processDebugResources' because:
+  Build cache is disabled
+Skipping task ':app:processDebugResources' as it is up-to-date.
+Resolve mutations for :app:kaptGenerateStubsDebugKotlin (Thread[#154,Execution worker,5,main]) started.
+:app:kaptGenerateStubsDebugKotlin (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:kaptGenerateStubsDebugKotlin
+Adding -Xuse-inline-scopes-numbers Kotlin compiler flag for task :app:compileDebugAndroidTestKotlin
+GradleBuildProject.Builder should not be accessed through AnalyticsConfiguratorService after AnalyticsService is created. Analytics information of this build might be incomplete.
+Caching disabled for task ':app:kaptGenerateStubsDebugKotlin' because:
+  Build cache is disabled
+Task ':app:kaptGenerateStubsDebugKotlin' is not up-to-date because:
+  Value of input property 'compilerOptions.freeCompilerArgs' has changed for task ':app:kaptGenerateStubsDebugKotlin'
+The input changes require a full rebuild for incremental task ':app:kaptGenerateStubsDebugKotlin'.
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+Using Kotlin/JVM incremental compilation
+[KOTLIN] Kotlin compilation 'jdkHome' argument: null
+i: starting the daemon as: C:\Program Files\Java\jdk-23\bin\java -cp C:\Users\angel\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlin\kotlin-compiler-embeddable\2.2.10\6882d39ef03b18879c1a5d2a83c2212361bed5fe\kotlin-compiler-embeddable-2.2.10.jar;C:\Users\angel\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlin\kotlin-stdlib\2.2.10\30de6faa127a4a012db8e71bf1b9c0a99b1402b2\kotlin-stdlib-2.2.10.jar;C:\Users\angel\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlin\kotlin-script-runtime\2.2.10\712f9bc08f378c13a4a00f0bbb28c76e59183e83\kotlin-script-runtime-2.2.10.jar;C:\Users\angel\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlin\kotlin-reflect\1.6.10\1cbe9c92c12a94eea200d23c2bbaedaf3daf5132\kotlin-reflect-1.6.10.jar;C:\Users\angel\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlin\kotlin-daemon-embeddable\2.2.10\212fd3c2c6e4e5d0f4db3c4191233e2b622380cc\kotlin-daemon-embeddable-2.2.10.jar;C:\Users\angel\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlinx\kotlinx-coroutines-core-jvm\1.8.0\ac1dc37a30a93150b704022f8d895ee1bd3a36b3\kotlinx-coroutines-core-jvm-1.8.0.jar;C:\Users\angel\.gradle\caches\modules-2\files-2.1\org.jetbrains\annotations\13.0\919f0dfe192fb4e063e7dacadee7f8bb9a2672a9\annotations-13.0.jar -Djava.awt.headless=true -Djava.rmi.server.hostname=127.0.0.1 -Xmx2048m -XX:ReservedCodeCacheSize=320m -Dkotlin.environment.keepalive -ea -XX:+UseCodeCacheFlushing -XX:+UseParallelGC -Dkotlin.daemon.initiator.marker.file=C:\Users\angel\AppData\Local\Temp\kotlin-compiler-in-agicollectionpp-2652135833730860381.alive --add-exports java.base/sun.nio.ch=ALL-UNNAMED org.jetbrains.kotlin.daemon.KotlinCompileDaemon --daemon-runFilesPath C:\Users\angel\AppData\Local\kotlin\daemon --daemon-autoshutdownIdleSeconds=7200 --daemon-compilerClasspath C:\Users\angel\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlin\kotlin-compiler-embeddable\2.2.10\6882d39ef03b18879c1a5d2a83c2212361bed5fe\kotlin-compiler-embeddable-2.2.10.jar;C:\Users\angel\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlin\kotlin-stdlib\2.2.10\30de6faa127a4a012db8e71bf1b9c0a99b1402b2\kotlin-stdlib-2.2.10.jar;C:\Users\angel\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlin\kotlin-script-runtime\2.2.10\712f9bc08f378c13a4a00f0bbb28c76e59183e83\kotlin-script-runtime-2.2.10.jar;C:\Users\angel\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlin\kotlin-reflect\1.6.10\1cbe9c92c12a94eea200d23c2bbaedaf3daf5132\kotlin-reflect-1.6.10.jar;C:\Users\angel\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlin\kotlin-daemon-embeddable\2.2.10\212fd3c2c6e4e5d0f4db3c4191233e2b622380cc\kotlin-daemon-embeddable-2.2.10.jar;C:\Users\angel\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlinx\kotlinx-coroutines-core-jvm\1.8.0\ac1dc37a30a93150b704022f8d895ee1bd3a36b3\kotlinx-coroutines-core-jvm-1.8.0.jar;C:\Users\angel\.gradle\caches\modules-2\files-2.1\org.jetbrains\annotations\13.0\919f0dfe192fb4e063e7dacadee7f8bb9a2672a9\annotations-13.0.jar
+i: #1 retrying connecting to the daemon 
+Options for KOTLIN DAEMON: IncrementalCompilationOptions(super=CompilationOptions(compilerMode=INCREMENTAL_COMPILER, targetPlatform=JVM, reportCategories=[0, 3], reportSeverity=2, requestedCompilationResults=[0], kotlinScriptExtensions=[]), sourceChanges=org.jetbrains.kotlin.buildtools.api.SourcesChanges$Unknown@207d61be, classpathChanges=NotAvailableForNonIncrementalRun, workingDir=E:\MagicCollection\MagicCollectionAndroid\app\build\kotlin\kaptGenerateStubsDebugKotlin\cacheable, multiModuleICSettings=MultiModuleICSettings(buildHistoryFile=E:\MagicCollection\MagicCollectionAndroid\app\build\kotlin\kaptGenerateStubsDebugKotlin\local-state\build-history.bin, useModuleDetection=true), icFeatures=IncrementalCompilationFeatures(usePreciseJavaTracking=true, withAbiSnapshot=false, preciseCompilationResultsBackup=true, keepIncrementalCompilationCachesInMemory=true, enableUnsafeIncrementalCompilationForMultiplatform=false, enableMonotonousIncrementalCompileSetExpansion=true), outputFiles=[E:\MagicCollection\MagicCollectionAndroid\app\build\tmp\kapt3\incrementalData\debug, E:\MagicCollection\MagicCollectionAndroid\app\build\tmp\kapt3\stubs\debug, E:\MagicCollection\MagicCollectionAndroid\app\build\kotlin\kaptGenerateStubsDebugKotlin\cacheable, E:\MagicCollection\MagicCollectionAndroid\app\build\kotlin\kaptGenerateStubsDebugKotlin\local-state])
+Finished executing kotlin compiler using DAEMON strategy
+Resolve mutations for :app:kaptDebugKotlin (Thread[#154,Execution worker,5,main]) started.
+:app:kaptDebugKotlin (Thread[#154,Execution worker,5,main]) started.
+
+> Task :app:kaptDebugKotlin
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\java', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\main\kotlin', not found
+file or directory 'E:\MagicCollection\MagicCollectionAndroid\app\src\debug\kotlin', not found
+Caching disabled for task ':app:kaptDebugKotlin' because:
+  Build cache is disabled
+Task ':app:kaptDebugKotlin' is not up-to-date because:
+  Task has failed previously.
+The input changes require a full rebuild for incremental task ':app:kaptDebugKotlin'.
+Running kapt annotation processing using the Gradle Worker API
+Adding -Xuse-inline-scopes-numbers Kotlin compiler flag for task :app:compileDebugKotlin
+GradleBuildProject.Builder should not be accessed through AnalyticsConfiguratorService after AnalyticsService is created. Analytics information of this build might be incomplete.
+Using workers NONE isolation mode to run kapt
+
+> Task :app:kaptDebugKotlin FAILED
+Build 202d6cdb-d166-471e-8fea-c3623ad90430 is closed
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:kaptDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.gradle.internal.KaptWithoutKotlincTask$KaptExecutionWorkAction
+
+* Try:
+> Run with --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+* Exception is:
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:kaptDebugKotlin'.
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
+	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:121)
+	at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:41)
+	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+	at org.gradle.execution.plan.DefaultNodeExecutor.executeLocalTaskNode(DefaultNodeExecutor.java:55)
+	at org.gradle.execution.plan.DefaultNodeExecutor.execute(DefaultNodeExecutor.java:34)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:355)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:343)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:339)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:84)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:339)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:328)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
+Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.gradle.internal.KaptWithoutKotlincTask$KaptExecutionWorkAction
+	at org.gradle.workers.internal.DefaultWorkerExecutor$WorkItemExecution.waitForCompletion(DefaultWorkerExecutor.java:289)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.lambda$waitForItemsAndGatherFailures$2(DefaultAsyncWorkTracker.java:130)
+	at org.gradle.internal.Factories$1.create(Factories.java:30)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.lambda$withoutLocks$2(DefaultWorkerLeaseService.java:344)
+	at org.gradle.internal.work.ResourceLockStatistics$1.measure(ResourceLockStatistics.java:42)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocks(DefaultWorkerLeaseService.java:342)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocks(DefaultWorkerLeaseService.java:326)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLock(DefaultWorkerLeaseService.java:331)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:126)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:92)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForAll(DefaultAsyncWorkTracker.java:78)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForCompletion(DefaultAsyncWorkTracker.java:66)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:267)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:29)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:26)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:47)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeAction(TaskExecution.java:244)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeActions(TaskExecution.java:227)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeWithPreviousOutputFiles(TaskExecution.java:210)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.execute(TaskExecution.java:176)
+	at org.gradle.internal.execution.steps.ExecuteStep.executeInternal(ExecuteStep.java:110)
+	at org.gradle.internal.execution.steps.ExecuteStep.access$000(ExecuteStep.java:47)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:64)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:61)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:61)
+	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:47)
+	at org.gradle.internal.execution.steps.CancelExecutionStep.execute(CancelExecutionStep.java:42)
+	at org.gradle.internal.execution.steps.TimeoutStep.executeWithoutTimeout(TimeoutStep.java:75)
+	at org.gradle.internal.execution.steps.TimeoutStep.execute(TimeoutStep.java:55)
+	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:51)
+	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:29)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.executeMutable(RemovePreviousOutputsStep.java:70)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.executeMutable(RemovePreviousOutputsStep.java:40)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:25)
+	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:62)
+	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:27)
+	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:69)
+	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:46)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.executeMutable(ResolveInputChangesStep.java:39)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.executeMutable(ResolveInputChangesStep.java:28)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:25)
+	at org.gradle.internal.execution.steps.BuildCacheStep.executeWithoutCache(BuildCacheStep.java:192)
+	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$execute$1(BuildCacheStep.java:76)
+	at org.gradle.internal.Either$Right.fold(Either.java:176)
+	at org.gradle.internal.execution.caching.CachingState.fold(CachingState.java:62)
+	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:74)
+	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:49)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:46)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:35)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.executeBecause(SkipUpToDateStep.java:75)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.lambda$execute$2(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:35)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:37)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:27)
+	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:49)
+	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:27)
+	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:71)
+	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:39)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.executeMutable(ResolveChangesStep.java:63)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.executeMutable(ResolveChangesStep.java:34)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:25)
+	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:64)
+	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:42)
+	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:77)
+	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:46)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.executeWithNonEmptySources(AbstractSkipEmptyWorkStep.java:133)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:59)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:36)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:36)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:23)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.executeMutable(HandleStaleOutputsStep.java:77)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.executeMutable(HandleStaleOutputsStep.java:43)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:25)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.lambda$execute$0(AssignMutableWorkspaceStep.java:35)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$4.withWorkspace(TaskExecution.java:305)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:31)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:22)
+	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:40)
+	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:23)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.lambda$execute$2(ExecuteWorkBuildOperationFiringStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:39)
+	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:46)
+	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:34)
+	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:44)
+	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:31)
+	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:68)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:132)
+	... 30 more
+Caused by: java.lang.reflect.InvocationTargetException
+	at org.jetbrains.kotlin.gradle.internal.KaptExecution.run(KaptWithoutKotlincTask.kt:336)
+	at org.jetbrains.kotlin.gradle.internal.KaptWithoutKotlincTask$KaptExecutionWorkAction.execute(KaptWithoutKotlincTask.kt:273)
+	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:68)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:64)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:61)
+	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:102)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:61)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:209)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:204)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:66)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
+	at org.gradle.workers.internal.AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:58)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:176)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:194)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.access$700(DefaultConditionalExecutionQueue.java:127)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:169)
+	at org.gradle.internal.Factories$1.create(Factories.java:30)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.lambda$withLocksAcquired$0(DefaultWorkerLeaseService.java:269)
+	at org.gradle.internal.work.ResourceLockStatistics$1.measure(ResourceLockStatistics.java:42)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocksAcquired(DefaultWorkerLeaseService.java:267)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:259)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:132)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:164)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:133)
+	... 2 more
+Caused by: java.lang.reflect.InvocationTargetException
+	at org.jetbrains.kotlin.kapt.base.AnnotationProcessingKt.doAnnotationProcessing(annotationProcessing.kt:98)
+	at org.jetbrains.kotlin.kapt.base.AnnotationProcessingKt.doAnnotationProcessing(annotationProcessing.kt:37)
+	at org.jetbrains.kotlin.kapt.base.Kapt.kapt(Kapt.kt:46)
+	... 33 more
+Caused by: com.sun.tools.javac.processing.AnnotationProcessingError: java.lang.IllegalArgumentException: Provided Metadata instance has version 2.2.0, while maximum supported version is 2.1.0. To support newer versions, update the kotlinx-metadata-jvm library.
+	... 36 more
+Caused by: java.lang.IllegalArgumentException: Provided Metadata instance has version 2.2.0, while maximum supported version is 2.1.0. To support newer versions, update the kotlinx-metadata-jvm library.
+	at dagger.spi.internal.shaded.androidx.room.jarjarred.kotlinx.metadata.jvm.internal.JvmReadUtils.throwIfNotCompatible$kotlinx_metadata_jvm(JvmReadUtils.kt:101)
+	at dagger.spi.internal.shaded.androidx.room.jarjarred.kotlinx.metadata.jvm.internal.JvmReadUtils.checkMetadataVersionForRead(JvmReadUtils.kt:90)
+	at dagger.spi.internal.shaded.androidx.room.jarjarred.kotlinx.metadata.jvm.internal.JvmReadUtils.readMetadataImpl$kotlinx_metadata_jvm(JvmReadUtils.kt:47)
+	at dagger.spi.internal.shaded.androidx.room.jarjarred.kotlinx.metadata.jvm.KotlinClassMetadata$Companion.readStrict(KotlinClassMetadata.kt:793)
+	at dagger.spi.internal.shaded.androidx.room.compiler.processing.javac.kotlin.KmClassContainer$Companion.createFor(KotlinClassMetadataUtils.kt:184)
+	at dagger.spi.internal.shaded.androidx.room.compiler.processing.javac.JavacTypeElement$kotlinMetadata$2.invoke(JavacTypeElement.kt:62)
+	at dagger.spi.internal.shaded.androidx.room.compiler.processing.javac.JavacTypeElement$kotlinMetadata$2.invoke(JavacTypeElement.kt:61)
+	at kotlin.SynchronizedLazyImpl.getValue(LazyJVM.kt:86)
+	at dagger.spi.internal.shaded.androidx.room.compiler.processing.javac.JavacTypeElement.getKotlinMetadata(JavacTypeElement.kt:61)
+	at dagger.spi.internal.shaded.androidx.room.compiler.processing.javac.JavacTypeElement.isClass(JavacTypeElement.kt:150)
+	at dagger.internal.codegen.xprocessing.XElements.getKindName(XElements.java:365)
+	at dagger.internal.codegen.base.DaggerSuperficialValidation$ValidationException.getMessageForElement(DaggerSuperficialValidation.java:636)
+	at dagger.internal.codegen.base.DaggerSuperficialValidation$ValidationException.append(DaggerSuperficialValidation.java:547)
+	at dagger.internal.codegen.base.DaggerSuperficialValidation$ValidationException.access$200(DaggerSuperficialValidation.java:491)
+	at dagger.internal.codegen.base.DaggerSuperficialValidation.validateTypeOf(DaggerSuperficialValidation.java:142)
+	at dagger.internal.codegen.validation.InjectValidator.validateForMembersInjectionInternalUncached(InjectValidator.java:374)
+	at dagger.internal.codegen.base.Util.reentrantComputeIfAbsent(Util.java:33)
+	at dagger.internal.codegen.validation.InjectValidator.validateForMembersInjectionInternal(InjectValidator.java:369)
+	at dagger.internal.codegen.validation.InjectValidator.validateUncached(InjectValidator.java:143)
+	at dagger.internal.codegen.base.Util.reentrantComputeIfAbsent(Util.java:33)
+	at dagger.internal.codegen.validation.InjectValidator.validate(InjectValidator.java:138)
+	at dagger.internal.codegen.validation.InjectBindingRegistryImpl.tryRegisterConstructor(InjectBindingRegistryImpl.java:255)
+	at dagger.internal.codegen.validation.InjectBindingRegistryImpl.tryRegisterInjectConstructor(InjectBindingRegistryImpl.java:241)
+	at dagger.internal.codegen.processingstep.InjectProcessingStep.process(InjectProcessingStep.java:73)
+	at dagger.internal.codegen.processingstep.TypeCheckingProcessingStep.lambda$process$0(TypeCheckingProcessingStep.java:94)
+	at com.google.common.collect.SingletonImmutableBiMap.forEach(SingletonImmutableBiMap.java:70)
+	at dagger.internal.codegen.processingstep.TypeCheckingProcessingStep.process(TypeCheckingProcessingStep.java:72)
+	at dagger.internal.codegen.processingstep.TypeCheckingProcessingStep.process(TypeCheckingProcessingStep.java:49)
+	at dagger.spi.internal.shaded.androidx.room.compiler.processing.XProcessingStep.process(XProcessingStep.kt:59)
+	at dagger.spi.internal.shaded.androidx.room.compiler.processing.CommonProcessorDelegate.processRound(XBasicAnnotationProcessor.kt:132)
+	at dagger.spi.internal.shaded.androidx.room.compiler.processing.javac.JavacBasicAnnotationProcessor.process(JavacBasicAnnotationProcessor.kt:73)
+	at org.jetbrains.kotlin.kapt.base.incremental.IncrementalProcessor.process(incrementalProcessors.kt:88)
+	at org.jetbrains.kotlin.kapt.base.ProcessorWrapper.process(annotationProcessing.kt:217)
+	... 36 more
+
+
+BUILD FAILED in 20s
+17 actionable tasks: 2 executed, 15 up-to-date
+Watched directory hierarchies: [E:\MagicCollection\MagicCollectionAndroid]
