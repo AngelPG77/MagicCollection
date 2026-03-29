@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Colección Magic</string>
+    <string name="title_home">Inicio</string>
+    <string name="title_search">Búsqueda</string>
+    <string name="title_collections">Colecciones</string>
+    <string name="title_decks">Mazos</string>
+    <string name="title_scanner">Escáner</string>
+    <string name="work_in_progress">En construcción</string>
+    <string name="wip_description">Esta sección está actualmente en desarrollo.</string>
+</resources>

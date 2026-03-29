@@ -6,12 +6,11 @@ import com.pga.magiccollection.domain.usecase.auth.*
 import com.pga.magiccollection.domain.usecase.card.*
 import com.pga.magiccollection.domain.usecase.collection.*
 import com.pga.magiccollection.domain.usecase.inventory.*
+import com.pga.magiccollection.domain.usecase.home.*
+import com.pga.magiccollection.domain.usecase.settings.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
@@ -26,11 +25,19 @@ class MainViewModel @Inject constructor(
     private val syncCollectionsUseCase: SyncCollectionsUseCase,
     private val observeCollectionsUseCase: ObserveCollectionsUseCase,
     private val getSessionStateUseCase: GetSessionStateUseCase,
-    private val logoutUseCase: LogoutUseCase
+    private val logoutUseCase: LogoutUseCase,
+    private val getRecentCardsUseCase: GetRecentCardsUseCase,
+    private val addRecentCardUseCase: AddRecentCardUseCase,
+    private val getAppPreferencesUseCase: GetAppPreferencesUseCase,
+    private val updateAppPreferenceUseCase: UpdateAppPreferenceUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
+
+    // Flujos de Datos para Home y Settings
+    val recentCards = getRecentCardsUseCase()
+    val preferences = getAppPreferencesUseCase()
 
     private var collectionsJob: Job? = null
     private var authJob: Job? = null
@@ -40,6 +47,16 @@ class MainViewModel @Inject constructor(
         loadSession()
     }
 
+    // --- Preferencias ---
+    fun updateDarkTheme(enabled: Boolean) {
+        viewModelScope.launch { updateAppPreferenceUseCase.setDarkTheme(enabled) }
+    }
+
+    fun updateGridSize(size: Int) {
+        viewModelScope.launch { updateAppPreferenceUseCase.setGridSize(size) }
+    }
+
+    // --- Lógica de Usuario ---
     fun onUsernameChanged(value: String) {
         _uiState.update { it.copy(usernameInput = value) }
     }
@@ -114,49 +131,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun searchCards() {
-        val state = _uiState.value
-        viewModelScope.launch {
-            _uiState.update { it.copy(searchLoading = true, searchMessage = null) }
-            try {
-                val results = searchCardsUseCase(state.searchQueryInput)
-                _uiState.update {
-                    it.copy(
-                        searchResults = results,
-                        searchMessage = "Resultados: ${results.size}"
-                    )
-                }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(searchMessage = handleError(e)) }
-            } finally {
-                _uiState.update { it.copy(searchLoading = false) }
-            }
-        }
-    }
-
-    fun createLocalCollection() {
-        val state = _uiState.value
-        viewModelScope.launch {
-            _uiState.update { it.copy(collectionLoading = true, collectionMessage = null) }
-            try {
-                createCollectionUseCase(
-                    name = state.collectionNameInput,
-                    userId = state.currentUserId
-                )
-                _uiState.update {
-                    it.copy(
-                        collectionNameInput = "",
-                        collectionMessage = "Coleccion guardada en local (pendiente sync)."
-                    )
-                }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(collectionMessage = e.message ?: "Error desconocido") }
-            } finally {
-                _uiState.update { it.copy(collectionLoading = false) }
-            }
-        }
-    }
-
+    // --- Colecciones y Sincronización ---
     fun syncCollections() {
         syncJob?.cancel()
         val state = _uiState.value

@@ -5,6 +5,7 @@ import com.pga.magiccollection.data.remote.AuthTokenInterceptor
 import com.pga.magiccollection.data.remote.api.AuthApi
 import com.pga.magiccollection.data.remote.api.CardsApi
 import com.pga.magiccollection.data.remote.api.CollectionsApi
+import com.pga.magiccollection.data.remote.api.InventoryApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

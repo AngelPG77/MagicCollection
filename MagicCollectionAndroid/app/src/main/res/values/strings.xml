@@ -1,3 +1,10 @@
 <resources>
-    <string name="app_name">MagicCollectionApp</string>
+    <string name="app_name">Magic Collection</string>
+    <string name="title_home">Home</string>
+    <string name="title_search">Search</string>
+    <string name="title_collections">Collections</string>
+    <string name="title_decks">Decks</string>
+    <string name="title_scanner">Scanner</string>
+    <string name="work_in_progress">Work in Progress</string>
+    <string name="wip_description">This section is currently under development.</string>
 </resources>

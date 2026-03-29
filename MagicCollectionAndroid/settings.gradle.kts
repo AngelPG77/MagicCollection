@@ -22,6 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "MagicCollectionApp"
+rootProject.name = "MagicCollectionAndroid"
 include(":app")
  

@@ -3,8 +3,11 @@ package com.pga.magiccollection.di
 import android.content.Context
 import androidx.room.Room
 import com.pga.magiccollection.data.local.MagicDatabase
+import com.pga.magiccollection.data.local.dao.CardOwnedDao
 import com.pga.magiccollection.data.local.dao.CollectionDao
+import com.pga.magiccollection.data.local.dao.RecentCardDao
 import com.pga.magiccollection.data.local.dao.UserDao
+import com.pga.magiccollection.data.local.security.PreferenceManager
 import com.pga.magiccollection.data.local.security.SessionManager
 import dagger.Module
 import dagger.Provides
@@ -24,7 +27,8 @@ object DatabaseModule {
             context,
             MagicDatabase::class.java,
             "magic_collection.db"
-        ).build()
+        ).fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
@@ -43,8 +47,19 @@ object DatabaseModule {
     }
 
     @Provides
+    fun provideRecentCardDao(database: MagicDatabase): RecentCardDao {
+        return database.recentCardDao()
+    }
+
+    @Provides
     @Singleton
     fun provideSessionManager(@ApplicationContext context: Context): SessionManager {
         return SessionManager(context)
+    }
+
+    @Provides
+    @Singleton
+    fun providePreferenceManager(@ApplicationContext context: Context): PreferenceManager {
+        return PreferenceManager(context)
     }
 }
