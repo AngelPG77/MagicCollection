@@ -30,39 +30,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModelProvider
-import com.pga.magiccollection.data.local.MagicDatabase
-import com.pga.magiccollection.data.local.security.SessionManager
-import com.pga.magiccollection.data.remote.AuthTokenInterceptor
-import com.pga.magiccollection.data.remote.api.AuthApi
-import com.pga.magiccollection.data.remote.api.CardsApi
-import com.pga.magiccollection.data.remote.api.CollectionsApi
-import com.pga.magiccollection.data.repository.AuthRepository
-import com.pga.magiccollection.data.repository.CardSearchRepository
-import com.pga.magiccollection.data.repository.CollectionSyncRepository
-import com.pga.magiccollection.data.repository.SessionRepository
-import com.pga.magiccollection.domain.usecase.CreateLocalCollectionUseCase
-import com.pga.magiccollection.domain.usecase.GetSessionStateUseCase
-import com.pga.magiccollection.domain.usecase.LoginUseCase
-import com.pga.magiccollection.domain.usecase.LogoutUseCase
-import com.pga.magiccollection.domain.usecase.ObserveCollectionsUseCase
-import com.pga.magiccollection.domain.usecase.RegisterUseCase
-import com.pga.magiccollection.domain.usecase.SearchCardsUseCase
-import com.pga.magiccollection.domain.usecase.SyncCollectionsUseCase
 import com.pga.magiccollection.ui.screen.MainUiState
 import com.pga.magiccollection.ui.screen.MainViewModel
 import com.pga.magiccollection.ui.theme.MagicCollectionAppTheme
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
+import dagger.hilt.android.AndroidEntryPoint
 
-class MainActivity : ComponentActivity() {
+@AndroidEntryPoint
+class MagicCollectionActivity : ComponentActivity() {
 
-    private val viewModel: MainViewModel by viewModels {
-        buildViewModelFactory()
-    }
+    private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,95 +53,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    private fun buildViewModelFactory(): ViewModelProvider.Factory {
-        val sessionManager = SessionManager(applicationContext)
-        val database = MagicDatabaseProvider.get(applicationContext)
-
-        val authApi = RetrofitProvider.createAuthApi()
-        val cardsApi = RetrofitProvider.createCardsApi(sessionManager)
-        val collectionsApi = RetrofitProvider.createCollectionsApi(sessionManager)
-
-        val authRepository = AuthRepository(
-            authApi = authApi,
-            userDao = database.userDao(),
-            sessionManager = sessionManager
-        )
-        val cardSearchRepository = CardSearchRepository(cardsApi)
-        val collectionSyncRepository = CollectionSyncRepository(
-            collectionDao = database.collectionDao(),
-            collectionsApi = collectionsApi
-        )
-        val sessionRepository = SessionRepository(sessionManager)
-
-        return MainViewModel.Factory(
-            registerUseCase = RegisterUseCase(authRepository),
-            loginUseCase = LoginUseCase(authRepository),
-            searchCardsUseCase = SearchCardsUseCase(cardSearchRepository),
-            createLocalCollectionUseCase = CreateLocalCollectionUseCase(collectionSyncRepository),
-            syncCollectionsUseCase = SyncCollectionsUseCase(collectionSyncRepository),
-            observeCollectionsUseCase = ObserveCollectionsUseCase(collectionSyncRepository),
-            getSessionStateUseCase = GetSessionStateUseCase(sessionRepository),
-            logoutUseCase = LogoutUseCase(sessionRepository)
-        )
-    }
-}
-
-private object MagicDatabaseProvider {
-    @Volatile
-    private var instance: MagicDatabase? = null
-
-    fun get(context: android.content.Context): MagicDatabase {
-        return instance ?: synchronized(this) {
-            instance ?: androidx.room.Room.databaseBuilder(
-                context.applicationContext,
-                MagicDatabase::class.java,
-                "magic_collection.db"
-            ).build().also { instance = it }
-        }
-    }
-}
-
-private object RetrofitProvider {
-    private const val BASE_URL = "http://10.0.2.2:8080/"
-
-    fun createAuthApi(): AuthApi {
-        val client = baseClientBuilder().build()
-        return retrofit(client).create(AuthApi::class.java)
-    }
-
-    fun createCardsApi(sessionManager: SessionManager): CardsApi {
-        val client = baseClientBuilder()
-            .addInterceptor(AuthTokenInterceptor(sessionManager))
-            .build()
-        return retrofit(client).create(CardsApi::class.java)
-    }
-
-    fun createCollectionsApi(sessionManager: SessionManager): CollectionsApi {
-        val client = baseClientBuilder()
-            .addInterceptor(AuthTokenInterceptor(sessionManager))
-            .build()
-        return retrofit(client).create(CollectionsApi::class.java)
-    }
-
-    private fun retrofit(client: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
-
-    private fun baseClientBuilder(): OkHttpClient.Builder {
-        val logging = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BASIC
-        }
-        return OkHttpClient.Builder()
-            .addInterceptor(logging)
-            .connectTimeout(20, TimeUnit.SECONDS)
-            .readTimeout(20, TimeUnit.SECONDS)
-            .writeTimeout(20, TimeUnit.SECONDS)
     }
 }
 
@@ -336,4 +223,3 @@ fun GreetingPreview() {
         Text("MagicCollection")
     }
 }
-

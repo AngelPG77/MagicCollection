@@ -15,6 +15,30 @@ data class LoginRequestDto(
 )
 
 data class LoginResponseDto(
-    val token: String
+    val token: String,
+    val userId: Long
 )
 
+data class UpdateUserRequestDto(
+    val newUsername: String
+)
+
+data class UpdateUserResponseDto(
+    val success: Boolean,
+    val message: String
+)
+
+data class UpdatePasswordRequestDto(
+    val currentPassword: String,
+    val newPassword: String
+)
+
+data class UpdatePasswordResponseDto(
+    val success: Boolean,
+    val message: String
+)
+
+data class DeleteUserResponseDto(
+    val success: Boolean,
+    val message: String
+)

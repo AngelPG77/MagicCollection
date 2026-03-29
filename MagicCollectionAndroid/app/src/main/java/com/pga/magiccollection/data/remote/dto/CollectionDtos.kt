@@ -4,9 +4,7 @@ data class CollectionRequestDto(
     val name: String
 )
 
-data class CollectionDto(
+data class CollectionResponseDto(
     val id: Long,
-    val name: String,
-    val ownerUsername: String
+    val name: String
 )
-

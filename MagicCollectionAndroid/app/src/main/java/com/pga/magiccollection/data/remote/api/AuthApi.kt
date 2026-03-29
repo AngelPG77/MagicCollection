@@ -1,11 +1,7 @@
 package com.pga.magiccollection.data.remote.api
 
-import com.pga.magiccollection.data.remote.dto.LoginRequestDto
-import com.pga.magiccollection.data.remote.dto.LoginResponseDto
-import com.pga.magiccollection.data.remote.dto.RegisterRequestDto
-import com.pga.magiccollection.data.remote.dto.RegisterResponseDto
-import retrofit2.http.Body
-import retrofit2.http.POST
+import com.pga.magiccollection.data.remote.dto.*
+import retrofit2.http.*
 
 interface AuthApi {
     @POST("auth/register")
@@ -13,5 +9,13 @@ interface AuthApi {
 
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequestDto): LoginResponseDto
-}
 
+    @PUT("auth/update-username")
+    suspend fun updateUsername(@Body request: UpdateUserRequestDto): UpdateUserResponseDto
+
+    @PUT("auth/update-password")
+    suspend fun updatePassword(@Body request: UpdatePasswordRequestDto): UpdatePasswordResponseDto
+
+    @DELETE("auth/delete")
+    suspend fun deleteUser(): DeleteUserResponseDto
+}

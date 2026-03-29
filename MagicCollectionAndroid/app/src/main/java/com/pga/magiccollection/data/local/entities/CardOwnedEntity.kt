@@ -1,10 +1,21 @@
 package com.pga.magiccollection.data.local.entities
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 
 @Entity(
     tableName = "cards_owned",
-    primaryKeys = ["scryfallId", "collectionId", "language", "condition", "isFoil"]
+    primaryKeys = ["scryfallId", "collectionId", "language", "condition", "isFoil"],
+    foreignKeys = [
+        ForeignKey(
+            entity = CollectionEntity::class,
+            parentColumns = ["localId"],
+            childColumns = ["collectionId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index(value = ["collectionId"])]
 )
 data class CardOwnedEntity(
     val scryfallId: String,
@@ -14,7 +25,5 @@ data class CardOwnedEntity(
     val isFoil: Boolean = false,
     val condition: String,
     val language: String = "ENGLISH",
-    val Synced: Boolean = false
+    val synced: Boolean = false
 )
-
-

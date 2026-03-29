@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -68,6 +69,10 @@ dependencies {
 
     // Seguridad (JWT Cifrado)
     implementation(libs.androidx.security.crypto)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
 
     // Testing
     testImplementation(libs.junit)

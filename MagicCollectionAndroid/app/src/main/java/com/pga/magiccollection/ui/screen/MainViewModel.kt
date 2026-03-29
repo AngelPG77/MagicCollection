@@ -1,16 +1,12 @@
 package com.pga.magiccollection.ui.screen
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.pga.magiccollection.domain.usecase.CreateLocalCollectionUseCase
-import com.pga.magiccollection.domain.usecase.GetSessionStateUseCase
-import com.pga.magiccollection.domain.usecase.LoginUseCase
-import com.pga.magiccollection.domain.usecase.LogoutUseCase
-import com.pga.magiccollection.domain.usecase.ObserveCollectionsUseCase
-import com.pga.magiccollection.domain.usecase.RegisterUseCase
-import com.pga.magiccollection.domain.usecase.SearchCardsUseCase
-import com.pga.magiccollection.domain.usecase.SyncCollectionsUseCase
+import com.pga.magiccollection.domain.usecase.auth.*
+import com.pga.magiccollection.domain.usecase.card.*
+import com.pga.magiccollection.domain.usecase.collection.*
+import com.pga.magiccollection.domain.usecase.inventory.*
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,12 +15,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
+import javax.inject.Inject
 
-class MainViewModel(
+@HiltViewModel
+class MainViewModel @Inject constructor(
     private val registerUseCase: RegisterUseCase,
     private val loginUseCase: LoginUseCase,
     private val searchCardsUseCase: SearchCardsUseCase,
-    private val createLocalCollectionUseCase: CreateLocalCollectionUseCase,
+    private val createCollectionUseCase: CreateCollectionUseCase,
     private val syncCollectionsUseCase: SyncCollectionsUseCase,
     private val observeCollectionsUseCase: ObserveCollectionsUseCase,
     private val getSessionStateUseCase: GetSessionStateUseCase,
@@ -35,6 +33,8 @@ class MainViewModel(
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
     private var collectionsJob: Job? = null
+    private var authJob: Job? = null
+    private var syncJob: Job? = null
 
     init {
         loadSession()
@@ -57,8 +57,9 @@ class MainViewModel(
     }
 
     fun register() {
+        authJob?.cancel()
         val state = _uiState.value
-        viewModelScope.launch {
+        authJob = viewModelScope.launch {
             _uiState.update { it.copy(authLoading = true, authMessage = null) }
             try {
                 val message = registerUseCase(
@@ -66,12 +67,8 @@ class MainViewModel(
                     password = state.passwordInput
                 )
                 _uiState.update { it.copy(authMessage = message) }
-            } catch (httpError: HttpException) {
-                _uiState.update { it.copy(authMessage = "Registro fallido (HTTP ${httpError.code()}).") }
-            } catch (networkError: IOException) {
-                _uiState.update { it.copy(authMessage = "No se pudo conectar al backend.") }
-            } catch (validationError: IllegalArgumentException) {
-                _uiState.update { it.copy(authMessage = validationError.message) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(authMessage = handleError(e)) }
             } finally {
                 _uiState.update { it.copy(authLoading = false) }
             }
@@ -79,8 +76,9 @@ class MainViewModel(
     }
 
     fun login() {
+        authJob?.cancel()
         val state = _uiState.value
-        viewModelScope.launch {
+        authJob = viewModelScope.launch {
             _uiState.update { it.copy(authLoading = true, authMessage = null) }
             try {
                 loginUseCase(
@@ -88,12 +86,8 @@ class MainViewModel(
                     password = state.passwordInput
                 )
                 loadSession(successMessage = "Login correcto.")
-            } catch (httpError: HttpException) {
-                _uiState.update { it.copy(authMessage = "Login fallido (HTTP ${httpError.code()}).") }
-            } catch (networkError: IOException) {
-                _uiState.update { it.copy(authMessage = "No se pudo conectar al backend.") }
-            } catch (validationError: IllegalArgumentException) {
-                _uiState.update { it.copy(authMessage = validationError.message) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(authMessage = handleError(e)) }
             } finally {
                 _uiState.update { it.copy(authLoading = false) }
             }
@@ -103,6 +97,8 @@ class MainViewModel(
     fun logout() {
         logoutUseCase()
         collectionsJob?.cancel()
+        authJob?.cancel()
+        syncJob?.cancel()
         _uiState.update {
             it.copy(
                 isLoggedIn = false,
@@ -130,12 +126,8 @@ class MainViewModel(
                         searchMessage = "Resultados: ${results.size}"
                     )
                 }
-            } catch (httpError: HttpException) {
-                _uiState.update { it.copy(searchMessage = "Busqueda fallida (HTTP ${httpError.code()}).") }
-            } catch (networkError: IOException) {
-                _uiState.update { it.copy(searchMessage = "No se pudo conectar al backend.") }
-            } catch (validationError: IllegalArgumentException) {
-                _uiState.update { it.copy(searchMessage = validationError.message) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(searchMessage = handleError(e)) }
             } finally {
                 _uiState.update { it.copy(searchLoading = false) }
             }
@@ -147,7 +139,7 @@ class MainViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(collectionLoading = true, collectionMessage = null) }
             try {
-                createLocalCollectionUseCase(
+                createCollectionUseCase(
                     name = state.collectionNameInput,
                     userId = state.currentUserId
                 )
@@ -157,8 +149,8 @@ class MainViewModel(
                         collectionMessage = "Coleccion guardada en local (pendiente sync)."
                     )
                 }
-            } catch (validationError: IllegalArgumentException) {
-                _uiState.update { it.copy(collectionMessage = validationError.message) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(collectionMessage = e.message ?: "Error desconocido") }
             } finally {
                 _uiState.update { it.copy(collectionLoading = false) }
             }
@@ -166,18 +158,15 @@ class MainViewModel(
     }
 
     fun syncCollections() {
+        syncJob?.cancel()
         val state = _uiState.value
-        viewModelScope.launch {
+        syncJob = viewModelScope.launch {
             _uiState.update { it.copy(syncLoading = true, collectionMessage = null) }
             try {
                 val synced = syncCollectionsUseCase(state.currentUserId)
                 _uiState.update { it.copy(collectionMessage = "Sincronizadas: $synced colecciones.") }
-            } catch (httpError: HttpException) {
-                _uiState.update { it.copy(collectionMessage = "Sync fallido (HTTP ${httpError.code()}).") }
-            } catch (networkError: IOException) {
-                _uiState.update {
-                    it.copy(collectionMessage = "Sin conexion. Se mantienen pendientes para reintento.")
-                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(collectionMessage = handleError(e)) }
             } finally {
                 _uiState.update { it.copy(syncLoading = false) }
             }
@@ -210,32 +199,19 @@ class MainViewModel(
         }
     }
 
-    class Factory(
-        private val registerUseCase: RegisterUseCase,
-        private val loginUseCase: LoginUseCase,
-        private val searchCardsUseCase: SearchCardsUseCase,
-        private val createLocalCollectionUseCase: CreateLocalCollectionUseCase,
-        private val syncCollectionsUseCase: SyncCollectionsUseCase,
-        private val observeCollectionsUseCase: ObserveCollectionsUseCase,
-        private val getSessionStateUseCase: GetSessionStateUseCase,
-        private val logoutUseCase: LogoutUseCase
-    ) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-                return MainViewModel(
-                    registerUseCase = registerUseCase,
-                    loginUseCase = loginUseCase,
-                    searchCardsUseCase = searchCardsUseCase,
-                    createLocalCollectionUseCase = createLocalCollectionUseCase,
-                    syncCollectionsUseCase = syncCollectionsUseCase,
-                    observeCollectionsUseCase = observeCollectionsUseCase,
-                    getSessionStateUseCase = getSessionStateUseCase,
-                    logoutUseCase = logoutUseCase
-                ) as T
+    private fun handleError(e: Exception): String {
+        return when (e) {
+            is HttpException -> {
+                when (e.code()) {
+                    401 -> "No autorizado: credenciales incorrectas."
+                    403 -> "Prohibido: no tienes permisos."
+                    404 -> "No encontrado."
+                    409 -> "Conflicto: el recurso ya existe."
+                    else -> "Error del servidor (HTTP ${e.code()})."
+                }
             }
-            throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+            is IOException -> "Sin conexión: verifica tu internet."
+            else -> e.message ?: "Ha ocurrido un error inesperado."
         }
     }
 }
-
