@@ -25,7 +25,9 @@ data class UpdateUserRequestDto(
 
 data class UpdateUserResponseDto(
     val success: Boolean,
-    val message: String
+    val message: String,
+    val newUsername: String? = null,
+    val token: String? = null
 )
 
 data class UpdatePasswordRequestDto(

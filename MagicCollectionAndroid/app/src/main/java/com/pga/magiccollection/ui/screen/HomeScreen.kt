@@ -64,14 +64,14 @@ fun RecentCardsSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = "Últimas cartas visitadas", // TODO: Añadir a strings.xml
+            text = stringResource(id = R.string.recent_cards_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
         
         if (cards.isEmpty()) {
             Text(
-                text = "No has visitado ninguna carta aún.",
+                text = stringResource(id = R.string.recent_cards_empty),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.secondary
             )
@@ -111,16 +111,16 @@ fun UtilitiesSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
-            text = "Utilidades",
+            text = stringResource(id = R.string.utilities_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
 
         val buttons = listOf(
-            UtilityItem("Carta aleatoria", Icons.Default.Refresh, onRandomCard, true),
-            UtilityItem("Lista de deseados", Icons.Default.Favorite, onWishlist, isLoggedIn),
-            UtilityItem("Reglamento", Icons.Default.Info, onRules, true),
-            UtilityItem("Intercambio", Icons.Default.Share, onTrade, true)
+            UtilityItem(stringResource(id = R.string.utility_random_card), Icons.Default.Refresh, onRandomCard, true),
+            UtilityItem(stringResource(id = R.string.utility_wishlist), Icons.Default.Favorite, onWishlist, isLoggedIn),
+            UtilityItem(stringResource(id = R.string.utility_rules), Icons.Default.Info, onRules, true),
+            UtilityItem(stringResource(id = R.string.utility_trade), Icons.Default.Share, onTrade, true)
         )
 
         buttons.chunked(2).forEach { rowItems ->

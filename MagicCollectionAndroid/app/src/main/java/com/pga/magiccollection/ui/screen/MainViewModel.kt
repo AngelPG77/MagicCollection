@@ -8,6 +8,7 @@ import com.pga.magiccollection.domain.usecase.collection.*
 import com.pga.magiccollection.domain.usecase.inventory.*
 import com.pga.magiccollection.domain.usecase.home.*
 import com.pga.magiccollection.domain.usecase.settings.*
+import com.pga.magiccollection.util.ErrorParser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -29,7 +30,10 @@ class MainViewModel @Inject constructor(
     private val getRecentCardsUseCase: GetRecentCardsUseCase,
     private val addRecentCardUseCase: AddRecentCardUseCase,
     private val getAppPreferencesUseCase: GetAppPreferencesUseCase,
-    private val updateAppPreferenceUseCase: UpdateAppPreferenceUseCase
+    private val updateAppPreferenceUseCase: UpdateAppPreferenceUseCase,
+    private val updateUsernameUseCase: UpdateUsernameUseCase,
+    private val updatePasswordUseCase: UpdatePasswordUseCase,
+    private val deleteUserUseCase: DeleteUserUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MainUiState())
@@ -47,6 +51,47 @@ class MainViewModel @Inject constructor(
         loadSession()
     }
 
+    // --- Control de Diálogos ---
+    fun showUpdateUsernameDialog(show: Boolean) {
+        _uiState.update { it.copy(showUpdateUsernameDialog = show, newUsernameInput = "", authMessage = null) }
+    }
+
+    fun showChangePasswordDialog(show: Boolean) {
+        _uiState.update { it.copy(showChangePasswordDialog = show, currentPasswordInput = "", newPasswordInput = "", repeatPasswordInput = "", authMessage = null) }
+    }
+
+    fun showDeleteAccountDialog(show: Boolean) {
+        _uiState.update { it.copy(showDeleteAccountDialog = show, authMessage = null) }
+    }
+
+    fun onNewUsernameChanged(value: String) {
+        _uiState.update { it.copy(newUsernameInput = value) }
+    }
+
+    fun onCurrentPasswordChanged(value: String) {
+        _uiState.update { it.copy(currentPasswordInput = value) }
+    }
+
+    fun onNewPasswordChanged(value: String) {
+        _uiState.update { it.copy(newPasswordInput = value) }
+    }
+
+    fun onRepeatPasswordChanged(value: String) {
+        _uiState.update { it.copy(repeatPasswordInput = value) }
+    }
+
+    fun togglePasswordVisibility() {
+        _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
+    }
+
+    fun toggleCurrentPasswordVisibility() {
+        _uiState.update { it.copy(isCurrentPasswordVisible = !it.isCurrentPasswordVisible) }
+    }
+
+    fun toggleRepeatPasswordVisibility() {
+        _uiState.update { it.copy(isRepeatPasswordVisible = !it.isRepeatPasswordVisible) }
+    }
+
     // --- Preferencias ---
     fun updateDarkTheme(enabled: Boolean) {
         viewModelScope.launch { updateAppPreferenceUseCase.setDarkTheme(enabled) }
@@ -54,6 +99,18 @@ class MainViewModel @Inject constructor(
 
     fun updateGridSize(size: Int) {
         viewModelScope.launch { updateAppPreferenceUseCase.setGridSize(size) }
+    }
+
+    fun updateSearchLanguage(lang: String) {
+        viewModelScope.launch { updateAppPreferenceUseCase.setSearchLanguage(lang) }
+    }
+
+    fun updateAppLanguage(lang: String) {
+        viewModelScope.launch { updateAppPreferenceUseCase.setAppLanguage(lang) }
+    }
+
+    fun updateThemeColor(color: String) {
+        viewModelScope.launch { updateAppPreferenceUseCase.setThemeColor(color) }
     }
 
     // --- Lógica de Usuario ---
@@ -79,11 +136,16 @@ class MainViewModel @Inject constructor(
         authJob = viewModelScope.launch {
             _uiState.update { it.copy(authLoading = true, authMessage = null) }
             try {
-                val message = registerUseCase(
+                registerUseCase(
                     username = state.usernameInput.trim(),
                     password = state.passwordInput
                 )
-                _uiState.update { it.copy(authMessage = message) }
+                // Si el registro tiene éxito, hacemos login automático
+                loginUseCase(
+                    username = state.usernameInput.trim(),
+                    password = state.passwordInput
+                )
+                loadSession(successMessage = "Cuenta creada y sesión iniciada.")
             } catch (e: Exception) {
                 _uiState.update { it.copy(authMessage = handleError(e)) }
             } finally {
@@ -148,6 +210,67 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun deleteUser() {
+        authJob?.cancel()
+        authJob = viewModelScope.launch {
+            _uiState.update { it.copy(authLoading = true, authMessage = null) }
+            try {
+                deleteUserUseCase()
+                logout()
+                showDeleteAccountDialog(false)
+                _uiState.update { it.copy(authMessage = "Cuenta eliminada correctamente.") }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(authMessage = handleError(e)) }
+            } finally {
+                _uiState.update { it.copy(authLoading = false) }
+            }
+        }
+    }
+
+    fun updateUsername() {
+        authJob?.cancel()
+        val state = _uiState.value
+        if (state.newUsernameInput.isBlank()) return
+        
+        authJob = viewModelScope.launch {
+            _uiState.update { it.copy(authLoading = true, authMessage = null) }
+            try {
+                updateUsernameUseCase(state.newUsernameInput.trim())
+                showUpdateUsernameDialog(false)
+                loadSession(successMessage = "Nombre de usuario actualizado.")
+            } catch (e: Exception) {
+                _uiState.update { it.copy(authMessage = handleError(e)) }
+            } finally {
+                _uiState.update { it.copy(authLoading = false) }
+            }
+        }
+    }
+
+    fun updatePassword() {
+        authJob?.cancel()
+        val state = _uiState.value
+        
+        if (state.newPasswordInput != state.repeatPasswordInput) {
+            _uiState.update { it.copy(authMessage = "Las contraseñas no coinciden") }
+            return
+        }
+
+        if (state.currentPasswordInput.isBlank() || state.newPasswordInput.isBlank()) return
+
+        authJob = viewModelScope.launch {
+            _uiState.update { it.copy(authLoading = true, authMessage = null) }
+            try {
+                updatePasswordUseCase(state.currentPasswordInput, state.newPasswordInput)
+                showChangePasswordDialog(false)
+                _uiState.update { it.copy(authMessage = "Contraseña actualizada correctamente.") }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(authMessage = handleError(e)) }
+            } finally {
+                _uiState.update { it.copy(authLoading = false) }
+            }
+        }
+    }
+
     private fun loadSession(successMessage: String? = null) {
         val session = getSessionStateUseCase()
         _uiState.update {
@@ -175,18 +298,13 @@ class MainViewModel @Inject constructor(
     }
 
     private fun handleError(e: Exception): String {
-        return when (e) {
-            is HttpException -> {
-                when (e.code()) {
-                    401 -> "No autorizado: credenciales incorrectas."
-                    403 -> "Prohibido: no tienes permisos."
-                    404 -> "No encontrado."
-                    409 -> "Conflicto: el recurso ya existe."
-                    else -> "Error del servidor (HTTP ${e.code()})."
-                }
+        // Si es error de sesión expirada/inválida, cerrar sesión automáticamente
+        if (ErrorParser.isSessionError(e)) {
+            viewModelScope.launch {
+                logoutUseCase()
+                loadSession()
             }
-            is IOException -> "Sin conexión: verifica tu internet."
-            else -> e.message ?: "Ha ocurrido un error inesperado."
         }
+        return ErrorParser.parseError(e)
     }
 }

@@ -19,6 +19,18 @@ data class MainUiState(
     val searchMessage: String? = null,
     val collectionMessage: String? = null,
     val searchResults: List<ScryfallCardDto> = emptyList(),
-    val collections: List<CollectionEntity> = emptyList()
+    val collections: List<CollectionEntity> = emptyList(),
+
+    // Gestión de cuenta
+    val showUpdateUsernameDialog: Boolean = false,
+    val showChangePasswordDialog: Boolean = false,
+    val showDeleteAccountDialog: Boolean = false,
+    val newUsernameInput: String = "",
+    val currentPasswordInput: String = "",
+    val newPasswordInput: String = "",
+    val repeatPasswordInput: String = "",
+    val isPasswordVisible: Boolean = false,
+    val isCurrentPasswordVisible: Boolean = false,
+    val isRepeatPasswordVisible: Boolean = false
 )
 

@@ -1,5 +1,6 @@
 package com.pga.magiccollection.di
 
+import com.pga.magiccollection.BuildConfig
 import com.pga.magiccollection.data.local.security.SessionManager
 import com.pga.magiccollection.data.remote.AuthTokenInterceptor
 import com.pga.magiccollection.data.remote.api.AuthApi
@@ -21,13 +22,23 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "http://10.0.2.2:8080/"
-
     @Provides
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
-        return HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BASIC
+        return HttpLoggingInterceptor { message ->
+            // Redactar tokens de autorización en los logs (seguridad)
+            val sanitizedMessage = if (message.contains("Authorization:", ignoreCase = true)) {
+                message.replace(Regex("Bearer [A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+"), "Bearer [REDACTED]")
+            } else {
+                message
+            }
+            android.util.Log.i("okhttp.OkHttpClient", sanitizedMessage)
+        }.apply {
+            level = if (BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BODY
+            } else {
+                HttpLoggingInterceptor.Level.BASIC
+            }
         }
     }
 
@@ -48,7 +59,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(BuildConfig.BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -56,23 +67,43 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideAuthApi(retrofit: Retrofit): AuthApi {
-        return retrofit.create(AuthApi::class.java)
+    fun provideAuthApi(
+        retrofit: Retrofit,
+        sessionManager: SessionManager,
+        loggingInterceptor: HttpLoggingInterceptor
+    ): AuthApi {
+        // Create an authenticated client specifically for AuthApi requests that need it
+        val authenticatedClient = OkHttpClient.Builder()
+            .addInterceptor(AuthTokenInterceptor(sessionManager))
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
+            .build()
+        
+        return retrofit.newBuilder()
+            .client(authenticatedClient)
+            .build()
+            .create(AuthApi::class.java)
     }
 
     @Provides
     @Singleton
     fun provideCardsApi(
         retrofit: Retrofit,
-        sessionManager: SessionManager
+        sessionManager: SessionManager,
+        loggingInterceptor: HttpLoggingInterceptor
     ): CardsApi {
-        val authenticatedClient = retrofit.callFactory() as OkHttpClient
-        val newClient = authenticatedClient.newBuilder()
+        val authenticatedClient = OkHttpClient.Builder()
             .addInterceptor(AuthTokenInterceptor(sessionManager))
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
             .build()
         
         return retrofit.newBuilder()
-            .client(newClient)
+            .client(authenticatedClient)
             .build()
             .create(CardsApi::class.java)
     }
@@ -81,15 +112,19 @@ object NetworkModule {
     @Singleton
     fun provideCollectionsApi(
         retrofit: Retrofit,
-        sessionManager: SessionManager
+        sessionManager: SessionManager,
+        loggingInterceptor: HttpLoggingInterceptor
     ): CollectionsApi {
-        val authenticatedClient = retrofit.callFactory() as OkHttpClient
-        val newClient = authenticatedClient.newBuilder()
+        val authenticatedClient = OkHttpClient.Builder()
             .addInterceptor(AuthTokenInterceptor(sessionManager))
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
             .build()
         
         return retrofit.newBuilder()
-            .client(newClient)
+            .client(authenticatedClient)
             .build()
             .create(CollectionsApi::class.java)
     }
@@ -98,15 +133,19 @@ object NetworkModule {
     @Singleton
     fun provideInventoryApi(
         retrofit: Retrofit,
-        sessionManager: SessionManager
+        sessionManager: SessionManager,
+        loggingInterceptor: HttpLoggingInterceptor
     ): InventoryApi {
-        val authenticatedClient = retrofit.callFactory() as OkHttpClient
-        val newClient = authenticatedClient.newBuilder()
+        val authenticatedClient = OkHttpClient.Builder()
             .addInterceptor(AuthTokenInterceptor(sessionManager))
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
             .build()
         
         return retrofit.newBuilder()
-            .client(newClient)
+            .client(authenticatedClient)
             .build()
             .create(InventoryApi::class.java)
     }

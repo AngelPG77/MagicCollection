@@ -39,8 +39,10 @@ class AuthRepository(
         if (response.success) {
             val userId = sessionManager.getUserId()
             userDao.insertUser(UserEntity(id = userId, username = newUsername))
+            // Guardar el nuevo token si viene en la respuesta
+            val newToken = response.token ?: sessionManager.getAuthToken() ?: ""
             sessionManager.saveSession(
-                token = sessionManager.getAuthToken() ?: "",
+                token = newToken,
                 userId = userId,
                 username = newUsername
             )

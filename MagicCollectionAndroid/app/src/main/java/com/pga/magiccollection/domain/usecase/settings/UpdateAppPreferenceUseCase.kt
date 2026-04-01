@@ -11,4 +11,5 @@ class UpdateAppPreferenceUseCase @Inject constructor(
     suspend fun setStartScreen(route: String) = preferenceManager.setStartScreen(route)
     suspend fun setSearchLanguage(lang: String) = preferenceManager.setSearchLanguage(lang)
     suspend fun setAppLanguage(lang: String) = preferenceManager.setAppLanguage(lang)
+    suspend fun setThemeColor(color: String) = preferenceManager.setThemeColor(color)
 }

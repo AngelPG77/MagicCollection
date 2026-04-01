@@ -10,7 +10,8 @@ data class AppPreferences(
     val gridSize: Int,
     val startScreen: String,
     val searchLanguage: String,
-    val appLanguage: String
+    val appLanguage: String,
+    val themeColor: String
 )
 
 class GetAppPreferencesUseCase @Inject constructor(
@@ -22,9 +23,17 @@ class GetAppPreferencesUseCase @Inject constructor(
             preferenceManager.gridSize,
             preferenceManager.startScreen,
             preferenceManager.searchLanguage,
-            preferenceManager.appLanguage
-        ) { dark, grid, start, search, app ->
-            AppPreferences(dark, grid, start, search, app)
+            preferenceManager.appLanguage,
+            preferenceManager.themeColor
+        ) { values: Array<Any?> ->
+            AppPreferences(
+                darkTheme = values[0] as Boolean,
+                gridSize = values[1] as Int,
+                startScreen = values[2] as String,
+                searchLanguage = values[3] as String,
+                appLanguage = values[4] as String,
+                themeColor = values[5] as String
+            )
         }
     }
 }

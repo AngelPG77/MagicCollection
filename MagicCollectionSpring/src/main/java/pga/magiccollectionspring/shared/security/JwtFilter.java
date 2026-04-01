@@ -1,5 +1,6 @@
 package pga.magiccollectionspring.shared.security;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,8 +46,14 @@ public class JwtFilter extends OncePerRequestFilter {
 
         try {
             username = jwtService.extractUsername(jwt);
+        } catch (ExpiredJwtException e) {
+            log.warn("Token JWT expirado: {}", e.getMessage());
+            request.setAttribute("jwt_error", "expired");
+            filterChain.doFilter(request, response);
+            return;
         } catch (Exception e) {
             log.warn("Token JWT invalido: {}", e.getMessage());
+            request.setAttribute("jwt_error", "invalid");
             filterChain.doFilter(request, response);
             return;
         }
@@ -58,6 +65,8 @@ public class JwtFilter extends OncePerRequestFilter {
                         userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+            } else {
+                request.setAttribute("jwt_error", "invalid");
             }
         }
         filterChain.doFilter(request, response);

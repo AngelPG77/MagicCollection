@@ -17,6 +17,7 @@ class PreferenceManager(private val context: Context) {
         private val START_SCREEN = stringPreferencesKey("start_screen")
         private val SEARCH_LANGUAGE = stringPreferencesKey("search_language")
         private val APP_LANGUAGE = stringPreferencesKey("app_language")
+        private val THEME_COLOR = stringPreferencesKey("theme_color")
     }
 
     val darkTheme: Flow<Boolean> = context.dataStore.data.map { it[DARK_THEME] ?: false }
@@ -24,6 +25,11 @@ class PreferenceManager(private val context: Context) {
     val startScreen: Flow<String> = context.dataStore.data.map { it[START_SCREEN] ?: "home" }
     val searchLanguage: Flow<String> = context.dataStore.data.map { it[SEARCH_LANGUAGE] ?: "en" }
     val appLanguage: Flow<String> = context.dataStore.data.map { it[APP_LANGUAGE] ?: "es" }
+    val themeColor: Flow<String> = context.dataStore.data.map { it[THEME_COLOR] ?: "Purple" }
+
+    suspend fun setThemeColor(color: String) {
+        context.dataStore.edit { it[THEME_COLOR] = color }
+    }
 
     suspend fun setDarkTheme(enabled: Boolean) {
         context.dataStore.edit { it[DARK_THEME] = enabled }

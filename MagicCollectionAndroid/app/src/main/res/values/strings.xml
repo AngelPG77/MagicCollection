@@ -5,6 +5,75 @@
     <string name="title_collections">Collections</string>
     <string name="title_decks">Decks</string>
     <string name="title_scanner">Scanner</string>
+    <string name="title_settings">Settings</string>
+    <string name="title_register">Register</string>
+    <string name="title_guides">Guides &amp; FAQ</string>
+    <string name="title_contact">Contact Us</string>
+    
     <string name="work_in_progress">Work in Progress</string>
     <string name="wip_description">This section is currently under development.</string>
+    
+    <string name="action_back">Back</string>
+    <string name="action_settings">Settings</string>
+    
+    <string name="recent_cards_title">Last visited cards</string>
+    <string name="recent_cards_empty">You haven\'t visited any cards yet.</string>
+    <string name="utilities_title">Utilities</string>
+    <string name="utility_random_card">Random card</string>
+    <string name="utility_wishlist">Wishlist</string>
+    <string name="utility_rules">Rules</string>
+    <string name="utility_trade">Trade</string>
+    
+    <string name="settings_section_general">General</string>
+    <string name="settings_section_language">Language</string>
+    <string name="settings_search_language">Search language</string>
+    <string name="settings_app_language">App language</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_dark_theme">Dark theme</string>
+    <string name="settings_theme_color">Theme color</string>
+    <string name="settings_grid_size">Grid size</string>
+    <string name="settings_grid_size_columns">%1$d columns</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_section_account">Account</string>
+    <string name="settings_update_username">Update username</string>
+    <string name="settings_change_password">Change password</string>
+    <string name="settings_delete_account">Delete account</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_sync_status">Profile synced</string>
+    
+    <string name="welcome_back">Welcome,</string>
+    <string name="join_us">Join us!</string>
+    <string name="register_now">Register now</string>
+    <string name="login_now">Login</string>
+    <string name="action_logout">Logout</string>
+
+    <string name="login_title">Welcome back</string>
+    <string name="login_subtitle">Login to continue</string>
+    <string name="login_button">Login</string>
+    <string name="login_footer">Don\'t have an account? Register here!</string>
+
+    <string name="register_title">Create your account</string>
+    <string name="register_subtitle">Join the best Magic community</string>
+    <string name="register_button">Register</string>
+    <string name="register_footer">Already have an account? Login here</string>
+    
+    <string name="label_username">Username</string>
+    <string name="label_password">Password</string>
+    <string name="label_current_password">Current password</string>
+    
+    <string name="dialog_update_username_title">Update username</string>
+    <string name="dialog_change_password_title">Change password</string>
+    <string name="dialog_delete_account_title">Delete account</string>
+    <string name="dialog_delete_account_message">Are you sure you want to delete your account? This action cannot be undone.</string>
+    <string name="label_new_username">New username</string>
+    <string name="label_new_password">New password</string>
+    <string name="label_repeat_password">Repeat password</string>
+    <string name="error_passwords_dont_match">Passwords do not match</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_update">Update</string>
+    <string name="action_delete">Delete</string>
+    
+    <string name="lang_en">English</string>
+    <string name="lang_es">Spanish</string>
 </resources>

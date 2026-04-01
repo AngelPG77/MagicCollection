@@ -1,5 +1,6 @@
 package com.pga.magiccollection
 
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,11 +14,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -29,9 +33,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.pga.magiccollection.ui.screen.HomeScreen
 import com.pga.magiccollection.ui.screen.MainViewModel
+import com.pga.magiccollection.ui.screen.RegisterScreen
 import com.pga.magiccollection.ui.screen.SettingsScreen
 import com.pga.magiccollection.ui.theme.MagicCollectionAppTheme
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.Locale
 
 @AndroidEntryPoint
 class MagicCollectionActivity : ComponentActivity() {
@@ -42,8 +48,22 @@ class MagicCollectionActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val preferences by viewModel.preferences.collectAsState(initial = null)
-            MagicCollectionAppTheme(darkTheme = preferences?.darkTheme ?: false) {
-                MainNavigation(viewModel)
+            
+            val context = LocalContext.current
+            val localizedContext = remember(preferences?.appLanguage) {
+                val locale = Locale(preferences?.appLanguage ?: "es")
+                val config = Configuration(context.resources.configuration)
+                config.setLocale(locale)
+                context.createConfigurationContext(config)
+            }
+
+            CompositionLocalProvider(LocalContext provides localizedContext) {
+                MagicCollectionAppTheme(
+                    darkTheme = preferences?.darkTheme ?: false,
+                    themeColor = preferences?.themeColor ?: "Purple"
+                ) {
+                    MainNavigation(viewModel)
+                }
             }
         }
     }
@@ -55,8 +75,11 @@ sealed class Screen(val route: String, val titleRes: Int, val icon: ImageVector)
     object Collections : Screen("collections", R.string.title_collections, Icons.Default.List)
     object Decks : Screen("decks", R.string.title_decks, Icons.Default.PlayArrow)
     object Scanner : Screen("scanner", R.string.title_scanner, Icons.Default.Add)
-    object Settings : Screen("settings", R.string.app_name, Icons.Default.Settings) // Usamos app_name temporalmente
-    object Register : Screen("register", R.string.app_name, Icons.Default.AccountCircle)
+    object Settings : Screen("settings", R.string.title_settings, Icons.Default.Settings)
+    object Register : Screen("register", R.string.title_register, Icons.Default.AccountCircle)
+    object Login : Screen("login", R.string.login_now, Icons.Default.AccountCircle)
+    object Guides : Screen("guides", R.string.title_guides, Icons.Default.List)
+    object Contact : Screen("contact", R.string.title_contact, Icons.Default.Email)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,19 +100,34 @@ fun MainNavigation(viewModel: MainViewModel) {
                 Screen.Decks.route -> Screen.Decks
                 Screen.Scanner.route -> Screen.Scanner
                 Screen.Settings.route -> Screen.Settings
+                Screen.Register.route -> Screen.Register
+                Screen.Login.route -> Screen.Login
+                Screen.Guides.route -> Screen.Guides
+                Screen.Contact.route -> Screen.Contact
                 else -> Screen.Home
             }
 
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { Text(stringResource(id = currentScreen.titleRes)) },
-                actions = {
-                    if (currentScreen != Screen.Settings) {
-                        IconButton(onClick = { navController.navigate(Screen.Settings.route) }) {
-                            Icon(Icons.Default.Settings, contentDescription = "Opciones")
+                navigationIcon = {
+                    if (currentScreen == Screen.Settings || currentScreen == Screen.Register || 
+                        currentScreen == Screen.Login || currentScreen == Screen.Guides || 
+                        currentScreen == Screen.Contact) {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = stringResource(id = R.string.action_back))
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
+                actions = {
+                    if (currentScreen != Screen.Settings && currentScreen != Screen.Register &&
+                        currentScreen != Screen.Login && currentScreen != Screen.Guides && 
+                        currentScreen != Screen.Contact) {
+                        IconButton(onClick = { navController.navigate(Screen.Settings.route) }) {
+                            Icon(Icons.Default.Settings, contentDescription = stringResource(id = R.string.action_settings))
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
@@ -138,10 +176,28 @@ fun MainNavigation(viewModel: MainViewModel) {
             composable(Screen.Settings.route) {
                 SettingsScreen(
                     viewModel = viewModel,
-                    onNavigateToRegister = { navController.navigate(Screen.Register.route) }
+                    onNavigateToRegister = { navController.navigate(Screen.Register.route) },
+                    onNavigateToLogin = { navController.navigate(Screen.Login.route) },
+                    onNavigateToGuides = { navController.navigate(Screen.Guides.route) },
+                    onNavigateToContact = { navController.navigate(Screen.Contact.route) }
                 )
             }
-            composable(Screen.Register.route) { WipScreen(Screen.Register) }
+            composable(Screen.Register.route) { 
+                RegisterScreen(
+                    viewModel = viewModel,
+                    initialLoginMode = false,
+                    onSuccess = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.Login.route) { 
+                RegisterScreen(
+                    viewModel = viewModel,
+                    initialLoginMode = true,
+                    onSuccess = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.Guides.route) { WipScreen(Screen.Guides) }
+            composable(Screen.Contact.route) { WipScreen(Screen.Contact) }
         }
     }
 }

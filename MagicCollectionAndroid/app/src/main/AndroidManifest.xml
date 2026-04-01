@@ -14,11 +14,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
-        android:theme="@style/Theme.MagicCollectionApp">
+        android:theme="@style/Theme.MagicCollectionApp"
+        android:localeConfig="@xml/locales_config">
         <activity
             android:name=".MagicCollectionActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.MagicCollectionApp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
