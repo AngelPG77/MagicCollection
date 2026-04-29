@@ -15,15 +15,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.pga.magiccollection.R
+import com.pga.magiccollection.domain.model.card.MtgLanguage
 import com.pga.magiccollection.ui.theme.ThemeColors
 
 @Composable
@@ -32,17 +37,11 @@ fun SettingsScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToGuides: () -> Unit,
-    onNavigateToContact: () -> Unit
+    onNavigateToContact: () -> Unit,
+    onNavigateToGridSize: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val preferences by viewModel.preferences.collectAsState(initial = null)
-
-    // Efecto para guardar al salir si fuera necesario (aunque ya se guarda en cada cambio)
-    DisposableEffect(Unit) {
-        onDispose {
-            // Aquí podríamos forzar un guardado final si tuviéramos estados temporales
-        }
-    }
 
     // Diálogos de Gestión de Cuenta
     if (uiState.showUpdateUsernameDialog) {
@@ -102,6 +101,35 @@ fun SettingsScreen(
         )
     }
 
+    if (uiState.showForceScanDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.showForceScanDialog(false) },
+            title = { Text(stringResource(id = R.string.dialog_force_scan_title)) },
+            text = { Text(stringResource(id = R.string.dialog_force_scan_message)) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.forceScanScryfall() }) {
+                    Text(stringResource(id = R.string.action_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.showForceScanDialog(false) }) {
+                    Text(stringResource(id = R.string.action_cancel))
+                }
+            }
+        )
+    }
+
+    if (uiState.showDownloadDialog && uiState.selectedLanguageToDownload != null) {
+        val lang = MtgLanguage.fromCode(uiState.selectedLanguageToDownload!!)
+        DownloadLanguageDialog(
+            language = lang,
+            progress = uiState.downloadProgress,
+            isDownloading = uiState.isDownloading,
+            onConfirm = { viewModel.startLanguageDownload(lang.code) },
+            onDismiss = { viewModel.showDownloadDialog(false) }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -119,6 +147,43 @@ fun SettingsScreen(
         )
 
         if (preferences != null) {
+            // Sección Datos y Sincronización
+            SettingsSection(title = stringResource(id = R.string.settings_section_general)) {
+                val lastUpdate = preferences!!.lastIndexUpdate
+                val subtitle = if (lastUpdate != null) {
+                    val formattedDate = try {
+                        val isoFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                        val date = isoFormat.parse(lastUpdate)
+                        val displayFormat = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+                        displayFormat.format(date!!)
+                    } catch (e: Exception) {
+                        lastUpdate
+                    }
+                    stringResource(id = R.string.settings_last_update, formattedDate)
+                } else {
+                    stringResource(id = R.string.settings_last_update_never)
+                }
+
+                TextSettingsItem(
+                    title = stringResource(id = R.string.settings_update_catalog),
+                    subtitle = if (uiState.isForceScanning || uiState.isUpdatingIndex) {
+                        stringResource(id = R.string.msg_syncing_progress, (uiState.indexProgress * 100).toInt())
+                    } else {
+                        subtitle
+                    },
+                    icon = Icons.Default.Refresh,
+                    onClick = { if (!uiState.isForceScanning && !uiState.isUpdatingIndex) viewModel.showForceScanDialog(true) }
+                )
+                if (uiState.isForceScanning || uiState.isUpdatingIndex) {
+                    LinearProgressIndicator(
+                        progress = { uiState.indexProgress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+            }
+
             // Sección Cuenta (Solo si está logueado)
             if (uiState.isLoggedIn) {
                 SettingsSection(title = stringResource(id = R.string.settings_section_account)) {
@@ -144,31 +209,131 @@ fun SettingsScreen(
             // Sección General
             SettingsSection(title = stringResource(id = R.string.settings_section_general)) {
                 SyncStatusItem(
-                    isSynced = uiState.collections.all { it.synced },
-                    onSyncClick = { viewModel.syncCollections() }
+                    isSynced = uiState.isProfileSynced,
+                    onSyncClick = { viewModel.syncAll() }
                 )
             }
 
             // Sección Idioma
             SettingsSection(title = stringResource(id = R.string.settings_section_language)) {
-                TextSettingsItem(
-                    title = stringResource(id = R.string.settings_search_language),
-                    subtitle = if (preferences!!.searchLanguage == "en") stringResource(id = R.string.lang_en) else stringResource(id = R.string.lang_es),
-                    icon = Icons.Default.Search,
-                    onClick = { 
-                        val newLang = if (preferences!!.searchLanguage == "en") "es" else "en"
-                        viewModel.updateSearchLanguage(newLang)
+                var showLanguageDropdown by remember { mutableStateOf(false) }
+                var itemWidth by remember { mutableIntStateOf(0) }
+                val density = LocalDensity.current
+
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .onGloballyPositioned { coordinates ->
+                        itemWidth = coordinates.size.width
                     }
-                )
-                TextSettingsItem(
-                    title = stringResource(id = R.string.settings_app_language),
-                    subtitle = if (preferences!!.appLanguage == "en") stringResource(id = R.string.lang_en) else stringResource(id = R.string.lang_es),
-                    icon = Icons.Default.Info,
-                    onClick = { 
-                        val newLang = if (preferences!!.appLanguage == "en") "es" else "en"
-                        viewModel.updateAppLanguage(newLang)
+                ) {
+                    TextSettingsItem(
+                        title = stringResource(id = R.string.settings_search_language),
+                        subtitle = MtgLanguage.fromCode(preferences!!.searchLanguage).displayName,
+                        icon = Icons.Default.Search,
+                        onClick = { showLanguageDropdown = true }
+                    )
+
+                    DropdownMenu(
+                        expanded = showLanguageDropdown,
+                        onDismissRequest = { showLanguageDropdown = false },
+                        offset = DpOffset(0.dp, 4.dp),
+                        modifier = Modifier
+                            .width(with(density) { itemWidth.toDp() })
+                            .heightIn(max = 400.dp)
+                    ) {
+                        MtgLanguage.entries.forEach { lang ->
+                            val isDownloaded = preferences!!.downloadedLanguages.contains(lang.code)
+                            val isSelected = preferences!!.searchLanguage == lang.code
+
+                            DropdownMenuItem(
+                                text = {
+                                    Column {
+                                        Text(
+                                            text = lang.displayName,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                        Text(
+                                            text = "${lang.code.uppercase()} • ${lang.estimatedSizeMb} MB",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = if (isDownloaded) {
+                                            if (isSelected) Icons.Default.CheckCircle else Icons.Default.Check
+                                        } else {
+                                            Icons.Default.FileDownload
+                                        },
+                                        contentDescription = null,
+                                        modifier = Modifier.size(28.dp),
+                                        tint = if (isDownloaded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                },
+                                onClick = {
+                                    if (isDownloaded) {
+                                        viewModel.updateSearchLanguage(lang.code)
+                                        showLanguageDropdown = false
+                                    } else {
+                                        showLanguageDropdown = false
+                                        viewModel.showDownloadDialog(true, lang.code)
+                                    }
+                                }
+                            )
+                        }
                     }
-                )
+                }
+
+                var showAppLangDropdown by remember { mutableStateOf(false) }
+                var appLangItemWidth by remember { mutableIntStateOf(0) }
+
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .onGloballyPositioned { coordinates ->
+                        appLangItemWidth = coordinates.size.width
+                    }
+                ) {
+                    TextSettingsItem(
+                        title = stringResource(id = R.string.settings_app_language),
+                        subtitle = if (preferences!!.appLanguage == "en") stringResource(id = R.string.lang_en) else stringResource(id = R.string.lang_es),
+                        icon = Icons.Default.Language,
+                        onClick = { showAppLangDropdown = true }
+                    )
+
+                    DropdownMenu(
+                        expanded = showAppLangDropdown,
+                        onDismissRequest = { showAppLangDropdown = false },
+                        offset = DpOffset(0.dp, 4.dp),
+                        modifier = Modifier.width(with(density) { appLangItemWidth.toDp() })
+                    ) {
+                        listOf("en" to R.string.lang_en, "es" to R.string.lang_es).forEach { (code, labelRes) ->
+                            val isSelected = preferences!!.appLanguage == code
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = stringResource(id = labelRes),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Default.Language,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(28.dp),
+                                        tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                },
+                                onClick = {
+                                    viewModel.updateAppLanguage(code)
+                                    showAppLangDropdown = false
+                                }
+                            )
+                        }
+                    }
+                }
             }
 
             // Sección Apariencia
@@ -187,7 +352,7 @@ fun SettingsScreen(
                     title = stringResource(id = R.string.settings_grid_size),
                     subtitle = stringResource(id = R.string.settings_grid_size_columns, preferences!!.gridSize),
                     icon = Icons.Default.Menu,
-                    onClick = { /* TODO: Slider or picker */ }
+                    onClick = onNavigateToGridSize
                 )
             }
 
@@ -207,6 +372,55 @@ fun SettingsScreen(
             }
         }
     }
+}
+
+@Composable
+fun DownloadLanguageDialog(
+    language: MtgLanguage,
+    progress: Float,
+    isDownloading: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = if (isDownloading) ({}) else onDismiss,
+        title = { Text(if (isDownloading) stringResource(id = R.string.msg_downloading_database) else stringResource(id = R.string.action_download)) },
+        text = {
+            Column {
+                if (isDownloading) {
+                    Text(stringResource(id = R.string.msg_downloading_names, language.displayName))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        text = "${(progress * 100).toInt()}%",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.align(Alignment.End)
+                    )
+                } else {
+                    Text(stringResource(id = R.string.msg_confirm_download_names, language.displayName))
+                    Text(
+                        text = stringResource(id = R.string.required_space, language.estimatedSizeMb),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            if (!isDownloading) {
+                Button(onClick = onConfirm) { Text(stringResource(id = R.string.action_download)) }
+            }
+        },
+        dismissButton = {
+            if (!isDownloading) {
+                TextButton(onClick = onDismiss) { Text(stringResource(id = R.string.action_cancel)) }
+            }
+        }
+    )
 }
 
 @Composable
@@ -250,7 +464,9 @@ fun UpdateUsernameDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(onClick = {
+                onDismiss()
+            }) {
                 Text(stringResource(id = R.string.action_cancel))
             }
         }
@@ -490,13 +706,12 @@ fun SyncStatusItem(isSynced: Boolean, onSyncClick: () -> Unit) {
         headlineContent = { Text(stringResource(id = R.string.settings_sync_status)) },
         leadingContent = { Icon(Icons.Default.Refresh, contentDescription = null) },
         trailingContent = {
-            IconButton(onClick = onSyncClick) {
-                Icon(
-                    imageVector = if (isSynced) Icons.Default.CheckCircle else Icons.Default.Close,
-                    contentDescription = null,
-                    tint = if (isSynced) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-                )
-            }
-        }
+            Icon(
+                imageVector = if (isSynced) Icons.Default.CheckCircle else Icons.Default.Close,
+                contentDescription = null,
+                tint = if (isSynced) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+            )
+        },
+        modifier = Modifier.clickable { onSyncClick() }
     )
 }

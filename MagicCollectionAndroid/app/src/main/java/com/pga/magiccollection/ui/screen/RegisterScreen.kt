@@ -86,6 +86,24 @@ fun RegisterScreen(
             singleLine = true
         )
 
+        if (isLoginMode) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = uiState.rememberMe,
+                    onCheckedChange = { viewModel.onRememberMeChanged(it) }
+                )
+                Text(
+                    text = stringResource(id = R.string.remember_me),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+
         if (uiState.authMessage != null) {
             Text(
                 text = uiState.authMessage!!,
