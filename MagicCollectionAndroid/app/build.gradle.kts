@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "com.pga.magiccollection"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.pga.magiccollection"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.5"
 
@@ -53,6 +53,10 @@ android {
     }
 }
 
+kapt {
+    correctErrorTypes = true
+}
+
 dependencies {
     // Core & Compose
     implementation(libs.androidx.core.ktx)
@@ -80,12 +84,21 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.okhttp.logging)
 
+    // Logging
+    implementation(libs.timber)
+
     // Seguridad (JWT Cifrado)
     implementation(libs.androidx.security.crypto)
 
     // Hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.hilt.work)
+    kapt(libs.androidx.hilt.compiler)
+
+    // WorkManager
+    implementation(libs.androidx.work.runtime.ktx)
 
     // Testing
     testImplementation(libs.junit)

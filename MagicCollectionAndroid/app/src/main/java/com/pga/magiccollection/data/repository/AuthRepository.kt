@@ -18,20 +18,36 @@ class AuthRepository(
         return authApi.register(RegisterRequestDto(normalizedUsername, password)).message
     }
 
-    suspend fun login(username: String, password: String) {
+    suspend fun login(username: String, password: String, rememberMe: Boolean = false) {
         val normalizedUsername = username.trim()
         require(normalizedUsername.isNotEmpty()) { "El username es obligatorio." }
         require(password.isNotBlank()) { "La password es obligatoria." }
 
-        val response = authApi.login(LoginRequestDto(normalizedUsername, password))
+        val response = authApi.login(LoginRequestDto(normalizedUsername, password, rememberMe))
         val token = response.token
         val userId = response.userId
+        val refreshToken = response.refreshToken
         
+        // Limpiar cualquier usuario previo con el mismo nombre pero distinto ID (poco probable, pero por seguridad)
         val existingUser = userDao.getUserByUsername(normalizedUsername)
-        if (existingUser == null) {
-            userDao.insertUser(UserEntity(id = userId, username = normalizedUsername))
+        if (existingUser != null && existingUser.id != userId) {
+            userDao.deleteUserById(existingUser.id)
         }
-        sessionManager.saveSession(token, userId, normalizedUsername)
+
+        userDao.insertUser(UserEntity(id = userId, username = normalizedUsername))
+        sessionManager.saveSession(token, userId, normalizedUsername, refreshToken)
+    }
+
+    suspend fun ensureUserExists() {
+        if (sessionManager.isUserLoggedIn()) {
+            val userId = sessionManager.getUserId()
+            val username = sessionManager.getUsername()
+            if (userId != -1L && username != null) {
+                if (!userDao.existsById(userId)) {
+                    userDao.insertUser(UserEntity(id = userId, username = username))
+                }
+            }
+        }
     }
 
     suspend fun updateUsername(newUsername: String): String {
@@ -44,7 +60,8 @@ class AuthRepository(
             sessionManager.saveSession(
                 token = newToken,
                 userId = userId,
-                username = newUsername
+                username = newUsername,
+                refreshToken = sessionManager.getRefreshToken()
             )
         }
         return response.message

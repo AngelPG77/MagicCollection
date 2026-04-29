@@ -2,11 +2,9 @@ package com.pga.magiccollection.di
 
 import com.pga.magiccollection.BuildConfig
 import com.pga.magiccollection.data.local.security.SessionManager
-import com.pga.magiccollection.data.remote.AuthTokenInterceptor
-import com.pga.magiccollection.data.remote.api.AuthApi
-import com.pga.magiccollection.data.remote.api.CardsApi
-import com.pga.magiccollection.data.remote.api.CollectionsApi
-import com.pga.magiccollection.data.remote.api.InventoryApi
+import com.pga.magiccollection.data.remote.AuthInterceptor
+import com.pga.magiccollection.data.remote.api.*
+import com.pga.magiccollection.data.repository.SessionRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,6 +14,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -35,7 +34,8 @@ object NetworkModule {
             android.util.Log.i("okhttp.OkHttpClient", sanitizedMessage)
         }.apply {
             level = if (BuildConfig.DEBUG) {
-                HttpLoggingInterceptor.Level.BODY
+                // Cambiado de BODY a HEADERS para evitar OOM con respuestas grandes (como el índice de cartas)
+                HttpLoggingInterceptor.Level.HEADERS
             } else {
                 HttpLoggingInterceptor.Level.BASIC
             }
@@ -44,20 +44,41 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(
+    @Named("BaseClient")
+    fun provideBaseOkHttpClient(
         loggingInterceptor: HttpLoggingInterceptor
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
-            .connectTimeout(20, TimeUnit.SECONDS)
-            .readTimeout(20, TimeUnit.SECONDS)
-            .writeTimeout(20, TimeUnit.SECONDS)
+            .connectTimeout(10, TimeUnit.MINUTES)
+            .readTimeout(10, TimeUnit.MINUTES)
+            .writeTimeout(10, TimeUnit.MINUTES)
             .build()
     }
 
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
+    @Named("AuthenticatedClient")
+    fun provideAuthenticatedOkHttpClient(
+        loggingInterceptor: HttpLoggingInterceptor,
+        sessionManager: SessionManager,
+        sessionRepository: SessionRepository,
+        authApiProvider: javax.inject.Provider<AuthApi>
+    ): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(AuthInterceptor(sessionManager, sessionRepository, authApiProvider))
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(10, TimeUnit.MINUTES)
+            .readTimeout(10, TimeUnit.MINUTES)
+            .writeTimeout(10, TimeUnit.MINUTES)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(
+        @Named("BaseClient") okHttpClient: OkHttpClient
+    ): Retrofit {
         return Retrofit.Builder()
             .baseUrl(BuildConfig.BASE_URL)
             .client(okHttpClient)
@@ -69,18 +90,8 @@ object NetworkModule {
     @Singleton
     fun provideAuthApi(
         retrofit: Retrofit,
-        sessionManager: SessionManager,
-        loggingInterceptor: HttpLoggingInterceptor
+        @Named("AuthenticatedClient") authenticatedClient: OkHttpClient
     ): AuthApi {
-        // Create an authenticated client specifically for AuthApi requests that need it
-        val authenticatedClient = OkHttpClient.Builder()
-            .addInterceptor(AuthTokenInterceptor(sessionManager))
-            .addInterceptor(loggingInterceptor)
-            .connectTimeout(20, TimeUnit.SECONDS)
-            .readTimeout(20, TimeUnit.SECONDS)
-            .writeTimeout(20, TimeUnit.SECONDS)
-            .build()
-        
         return retrofit.newBuilder()
             .client(authenticatedClient)
             .build()
@@ -91,17 +102,8 @@ object NetworkModule {
     @Singleton
     fun provideCardsApi(
         retrofit: Retrofit,
-        sessionManager: SessionManager,
-        loggingInterceptor: HttpLoggingInterceptor
+        @Named("AuthenticatedClient") authenticatedClient: OkHttpClient
     ): CardsApi {
-        val authenticatedClient = OkHttpClient.Builder()
-            .addInterceptor(AuthTokenInterceptor(sessionManager))
-            .addInterceptor(loggingInterceptor)
-            .connectTimeout(20, TimeUnit.SECONDS)
-            .readTimeout(20, TimeUnit.SECONDS)
-            .writeTimeout(20, TimeUnit.SECONDS)
-            .build()
-        
         return retrofit.newBuilder()
             .client(authenticatedClient)
             .build()
@@ -112,17 +114,8 @@ object NetworkModule {
     @Singleton
     fun provideCollectionsApi(
         retrofit: Retrofit,
-        sessionManager: SessionManager,
-        loggingInterceptor: HttpLoggingInterceptor
+        @Named("AuthenticatedClient") authenticatedClient: OkHttpClient
     ): CollectionsApi {
-        val authenticatedClient = OkHttpClient.Builder()
-            .addInterceptor(AuthTokenInterceptor(sessionManager))
-            .addInterceptor(loggingInterceptor)
-            .connectTimeout(20, TimeUnit.SECONDS)
-            .readTimeout(20, TimeUnit.SECONDS)
-            .writeTimeout(20, TimeUnit.SECONDS)
-            .build()
-        
         return retrofit.newBuilder()
             .client(authenticatedClient)
             .build()
@@ -133,20 +126,23 @@ object NetworkModule {
     @Singleton
     fun provideInventoryApi(
         retrofit: Retrofit,
-        sessionManager: SessionManager,
-        loggingInterceptor: HttpLoggingInterceptor
+        @Named("AuthenticatedClient") authenticatedClient: OkHttpClient
     ): InventoryApi {
-        val authenticatedClient = OkHttpClient.Builder()
-            .addInterceptor(AuthTokenInterceptor(sessionManager))
-            .addInterceptor(loggingInterceptor)
-            .connectTimeout(20, TimeUnit.SECONDS)
-            .readTimeout(20, TimeUnit.SECONDS)
-            .writeTimeout(20, TimeUnit.SECONDS)
-            .build()
-        
         return retrofit.newBuilder()
             .client(authenticatedClient)
             .build()
             .create(InventoryApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWantListApi(
+        retrofit: Retrofit,
+        @Named("AuthenticatedClient") authenticatedClient: OkHttpClient
+    ): WantListApi {
+        return retrofit.newBuilder()
+            .client(authenticatedClient)
+            .build()
+            .create(WantListApi::class.java)
     }
 }

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Configuración para Producción (Release) -->
+    <domain-config>
+        <domain includeSubdomains="true">api.magiccollection.com</domain>
+        <pin-set expiration="2026-12-31">
+            <!-- Sustituir por el hash SHA-256 real del certificado de producción -->
+            <pin digest="SHA-256">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</pin>
+            <!-- Pin de respaldo (Backup Pin) obligatorio -->
+            <pin digest="SHA-256">BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=</pin>
+        </pin-set>
+    </domain-config>
+
+    <!-- Configuración para Desarrollo (Debug) -->
+    <debug-overrides>
+        <trust-anchors>
+            <!-- Permite certificados de usuario y del sistema en debug -->
+            <certificates src="user" />
+            <certificates src="system" />
+        </trust-anchors>
+    </debug-overrides>
+
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

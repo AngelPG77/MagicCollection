@@ -10,6 +10,9 @@ interface AuthApi {
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequestDto): LoginResponseDto
 
+    @POST("auth/refresh-token")
+    suspend fun refreshToken(@Body request: Map<String, String>): LoginResponseDto
+
     @PUT("auth/update-username")
     suspend fun updateUsername(@Body request: UpdateUserRequestDto): UpdateUserResponseDto
 

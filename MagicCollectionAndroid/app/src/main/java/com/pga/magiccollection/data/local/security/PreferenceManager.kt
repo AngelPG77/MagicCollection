@@ -18,6 +18,8 @@ class PreferenceManager(private val context: Context) {
         private val SEARCH_LANGUAGE = stringPreferencesKey("search_language")
         private val APP_LANGUAGE = stringPreferencesKey("app_language")
         private val THEME_COLOR = stringPreferencesKey("theme_color")
+        private val DOWNLOADED_LANGS = stringPreferencesKey("downloaded_languages")
+        private val LAST_INDEX_UPDATE = stringPreferencesKey("last_index_update")
     }
 
     val darkTheme: Flow<Boolean> = context.dataStore.data.map { it[DARK_THEME] ?: false }
@@ -26,6 +28,22 @@ class PreferenceManager(private val context: Context) {
     val searchLanguage: Flow<String> = context.dataStore.data.map { it[SEARCH_LANGUAGE] ?: "en" }
     val appLanguage: Flow<String> = context.dataStore.data.map { it[APP_LANGUAGE] ?: "es" }
     val themeColor: Flow<String> = context.dataStore.data.map { it[THEME_COLOR] ?: "Purple" }
+    val lastIndexUpdate: Flow<String?> = context.dataStore.data.map { it[LAST_INDEX_UPDATE] }
+    val downloadedLanguages: Flow<Set<String>> = context.dataStore.data.map {
+        val normalized = it[DOWNLOADED_LANGS]
+            ?.split(",")
+            ?.asSequence()
+            ?.map { s -> s.trim().lowercase() }
+            ?.filter { s -> s.isNotBlank() }
+            ?.toMutableSet()
+            ?: mutableSetOf()
+        normalized.add("en")
+        normalized.toSet()
+    }
+
+    suspend fun setLastIndexUpdate(timestamp: String) {
+        context.dataStore.edit { it[LAST_INDEX_UPDATE] = timestamp }
+    }
 
     suspend fun setThemeColor(color: String) {
         context.dataStore.edit { it[THEME_COLOR] = color }
@@ -36,7 +54,7 @@ class PreferenceManager(private val context: Context) {
     }
 
     suspend fun setGridSize(size: Int) {
-        context.dataStore.edit { it[GRID_SIZE] = size.coerceIn(1, 5) }
+        context.dataStore.edit { it[GRID_SIZE] = size.coerceIn(1, 6) }
     }
 
     suspend fun setStartScreen(route: String) {
@@ -44,10 +62,25 @@ class PreferenceManager(private val context: Context) {
     }
 
     suspend fun setSearchLanguage(lang: String) {
-        context.dataStore.edit { it[SEARCH_LANGUAGE] = lang }
+        context.dataStore.edit { it[SEARCH_LANGUAGE] = lang.trim().lowercase().ifBlank { "en" } }
     }
 
     suspend fun setAppLanguage(lang: String) {
         context.dataStore.edit { it[APP_LANGUAGE] = lang }
+    }
+
+    suspend fun addDownloadedLanguage(lang: String) {
+        context.dataStore.edit { prefs ->
+            val current = prefs[DOWNLOADED_LANGS]
+                ?.split(",")
+                ?.asSequence()
+                ?.map { it.trim().lowercase() }
+                ?.filter { it.isNotBlank() }
+                ?.toMutableSet()
+                ?: mutableSetOf()
+            current.add("en")
+            current.add(lang.trim().lowercase())
+            prefs[DOWNLOADED_LANGS] = current.filter { it.isNotBlank() }.sorted().joinToString(",")
+        }
     }
 }

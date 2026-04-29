@@ -11,11 +11,13 @@ data class RegisterResponseDto(
 
 data class LoginRequestDto(
     val username: String,
-    val password: String
+    val password: String,
+    val rememberMe: Boolean = false
 )
 
 data class LoginResponseDto(
     val token: String,
+    val refreshToken: String? = null,
     val userId: Long
 )
 
