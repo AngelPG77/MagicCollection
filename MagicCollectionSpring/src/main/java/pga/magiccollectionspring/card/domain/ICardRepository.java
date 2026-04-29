@@ -1,15 +1,20 @@
 package pga.magiccollectionspring.card.domain;
 
 import pga.magiccollectionspring.shared.abstractions.IRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Domain repository interface for Card (master card catalog).
  * Handles all card catalog queries, separate from CardYouOwn (owned instances).
  */
-public interface ICardRepository extends IRepository<Card, Long> {
+public interface ICardRepository extends IRepository<Card, String> {
     // Basic lookups
     Optional<Card> findByScryfallId(String scryfallId);
 
@@ -37,7 +42,22 @@ public interface ICardRepository extends IRepository<Card, Long> {
     List<Card> findByColorAndType(String color, String type);
 
     // Utility
-    List<Card> findAllOrderByName();
+    java.util.Set<String> findAllScryfallIds();
 
     boolean existsByScryfallId(String scryfallId);
+
+    long count();
+
+    java.time.LocalDateTime findMaxLastUpdated();
+
+    Page<CardIndexView> findIndexPage(Pageable pageable);
+
+    Slice<CardIndexView> findIndexSlice(Pageable pageable);
+
+    List<CardIndexView> findIndexByScryfallIds(Set<String> scryfallIds);
+
+    Set<String> findScryfallIdsUpdatedSince(LocalDateTime since);
+
+    Set<String> findScryfallIdsByOracleIds(Set<String> oracleIds);
+
 }

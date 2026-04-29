@@ -1,14 +1,20 @@
 package pga.magiccollectionspring.card.infrastructure;
 
 import pga.magiccollectionspring.card.domain.Card;
+import pga.magiccollectionspring.card.domain.CardIndexView;
 import pga.magiccollectionspring.card.domain.ICardRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Spring Data JPA Repository for Card (MasterCard) entity.
@@ -16,7 +22,7 @@ import java.util.Optional;
  * Separate from CardYouOwn which deals with user-owned instances.
  */
 @Repository
-public interface CardRepository extends JpaRepository<Card, Long>, ICardRepository {
+public interface CardRepository extends JpaRepository<Card, String>, ICardRepository {
 
     // ========== BASIC LOOKUPS ==========
     Optional<Card> findByScryfallId(String scryfallId);
@@ -88,11 +94,81 @@ public interface CardRepository extends JpaRepository<Card, Long>, ICardReposito
     List<Card> findByColorAndType(@Param("color") String color, @Param("type") String type);
 
     /**
-     * Pagination support for browsing large card library
+     * Optimization: Get all existing Scryfall IDs in one go
      */
-    @Query("SELECT c FROM Card c ORDER BY c.name ASC")
-    List<Card> findAllOrderByName();
+    @Query("SELECT c.scryfallId FROM Card c")
+    java.util.Set<String> findAllScryfallIds();
 
     // ========== EXISTENCE CHECKS ==========
     boolean existsByScryfallId(String scryfallId);
+
+    @Query("SELECT MAX(c.lastUpdated) FROM Card c")
+    java.time.LocalDateTime findMaxLastUpdated();
+
+    @Override
+    @Query(
+            value = """
+                    SELECT
+                        c.oracleId AS oracleId,
+                        c.scryfallId AS scryfallId,
+                        c.name AS name,
+                        c.colorMask AS colorMask,
+                        c.identityMask AS identityMask,
+                        c.manaCost AS manaCost,
+                        c.cmc AS cmc,
+                        c.rarityRank AS rarityRank,
+                        c.typeLine AS typeLine,
+                        c.setCode AS setCode,
+                        c.imageSmallUrl AS imageSmallUrl
+                    FROM Card c
+                    """,
+            countQuery = "SELECT COUNT(c) FROM Card c"
+    )
+    Page<CardIndexView> findIndexPage(Pageable pageable);
+
+    @Override
+    @Query("""
+            SELECT
+                c.oracleId AS oracleId,
+                c.scryfallId AS scryfallId,
+                c.name AS name,
+                c.colorMask AS colorMask,
+                c.identityMask AS identityMask,
+                c.manaCost AS manaCost,
+                c.cmc AS cmc,
+                c.rarityRank AS rarityRank,
+                c.typeLine AS typeLine,
+                c.setCode AS setCode,
+                c.imageSmallUrl AS imageSmallUrl
+            FROM Card c
+            """)
+    Slice<CardIndexView> findIndexSlice(Pageable pageable);
+
+    @Override
+    @Query("""
+            SELECT
+                c.oracleId AS oracleId,
+                c.scryfallId AS scryfallId,
+                c.name AS name,
+                c.colorMask AS colorMask,
+                c.identityMask AS identityMask,
+                c.manaCost AS manaCost,
+                c.cmc AS cmc,
+                c.rarityRank AS rarityRank,
+                c.typeLine AS typeLine,
+                c.setCode AS setCode,
+                c.imageSmallUrl AS imageSmallUrl
+            FROM Card c
+            WHERE c.scryfallId IN :scryfallIds
+            ORDER BY c.scryfallId ASC
+            """)
+    List<CardIndexView> findIndexByScryfallIds(@Param("scryfallIds") Set<String> scryfallIds);
+
+    @Override
+    @Query("SELECT c.scryfallId FROM Card c WHERE c.lastUpdated > :since")
+    Set<String> findScryfallIdsUpdatedSince(@Param("since") LocalDateTime since);
+
+    @Override
+    @Query("SELECT c.scryfallId FROM Card c WHERE c.oracleId IN :oracleIds")
+    Set<String> findScryfallIdsByOracleIds(@Param("oracleIds") Set<String> oracleIds);
 }
