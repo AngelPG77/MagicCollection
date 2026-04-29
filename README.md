@@ -2,444 +2,286 @@
 
 Sistema completo para gestionar colecciones de cartas de *Magic: The Gathering* con:
 
-- Backend Java/Spring (`MagicCollectionSpring`)
-- App Android Kotlin/Compose (`MagicCollectionAndroid`)
+- **Backend** Java/Spring (`MagicCollectionSpring`)
+- **App Android** Kotlin/Compose (`MagicCollectionAndroid`)
 
 ## Estructura del repositorio
 
 ```text
 MagicCollection/
-├── MagicCollectionSpring/     # API REST + MySQL + JWT + Scryfall
-└── MagicCollectionAndroid/    # App Android (Compose + Room + Retrofit)
+├── MagicCollectionSpring/     # API REST + MySQL + JWT + sincronización Scryfall
+└── MagicCollectionAndroid/    # App Android (Compose + Room + Retrofit + Hilt + WorkManager)
 ```
 
 ## Estado actual (implementado)
 
 ### Backend (`MagicCollectionSpring`)
 
-- Autenticación con JWT (`register`, `login`, actualización de usuario y password, borrado de usuario).
-- Gestión de colecciones por usuario autenticado (CRUD).
-- Inventario de cartas poseídas (`cards_owned`) con cantidad, condición, idioma y foil.
-- Catálogo maestro de cartas (`master_cards`) con búsqueda local y descubrimiento vía Scryfall.
-- Integración con Scryfall para búsqueda y carga de cartas no existentes en catálogo local.
+- Autenticación con JWT (`register`, `login`, actualización de usuario/contraseña, borrado de cuenta).
+- Soporte de **refresh token** (`/auth/refresh-token`) para sesiones persistentes.
+- CRUD de colecciones por usuario autenticado.
+- Inventario de cartas poseidas (`cards_owned`) con merge por variante (idioma/condicion/foil).
+- Modulo de **WantList** completo (`want_lists` + `want_list_cards`).
+- Catalogo maestro de cartas con sincronización parcial/completa desde Scryfall.
+- Sincronización de expansiones (`mtg_sets`).
+- Indices multiidioma con manifest/snapshot/delta/build logs.
+- Programación de sincronización periodica y health indicator del indice.
 - Swagger/OpenAPI habilitado.
 
 ### Android (`MagicCollectionAndroid`)
 
-- Pantalla Compose de demo funcional con flujo completo:
-  - Registro y login
-  - Búsqueda de cartas contra backend (que consulta Scryfall)
-  - Creación de colección local (offline-first)
-  - Sincronización manual de colecciones locales pendientes al backend
-- Persistencia local con Room.
-- Sesión local cifrada (`EncryptedSharedPreferences`).
-- Arquitectura MVVM + Use Cases + Repositories (la UI no accede directamente a repositorios).
-- Inyección de dependencias por constructor/factory (DI manual en `MainActivity`).
+- UI Compose con navegacion por pantallas (home, busqueda, detalle, ajustes, auth, wantlists, etc.).
+- Arquitectura **MVVM + Use Cases + Repositories**.
+- Inyeccion de dependencias con **Hilt**.
+- Persistencia local con **Room** (version 13) y sincronización offline-first.
+- Busqueda local con **FTS4** (`card_names_fts`) + filtros por metadatos (`master_cards`).
+- Descarga de idiomas en segundo plano con **WorkManager** (`DownloadLanguageWorker`).
+- Sesion local cifrada (`EncryptedSharedPreferences`) con JWT + refresh token.
+- Interceptor de red con refresco automatico de token ante `401`.
 
 ## Arquitectura y patrones
 
 ### Backend
 
-- Estructura modular por dominios (`auth`, `card`, `collection`, `inventory`, `user`, `shared`).
-- Patrón por capas: **Controller → Application Service → Repository/Domain**.
-- CQRS ligero en capa de aplicación (`Command/Query/Response` + `ICommandService` / `IQueryService`).
-- Repositorios de dominio por interfaz + implementación con Spring Data JPA.
-- Mappers dedicados para separar entidades de DTOs.
-- Seguridad desacoplada con `CurrentUserProvider` inyectable.
+- Monolito modular por dominio: `auth`, `user`, `card`, `collection`, `inventory`, `wantlist`, `shared`.
+- Patrón por capas: **Controller -> Application Service -> Repository/Domain**.
+- CQRS ligero para comandos/consultas.
+- Contratos de servicio/repositorio en `shared/abstractions` y dominio.
+- Seguridad desacoplada con `CurrentUserProvider` y filtros JWT.
 
 ### Android
 
-- **MVVM** con `MainViewModel` y `StateFlow<MainUiState>`.
-- **Use Cases** para encapsular acciones de negocio (`LoginUseCase`, `SearchCardsUseCase`, etc.).
-- **Repository pattern** para acceso a datos remotos/locales.
-- **Offline-first** en colecciones: persistencia local + sincronización explícita.
-- Separación de responsabilidades en DAO:
-  - `CardOwnedDao`: operaciones CRUD/base
-  - `CardOwnedQueryDao`: búsquedas/filtros complejos
-
-## Refactorización
-
-Este apartado resume la refactorización aplicada y el estado resultante de la arquitectura en ambos proyectos.
-
-### Backend (`MagicCollectionSpring`)
-
-- Se consolidó una estructura **monolítica modular** por dominio: `auth`, `user`, `card`, `collection`, `inventory` y `shared`.
-- Se reforzó el estilo **Ports & Adapters (Hexagonal)**:
-  - `domain`: entidades + contratos (`IUserRepository`, `ICardRepository`, etc.).
-  - `application`: casos de uso command/query.
-  - `infrastructure`: implementaciones JPA y adaptadores técnicos (`ScryfallAdapter`).
-  - `api`: controladores REST + DTOs + mappers.
-- Se aplica **CQRS ligero**:
-  - Escritura: servicios command (`CreateCollectionService`, `AddCardService`, etc.).
-  - Lectura: servicios query (`GetCollectionsByUserService`, `SearchGlobalService`, etc.).
-  - Lecturas asíncronas para I/O externo (`IQueryServiceAsync`) en búsquedas Scryfall.
-- Se homogenizó la capa de servicios con contratos compartidos:
-  - `ICommandService<TCommand, TResponse>`
-  - `IQueryService<TQuery, TResponse>`
-  - `IQueryServiceAsync<TQuery, TResponse>`
-  - `IRepository<T, ID>`
-- Se mejoró la DI y testabilidad:
-  - Inyección por constructor en controladores/servicios/componentes.
-  - Sin uso de `@Autowired` en campos.
-  - Introducción de `CurrentUserProvider` para desacoplar lógica de negocio del acceso directo al `SecurityContextHolder`.
-- Se centralizó el manejo de errores en `GlobalExceptionHandler` para eliminar manejo repetitivo en controladores.
-
-### Android (`MagicCollectionAndroid`)
-
-- Se consolidó la arquitectura **MVVM + Use Cases + Repositories** para impedir que la UI modifique repositorios directamente.
-- Flujo de dependencias actual:
-  - `Compose UI` -> `MainViewModel` -> `UseCase` -> `Repository` -> `Room/Retrofit`.
-- Se aplicó separación explícita de responsabilidades:
-  - `MainUiState` para estado único de pantalla.
-  - `MainViewModel` para orquestación de casos de uso, estado y mensajes UI.
-  - Repositorios dedicados por contexto (`AuthRepository`, `CardSearchRepository`, `CollectionSyncRepository`, `SessionRepository`).
-- Se reforzó el patrón de persistencia offline-first en colecciones:
-  - creación local con marca `synced = false`,
-  - sincronización manual con backend.
-- DI actual en Android:
-  - Inyección por constructor/factory (composition root en `MainActivity` + `MainViewModel.Factory`).
-
-## Diseño de Base de Datos
-
-### Tablas de MySQL (backend Spring/JPA)
-
-#### `users`
-
-- Objetivo: almacenar identidad y credenciales de autenticación.
-- Columnas:
-  - `id` (PK, `Long`, auto-increment): identificador interno estable.
-  - `username` (único, no nulo): clave funcional de login.
-  - `password` (no nulo): hash de contraseña.
-- Claves:
-  - PK: `id` por simplicidad referencial y rendimiento en joins.
-  - Restricción única: `username` para evitar colisiones de cuenta.
-
-#### `collections`
-
-- Objetivo: representar carpetas/lotes de cartas propiedad de un usuario.
-- Columnas:
-  - `id` (PK, auto-increment): identificador interno de colección.
-  - `name` (no nulo): nombre visible de la colección.
-  - `user_id` (FK -> `users.id`, no nulo): propietario.
-- Claves:
-  - PK: `id` para operaciones CRUD directas.
-  - FK: `user_id` para ownership y autorización por usuario.
-- Razón de diseño:
-  - permite colecciones con mismo nombre entre usuarios distintos,
-  - permite validar unicidad por usuario en capa de servicio/repositorio.
-
-#### `master_cards`
-
-- Objetivo: catálogo maestro de cartas (local cache + datos enriquecidos de Scryfall).
-- Columnas:
-  - `id` (PK, auto-increment): id interno para relaciones.
-  - `name` (no nulo): nombre de carta.
-  - `set_code` (no nulo): edición/set.
-  - `scryfall_id` (único, no nulo): identificador global externo.
-  - `oracle_text` (texto): reglas de carta.
-  - `type_line` (texto): tipo/subtipo.
-  - `mana_cost` (texto): coste de maná.
-  - `converted_mana_cost` (entero): CMC para filtros.
-- Claves:
-  - PK: `id` para joins internos rápidos.
-  - Única: `scryfall_id` para evitar duplicados globales del catálogo.
-
-#### `cards_owned`
-
-- Objetivo: inventario físico poseído por usuario a través de sus colecciones.
-- Columnas:
-  - `id` (PK, auto-increment): identificador de registro poseído.
-  - `quantity` (no nulo): número de copias.
-  - `is_foil` (no nulo): variante foil/no foil.
-  - `card_condition` (enum texto, no nulo): estado de conservación.
-  - `language` (enum texto): idioma.
-  - `collection_id` (FK -> `collections.id`, no nulo): colección propietaria.
-  - `card_master_id` (FK -> `master_cards.id`, no nulo): carta del catálogo.
-- Claves:
-  - PK: `id` para edición/eliminación de registros específicos.
-  - FKs: `collection_id` y `card_master_id` para integridad referencial.
-- Razón de diseño:
-  - desacopla catálogo maestro de la variante física,
-  - permite múltiples variantes por carta (condición/idioma/foil) y consolidación de cantidad.
-
-### Tablas de Room (Android)
-
-#### `users`
-
-- Objetivo: cache local de usuarios conocidos por el dispositivo.
-- Columnas:
-  - `id` (PK manual): id local asociado a sesión.
-  - `username`: nombre de usuario.
-- Claves:
-  - PK simple por consistencia con el resto de tablas locales.
-
-#### `collections`
-
-- Objetivo: persistir colecciones locales para flujo offline-first.
-- Columnas:
-  - `localId` (PK autogenerada): identificador local estable.
-  - `remoteId` (nullable): id remoto cuando sincroniza con backend.
-  - `name`: nombre de colección.
-  - `userId`: propietario local.
-  - `synced`: bandera de estado de sincronización.
-- Claves:
-  - PK: `localId` para operaciones locales inmediatas.
-  - FK: `userId` -> `users.id` (`ON DELETE CASCADE`).
-  - Índice en `userId` para consultas por usuario (`observeCollectionsByUserId`).
-- Razón de diseño:
-  - diferencia explícita entre identidad local y remota,
-  - permite colas de sincronización sin bloquear UX.
-
-#### `master_cards`
-
-- Objetivo: catálogo maestro en local para búsquedas y joins de inventario.
-- Columnas:
-  - `scryfallId` (PK): clave natural global.
-  - `remoteId` (nullable): id interno remoto (si aplica).
-  - `name`, `setCode`, `oracleText`, `typeLine`.
-  - `manaCost`, `convertedManaCost`.
-  - `imageUrl`.
-- Claves:
-  - PK natural (`scryfallId`) para alineación directa con API externa y joins locales.
-
-#### `cards_owned`
-
-- Objetivo: guardar instancias poseídas con granularidad por variante.
-- Columnas:
-  - `scryfallId`: carta base.
-  - `collectionId`: colección local.
-  - `language`: variante por idioma.
-  - `condition`: variante por condición.
-  - `isFoil`: variante foil.
-  - `quantity`: cantidad acumulada.
-  - `remoteId` (nullable): referencia remota al sincronizar.
-  - `Synced`: estado de sincronización.
-- Claves:
-  - PK compuesta:
-    - (`scryfallId`, `collectionId`, `language`, `condition`, `isFoil`)
-- Razón de diseño de PK compuesta:
-  - evita duplicados exactos de la misma variante,
-  - permite merge de cantidad cuando la carta/variante ya existe.
-- Nota técnica actual:
-  - esta entidad no declara `foreignKeys` de Room explícitos, aunque su modelo lógico se relaciona con `collections` y `master_cards`.
-
-## Funcionalidades actuales
-
-### 1. Autenticación y sesión
-
-- Backend:
-  - registro (`/auth/register`), login (`/auth/login`),
-  - actualización de username/password,
-  - borrado de cuenta autenticada.
-- Seguridad:
-  - JWT stateless,
-  - endpoints protegidos para colecciones e inventario,
-  - resolución de usuario actual via `CurrentUserProvider`.
-- Android:
-  - persistencia de token + usuario en `EncryptedSharedPreferences`,
-  - recuperación automática de estado de sesión al iniciar,
-  - interceptor HTTP que agrega `Authorization: Bearer`.
-
-### 2. Catálogo de cartas y búsqueda
-
-- Descubrimiento remoto:
-  - `/cards/discover?query=...` consulta Scryfall vía backend.
-- Búsqueda exacta por nombre:
-  - `/cards/search?name=...` consulta catálogo local y, si no existe, obtiene de Scryfall y persiste.
-- Consulta de librería local:
-  - `/cards/library` y `/cards/{id}`.
-- Campos de coste de maná:
-  - `manaCost` y `convertedManaCost` disponibles en backend y Android para búsquedas/filtros.
-
-### 3. Gestión de colecciones
-
-- Backend:
-  - crear/listar/obtener/actualizar/eliminar colecciones.
-  - validación de ownership por usuario autenticado.
-  - validación de conflicto por nombre duplicado del mismo owner.
-- Android:
-  - creación local de colecciones aun sin sincronizar.
-  - observación reactiva de colecciones locales por usuario.
-
-### 4. Inventario de cartas poseídas
-
-- Backend:
-  - alta de carta en colección (`/your-cards/add`) con validación de ownership.
-  - merge de cantidad si la misma variante ya existe (misma carta + condición + idioma + foil).
-  - actualización de registros con lógica de consolidación de variantes.
-  - eliminación de registro poseído.
-  - búsquedas:
-    - por colección,
-    - global del usuario,
-    - por tipo.
-- Diseño funcional:
-  - separación entre catálogo (`master_cards`) e instancia poseída (`cards_owned`) evita duplicidad semántica.
-
-### 5. Offline-first y sincronización
-
-- Flujo actual Android:
-  1. usuario logueado crea colección local (`synced=false`);
-  2. la colección aparece al instante en UI;
-  3. al pulsar **Sincronizar**, se crean en backend las pendientes;
-  4. se marcan como `synced=true` y se guarda `remoteId`.
-- Beneficio:
-  - UX sin bloqueo de red,
-  - reintento manual controlado por usuario.
-
-### 6. UX y capa de presentación Android
-
-- Pantalla Compose única de demo con bloques funcionales:
-  - auth, búsqueda, creación local, sincronización, listado.
-- `MainViewModel` controla:
-  - loading states por operación,
-  - mensajes de éxito/error,
-  - sesión activa,
-  - resultados de búsqueda,
-  - lista de colecciones locales.
-- Manejo de errores diferenciado:
-  - validación local (`IllegalArgumentException`),
-  - errores HTTP,
-  - errores de conectividad (`IOException`).
-
-## Cumplimiento de requisitos del Informe Técnico (11/03/2026)
-
-### 1) Estructura de directorios (Monolito Modular)
-
-**Cumplido.**  
-El backend mantiene estructura modular por dominio:
-
-- `shared`
-- `auth`
-- `user`
-- `card`
-- `collection`
-- `inventory`
-
-### 2) Definición de la arquitectura
-
-#### Monolito Modular
-
-**Cumplido.**  
-Los módulos tienen responsabilidades diferenciadas y contratos de dominio explícitos.
-
-#### Arquitectura Hexagonal (Ports & Adapters)
-
-**Cumplido en el backend.**  
-El dominio define interfaces (repositorios/puertos) y la infraestructura implementa detalles técnicos (JPA, cliente Scryfall).
-
-#### CQRS
-
-**Cumplido.**  
-Separación efectiva entre comandos y consultas; además, consultas asíncronas para integraciones I/O.
-
-### 3) Contratos y calidad de código
-
-#### Abstracciones genéricas
-
-**Cumplido.**  
-Se usan contratos en `shared/abstractions`: `ICommandService`, `IQueryService`, `IQueryServiceAsync`, `IRepository` (más `IMapper` como contrato adicional de mapeo).
-
-#### Inyección de dependencias limpia
-
-**Cumplido.**  
-No se detecta `@Autowired` en campos y la inyección se realiza por constructor.
-
-### 4) Métricas de impacto (estado actual medido)
-
-Medición realizada sobre el código actual:
-
-- Archivos Java: **115**
-- Carpetas de paquete (recursivo): **61**
-- Módulos de dominio principales: **5** (`auth`, `user`, `card`, `collection`, `inventory`) + `shared`
-- Archivos en `shared/abstractions`: **5**
-- Archivos en `shared/exception`: **5** (incluye `GlobalExceptionHandler` + excepciones de dominio)
-- `try/catch` en controladores: **0**
-- `@Autowired` en campos: **0**
-
-Conclusión de cumplimiento frente al informe:  
-Se cumplen los requisitos estructurales, de patrones y de calidad definidos en el informe técnico; además, las métricas actuales mantienen (y en varios puntos superan) la escala de modularización indicada.
-
-## Requisitos
-
-### Generales
-
-- Windows + PowerShell (comandos de este README orientados a Windows).
-
-### Backend
-
-- Java 21
-- MySQL (configurado en `MagicCollectionSpring/src/main/resources/application.properties`)
-
-Valores actuales:
-
-- `spring.datasource.url=jdbc:mysql://localhost:3307/mtg_db`
-- `spring.datasource.username=root`
-- `spring.datasource.password=root`
-- `server.port=8080`
-
-### Android
-
-- Android Studio reciente
-- Emulador Android activo
-- SDK de compilación 36
-- Min SDK 26
-
-## Ejecución rápida
-
-## 1) Levantar backend
-
-```powershell
-cd .\MagicCollectionSpring
-.\mvnw.cmd spring-boot:run
-```
-
-API base: `http://localhost:8080`
-
-Swagger UI: `http://localhost:8080/swagger-ui/index.html`
-
-## 2) Levantar app Android
-
-Abre `MagicCollectionAndroid` en Android Studio y ejecuta en emulador.
-
-La app usa:
-
-- `http://10.0.2.2:8080/` como base URL (acceso del emulador al host local)
-
-## 3) Flujo recomendado de prueba end-to-end
-
-1. Registrar usuario en la app.
-2. Loguear usuario.
-3. Buscar cartas (backend + Scryfall).
-4. Crear colección local (queda pendiente de sync).
-5. Pulsar **Sincronizar** para enviarla al backend.
+- `Compose UI -> ViewModel -> UseCase -> Repository -> Room/Retrofit`.
+- Estado de UI centralizado por pantalla (`UiState` + `StateFlow`).
+- Persistencia local desacoplada por DAOs especializados.
+- Sincronización explicita de entidades locales con backend (`synced`, `pendingDelete`, `remoteId`).
+
+## Estructura de Base de Datos (detalle completo)
+
+El proyecto usa **dos almacenes distintos**:
+
+1. **MySQL (Spring Boot/Hibernate)** para la persistencia de servidor.
+2. **Room/SQLite (Android)** para cache local, busqueda offline y cola de sincronización.
+
+---
+
+## Java Spring Boot (MySQL + JPA/Hibernate)
+
+### 1) `users`
+- **Objetivo:** identidad base de usuario para autenticación/autorización.
+- **Clave primaria:** `id` (auto incremental).
+- **Campos clave:** `username` (unico), `password` (hash).
+- **Utilidad:** ancla de ownership para colecciones y wantlists; origen de identidad para JWT.
+
+### 2) `refresh_tokens`
+- **Objetivo:** persistir refresh tokens de larga duracion.
+- **Clave primaria:** `id`.
+- **Campos clave:** `user_id`, `token` (unico), `expiry_date`.
+- **Utilidad:** renovar JWT sin re-login cuando el usuario marcó `rememberMe`.
+
+### 3) `collections`
+- **Objetivo:** contenedor de cartas del usuario.
+- **Clave primaria:** `id`.
+- **Relaciones:** FK `user_id -> users.id`.
+- **Campos clave:** `name`, `user_id`.
+- **Utilidad:** base del inventario (`cards_owned`) y validaciones de ownership.
+
+### 4) `cards_owned`
+- **Objetivo:** inventario real poseido por el usuario dentro de colecciones.
+- **Clave primaria:** `id`.
+- **Relaciones:** FK `collection_id -> collections.id`, FK `card_master_id -> master_cards.scryfall_id`.
+- **Restricciones:** unique compuesta (`collection_id`, `card_master_id`, `is_foil`, `card_condition`, `language`).
+- **Campos clave:** `quantity`, `is_foil`, `card_condition`, `language`.
+- **Utilidad:** evita duplicar variantes identicas y permite merge de cantidades.
+
+### 5) `want_lists`
+- **Objetivo:** listas de cartas deseadas por usuario.
+- **Clave primaria:** `id`.
+- **Relaciones:** FK `user_id -> users.id`.
+- **Restricciones:** unique (`name`, `user_id`).
+- **Utilidad:** separar intencion de compra/interes del inventario poseido.
+
+### 6) `want_list_cards`
+- **Objetivo:** items de cada wantlist.
+- **Clave primaria:** `id`.
+- **Relaciones:** FK `want_list_id -> want_lists.id`.
+- **Campos clave:** `scryfall_id`, `name`, `quantity`, `foil`, `condition`, `language`.
+- **Utilidad:** granularidad por variante objetivo (idioma/estado/foil) para seguimiento de objetivos.
+
+### 7) `master_cards`
+- **Objetivo:** catalogo maestro de cartas sincronizado con Scryfall.
+- **Clave primaria:** `scryfall_id` (String, natural key global).
+- **Indices:** `idx_card_name` sobre `name`.
+- **Campos clave:** `oracle_id`, `name`, `printed_name`, `set_code`, `type_line`, `mana_cost`, `cmc`, `rarity`, `rarity_rank`, `color_mask`, `identity_mask`, `image_small_url`, `last_updated`.
+- **Utilidad:** fuente canonica para busqueda, inventario y metadatos de filtro.
+
+### 8) `card_localizations`
+- **Objetivo:** nombre localizado por carta semantica (oracle) e idioma.
+- **Clave primaria compuesta:** (`oracle_id`, `language_code`) via `@EmbeddedId`.
+- **Indices:** idioma (`idx_card_loc_lang`) y oracle (`idx_card_loc_oracle`).
+- **Campos clave:** `localized_name`, `last_updated`.
+- **Utilidad:** soporta busqueda y snapshots multiidioma sin duplicar toda la carta.
+
+### 9) `mtg_sets`
+- **Objetivo:** catalogo local de expansiones.
+- **Clave primaria:** `id`.
+- **Restricciones:** `code` unico.
+- **Campos clave:** `code`, `name`, `release_date`.
+- **Utilidad:** filtros por set y sincronización de metadata desde Scryfall.
+
+### 10) `card_catalog_sync_state`
+- **Objetivo:** control de version remota por tipo de bulk de Scryfall.
+- **Clave primaria:** `bulk_type`.
+- **Campos clave:** `remote_version_token`, `last_synced_at`.
+- **Utilidad:** evita descargas completas innecesarias si no cambió `default_cards` / `all_cards`.
+
+### 11) `index_language_state`
+- **Objetivo:** estado publicado del indice por idioma.
+- **Clave primaria:** `language_code`.
+- **Campos clave:** `version`, `checksum`, `total_rows`, `generated_at`, `source_last_updated`, `status`, `artifact_path`.
+- **Utilidad:** base para `manifest`, validacion de staleness y control de salud.
+
+### 12) `index_language_stage_row`
+- **Objetivo:** staging temporal de filas durante una reconstrucción de indice.
+- **Clave primaria compuesta:** (`build_token`, `language_code`, `scryfall_id`).
+- **Campos clave:** `localized_name`, `row_hash`.
+- **Utilidad:** comparar build nueva contra estado previo antes de publicar delta.
+
+### 13) `index_language_row_state`
+- **Objetivo:** estado materializado por carta/idioma del ultimo indice publicado.
+- **Clave primaria compuesta:** (`language_code`, `scryfall_id`).
+- **Campos clave:** `localized_name`, `row_hash`, `last_version`, `deleted`, `updated_at`, `deleted_at`.
+- **Utilidad:** detectar cambios reales (upsert/delete) entre versiones.
+
+### 14) `index_language_delta_entry`
+- **Objetivo:** registro de cambios incrementales entre versiones de indice.
+- **Clave primaria:** `id`.
+- **Campos clave:** `language_code`, `target_version`, `target_version_long`, `scryfall_id`, `change_type`, `localized_name`, `created_at`.
+- **Utilidad:** alimentar endpoint delta para clientes que ya tienen una version previa.
+
+### 15) `index_build_log`
+- **Objetivo:** auditoria y observabilidad de cada build de indice.
+- **Clave primaria:** `id`.
+- **Campos clave:** `language_code`, `version`, `status`, `started_at`, `finished_at`, `duration_ms`, `total_rows`, `upserts_count`, `deletes_count`, `checksum`, `build_token`, `error_message`.
+- **Utilidad:** diagnostico operativo, troubleshooting y metricas historicas.
+
+---
+
+## Android (Room/SQLite)
+
+### 1) `users`
+- **Objetivo:** cache local de usuarios conocidos por el dispositivo.
+- **Clave primaria:** `id` (remoto).
+- **Campos clave:** `username`.
+- **Utilidad:** resolver ownership local sin depender de red en cada pantalla.
+
+### 2) `collections`
+- **Objetivo:** colecciones locales offline-first.
+- **Clave primaria:** `localId` (autogenerada).
+- **Relaciones:** FK `userId -> users.id` (`ON DELETE CASCADE`), indice por `userId`.
+- **Campos clave:** `remoteId`, `name`, `synced`, `pendingDelete`.
+- **Utilidad:** separar identidad local/remota y soportar cola de alta/borrado.
+
+### 3) `cards_owned`
+- **Objetivo:** cartas poseidas en local por variante.
+- **Clave primaria compuesta:** (`scryfallId`, `collectionId`, `language`, `condition`, `isFoil`).
+- **Relaciones:** FK `collectionId -> collections.localId` (`ON DELETE CASCADE`), indice por `collectionId`.
+- **Campos clave:** `remoteId`, `quantity`, `synced`, `pendingDelete`.
+- **Utilidad:** merge de variantes iguales y sincronización robusta con backend.
+
+### 4) `want_lists`
+- **Objetivo:** listas de deseo locales.
+- **Clave primaria:** `localId` (autogenerada).
+- **Relaciones:** FK `userId -> users.id`, indice por `userId`, unique (`name`, `userId`).
+- **Campos clave:** `remoteId`, `name`, `synced`, `pendingDelete`.
+- **Utilidad:** CRUD offline y sincronización posterior contra `/wantlists`.
+
+### 5) `want_list_cards`
+- **Objetivo:** items de cada wantlist en local.
+- **Clave primaria:** `localId` (autogenerada).
+- **Relaciones:** FK `wantListLocalId -> want_lists.localId`, indice por `wantListLocalId`.
+- **Campos clave:** `remoteId`, `scryfallId`, `quantity`, `foil`, `condition`, `language`, `synced`, `pendingDelete`.
+- **Utilidad:** seguimiento fino de objetivos por variante y cola de sincronización.
+
+### 6) `master_cards`
+- **Objetivo:** metadata local de cartas para render y filtros de busqueda.
+- **Clave primaria:** `scryfallId`.
+- **Indices:** `name`, `typeLine`, `colorMask`, `identityMask`, `rarityRank`, `cmc`.
+- **Campos clave:** `printedName`, `setCode`, `manaCost`, `convertedManaCost`, `cmc`, `rarityRank`, `imageUrl`, `isDigital`.
+- **Utilidad:** evita depender de red para filtros/paginación local.
+
+### 7) `card_names_fts` (FTS4 virtual table)
+- **Objetivo:** busqueda textual ultrarapida por nombres.
+- **Tecnica:** FTS4 (`unicode61`), `language` marcado como `notIndexed`.
+- **Campos clave:** `card_id`, `name`, `language`.
+- **Utilidad:** autocompletado y busqueda por prefijos en local, con fallback por idioma.
+
+### 8) `downloaded_languages`
+- **Objetivo:** registrar idiomas descargados en el dispositivo.
+- **Clave primaria:** `languageCode`.
+- **Campos clave:** `downloadedAt`.
+- **Utilidad:** evita redescargas innecesarias y habilita UX de idiomas instalados.
+
+### 9) `language_index_state`
+- **Objetivo:** estado local de instalacion del indice por idioma.
+- **Clave primaria:** `languageCode`.
+- **Campos clave:** `installedVersion`, `checksum`, `rowCount`, `lastSyncAt`, `status`, `lastError`.
+- **Utilidad:** control de progreso, validacion de integridad y reintentos de sincronización.
+
+### 10) `mtg_sets`
+- **Objetivo:** cache local de expansiones.
+- **Clave primaria:** `code`.
+- **Campos clave:** `name`, `releaseDate`.
+- **Utilidad:** filtros por set desde app sin consultar backend en cada interacción.
+
+### 11) `recent_cards`
+- **Objetivo:** historial corto de cartas visitadas.
+- **Clave primaria:** `scryfallId`.
+- **Campos clave:** `name`, `imageUrl`, `visitedAt`.
+- **Utilidad:** mostrar recientes y mejorar navegacion/reengagement.
+
+---
 
 ## Endpoints principales del backend
 
 ### Auth
-
 - `POST /auth/register`
-- `POST /auth/login`
+- `POST /auth/login` (incluye `rememberMe`)
+- `POST /auth/refresh-token`
 - `PUT /auth/update-username`
 - `PUT /auth/update-password`
 - `DELETE /auth/delete`
 
-### Cartas (catálogo)
-
-- `GET /cards/search?name=...`
-- `GET /cards/discover?query=...`
+### Cartas y catalogo
+- `GET /cards/search?name=...&lang=...`
+- `GET /cards/discover?...` (filtros avanzados)
+- `GET /cards/autocomplete?query=...`
+- `GET /cards/random`
+- `GET /cards/scryfall/{id}?lang=...`
 - `GET /cards/library`
 - `GET /cards/{id}`
+- `POST /cards/sync-full`
+- `GET /cards/sets`
+
+### Indice multiidioma
+- `GET /cards/index/version`
+- `GET /cards/index/languages`
+- `GET /cards/index/{lang}/manifest`
+- `GET /cards/index/{lang}/page?offset=...&limit=...`
+- `GET /cards/index/{lang}/delta?sinceVersion=...`
+- `GET /cards/index/{lang}/builds?limit=...`
+- `POST /cards/index/rebuild/{lang}`
+- `GET /cards/index/{lang}/snapshot`
+- `GET /cards/index/{lang}/names/snapshot`
 
 ### Colecciones
-
 - `POST /collections`
 - `GET /collections`
 - `GET /collections/{id}`
 - `PUT /collections/{id}`
 - `DELETE /collections/{id}`
 
-### Inventario (cartas poseídas)
-
+### Inventario
 - `POST /your-cards/add`
 - `PUT /your-cards/update/{id}`
 - `DELETE /your-cards/delete/{id}`
@@ -448,18 +290,61 @@ La app usa:
 - `GET /your-cards/search/collection/{collectionId}?term=...`
 - `GET /your-cards/search/type?type=...`
 
-## Build local (verificación rápida)
+### WantList
+- `GET /wantlists`
+- `GET /wantlists/{id}`
+- `POST /wantlists`
+- `PUT /wantlists/{id}`
+- `DELETE /wantlists/{id}`
+- `POST /wantlists/{id}/cards`
+- `PUT /wantlists/{id}/cards/{cardId}`
+- `DELETE /wantlists/{id}/cards/{cardId}`
+
+## Requisitos
+
+### Backend
+- Java 21
+- MySQL
+- Config en `MagicCollectionSpring/src/main/resources/application.properties`:
+  - `spring.datasource.url=jdbc:mysql://localhost:3307/mtg_db`
+  - `spring.datasource.username=${DB_USERNAME:root}`
+  - `spring.datasource.password=${DB_PASSWORD:root}`
+  - `server.port=8080`
+
+### Android
+- Android Studio reciente
+- SDK compilacion: 36
+- Min SDK: 26
+- Base URL debug: `http://10.0.2.2:8080/`
+
+## Ejecución rapida
+
+### 1) Levantar backend
+
+```powershell
+cd .\MagicCollectionSpring
+.\mvnw.cmd spring-boot:run
+```
+
+- API base: `http://localhost:8080`
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+
+### 2) Levantar app Android
+
+Abrir `MagicCollectionAndroid` en Android Studio y ejecutar en emulador.
+
+## Validación local recomendada
 
 Backend:
 
 ```powershell
 cd .\MagicCollectionSpring
-.\mvnw.cmd clean compile
+.\mvnw.cmd test -q
 ```
 
 Android:
 
 ```powershell
 cd .\MagicCollectionAndroid
-.\gradlew.bat clean build -x test --no-daemon
+.\gradlew.bat testDebugUnitTest
 ```
