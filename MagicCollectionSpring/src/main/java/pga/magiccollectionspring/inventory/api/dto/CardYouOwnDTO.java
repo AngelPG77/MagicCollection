@@ -6,13 +6,13 @@ public class CardYouOwnDTO {
     private boolean isFoil;
     private String condition;
     private String language;
-    private Long cardId;
+    private String cardId;
     private String cardName;
     private Long collectionId;
 
     public CardYouOwnDTO() {}
 
-    public CardYouOwnDTO(Long id, int quantity, boolean isFoil, String condition, String language, Long cardId, String cardName, Long collectionId) {
+    public CardYouOwnDTO(Long id, int quantity, boolean isFoil, String condition, String language, String cardId, String cardName, Long collectionId) {
         this.id = id;
         this.quantity = quantity;
         this.isFoil = isFoil;
@@ -33,8 +33,8 @@ public class CardYouOwnDTO {
     public void setCondition(String condition) { this.condition = condition; }
     public String getLanguage() { return language; }
     public void setLanguage(String language) { this.language = language; }
-    public Long getCardId() { return cardId; }
-    public void setCardId(Long cardId) { this.cardId = cardId; }
+    public String getCardId() { return cardId; }
+    public void setCardId(String cardId) { this.cardId = cardId; }
     public String getCardName() { return cardName; }
     public void setCardName(String cardName) { this.cardName = cardName; }
     public Long getCollectionId() { return collectionId; }

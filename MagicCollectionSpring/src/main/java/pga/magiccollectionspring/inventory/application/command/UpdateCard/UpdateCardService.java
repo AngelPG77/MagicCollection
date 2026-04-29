@@ -48,7 +48,7 @@ public class UpdateCardService implements ICommandService<UpdateCardCommand, Upd
         boolean targetFoil = command.isFoil() != null ? command.isFoil() : original.isFoil();
 
         return inventoryRepo.findExactCardInCollection(
-                original.getCollection().getId(), original.getCardMasterData().getId(), targetCond, targetFoil, targetLang)
+                original.getCollection().getId(), original.getCardMasterData().getScryfallId(), targetCond, targetFoil, targetLang)
                 .map(conflict -> {
                     if (!conflict.getId().equals(command.id())) {
                         int numToAdd = command.quantity() != null ? command.quantity() : original.getQuantity();

@@ -18,6 +18,7 @@ import pga.magiccollectionspring.inventory.application.query.SearchInCollection.
 import pga.magiccollectionspring.inventory.application.query.SearchInCollection.SearchInCollectionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Map;
@@ -51,14 +52,21 @@ public class CardYouOwnController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<CardYouOwnDTO> addCard(@RequestBody CardYouOwnRequest request) {
-        return ResponseEntity.ok(addCardService.execute(new AddCardCommand(
-                request.getCollectionId(), request.getCardName(), request.getQuantity(),
-                request.getCondition(), request.getIsFoil(), request.getLanguage())).card());
+    public ResponseEntity<CardYouOwnDTO> addCard(@Valid @RequestBody CardYouOwnRequest request) {
+        AddCardCommand command = new AddCardCommand(
+                request.getCollectionId(),
+                request.getCardName(),
+                request.getQuantity(),
+                request.getCondition(),
+                request.getIsFoil(),
+                request.getLanguage(),
+                request.getLang()
+        );
+        return ResponseEntity.ok(addCardService.execute(command).card());
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<CardYouOwnDTO> updateCard(@PathVariable Long id, @RequestBody CardYouOwnRequest request) {
+    public ResponseEntity<CardYouOwnDTO> updateCard(@PathVariable Long id, @Valid @RequestBody CardYouOwnRequest request) {
         return ResponseEntity.ok(updateCardService.execute(new UpdateCardCommand(
                 id, request.getQuantity(), request.getCondition(), request.getIsFoil(), request.getLanguage())).card());
     }

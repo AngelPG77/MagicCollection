@@ -18,7 +18,7 @@ public interface ICardYouOwnRepository extends IRepository<CardYouOwn, Long> {
     // Find specific card variant (same condition, foil, language)
     Optional<CardYouOwn> findExactCardInCollection(
             Long collectionId,
-            Long cardId,
+            String cardId,
             CardCondition condition,
             boolean foil,
             Language language
@@ -35,6 +35,9 @@ public interface ICardYouOwnRepository extends IRepository<CardYouOwn, Long> {
     Integer getTotalCardsQuantity(Long collectionId);
 
     Integer getUniqueCardsCount(Long collectionId);
+
+    // Efficient searching
+    List<CardYouOwn> findByCollectionIdInAndScryfallIdIn(java.util.Collection<Long> collectionIds, java.util.Collection<String> scryfallIds);
 
     // Note: Searches by card type/text/name should use CardRepository instead
 }

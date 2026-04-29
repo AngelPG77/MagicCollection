@@ -7,6 +7,7 @@ public class CardYouOwnRequest {
     private String condition;
     private Boolean isFoil;
     private String language;
+    private String lang;
 
     public CardYouOwnRequest() {}
 
@@ -22,4 +23,6 @@ public class CardYouOwnRequest {
     public void setIsFoil(Boolean isFoil) { this.isFoil = isFoil; }
     public String getLanguage() { return language; }
     public void setLanguage(String language) { this.language = language; }
+    public String getLang() { return lang; }
+    public void setLang(String lang) { this.lang = lang; }
 }

@@ -21,20 +21,20 @@ import org.springframework.stereotype.Service;
 @Service
 public class AddCardService implements ICommandService<AddCardCommand, AddCardResponse> {
 
-    private final ICardYouOwnRepository inventoryRepo;
+    private final AddCardPersistenceService persistenceService;
     private final ICollectionRepository collectionRepository;
     private final ICardRepository cardRepository;
     private final ScryfallPort scryfallPort;
     private final CardYouOwnMapper mapper;
     private final CurrentUserProvider currentUserProvider;
 
-    public AddCardService(ICardYouOwnRepository inventoryRepo,
+    public AddCardService(AddCardPersistenceService persistenceService,
                           ICollectionRepository collectionRepository,
                           ICardRepository cardRepository,
                           ScryfallPort scryfallPort,
                           CardYouOwnMapper mapper,
                           CurrentUserProvider currentUserProvider) {
-        this.inventoryRepo = inventoryRepo;
+        this.persistenceService = persistenceService;
         this.collectionRepository = collectionRepository;
         this.cardRepository = cardRepository;
         this.scryfallPort = scryfallPort;
@@ -43,7 +43,6 @@ public class AddCardService implements ICommandService<AddCardCommand, AddCardRe
     }
 
     @Override
-    @Transactional
     public AddCardResponse execute(AddCardCommand command) {
         String username = currentUserProvider.getCurrentUsername();
         Collection collection = collectionRepository.findById(command.collectionId())
@@ -54,34 +53,22 @@ public class AddCardService implements ICommandService<AddCardCommand, AddCardRe
         }
 
         Card masterCard = cardRepository.findByNameIgnoreCase(command.cardName())
-                .orElseGet(() -> fetchAndSaveFromScryfall(command.cardName()));
+                .orElseGet(() -> fetchFromScryfall(command.cardName(), command.lang()));
 
         CardCondition cond = resolveCondition(command.condition(), CardCondition.NEAR_MINT);
-        Language lang = resolveLanguage(command.language(), Language.ENGLISH);
+        Language langProp = resolveLanguage(command.language(), Language.ENGLISH);
         boolean isFoil = command.isFoil() != null ? command.isFoil() : false;
         int quantityToAdd = command.quantity() != null ? command.quantity() : 1;
 
-        CardYouOwn result = inventoryRepo.findExactCardInCollection(collection.getId(), masterCard.getId(), cond, isFoil, lang)
-                .map(existing -> {
-                    existing.setQuantity(existing.getQuantity() + quantityToAdd);
-                    return inventoryRepo.save(existing);
-                })
-                .orElseGet(() -> {
-                    CardYouOwn newEntry = new CardYouOwn();
-                    newEntry.setCollection(collection);
-                    newEntry.setCardMasterData(masterCard);
-                    newEntry.setCardCondition(cond);
-                    newEntry.setLanguage(lang);
-                    newEntry.setFoil(isFoil);
-                    newEntry.setQuantity(quantityToAdd);
-                    return inventoryRepo.save(newEntry);
-                });
+        CardYouOwn result = persistenceService.saveCardAndInventory(
+                masterCard, collection, cond, langProp, isFoil, quantityToAdd
+        );
 
         return new AddCardResponse(mapper.map(result));
     }
 
-    private Card fetchAndSaveFromScryfall(String cardName) {
-        CardScryfallDTO dto = scryfallPort.findCardByName(cardName).join()
+    private Card fetchFromScryfall(String cardName, String lang) {
+        CardScryfallDTO dto = scryfallPort.findCardByName(cardName, lang != null ? lang : "en").join()
                 .orElseThrow(() -> new ResourceNotFoundException("Carta en Scryfall", cardName));
         Card card = new Card();
         card.setScryfallId(dto.getScryfallId());
@@ -91,7 +78,7 @@ public class AddCardService implements ICommandService<AddCardCommand, AddCardRe
         card.setTypeLine(dto.getTypeLine());
         card.setManaCost(dto.getManaCost());
         card.setConvertedManaCost(dto.getCmc() != null ? (int) Math.floor(dto.getCmc()) : null);
-        return cardRepository.save(card);
+        return card; // Returned without saving yet, persistenceService will handle it
     }
 
     private CardCondition resolveCondition(String condition, CardCondition fallback) {

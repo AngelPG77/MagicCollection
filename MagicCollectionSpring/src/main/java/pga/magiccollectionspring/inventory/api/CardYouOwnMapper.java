@@ -22,7 +22,7 @@ public class CardYouOwnMapper implements IMapper<CardYouOwn, CardYouOwnDTO> {
                 entity.isFoil(),
                 entity.getCardCondition() != null ? entity.getCardCondition().name() : null,
                 entity.getLanguage() != null ? entity.getLanguage().getCode() : null,
-                entity.getCardMasterData() != null ? entity.getCardMasterData().getId() : null,
+                entity.getCardMasterData() != null ? entity.getCardMasterData().getScryfallId() : null,
                 entity.getCardMasterData() != null ? entity.getCardMasterData().getName() : null,
                 entity.getCollection() != null ? entity.getCollection().getId() : null
         );

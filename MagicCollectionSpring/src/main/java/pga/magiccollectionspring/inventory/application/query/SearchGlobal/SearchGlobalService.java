@@ -41,22 +41,27 @@ public class SearchGlobalService implements IQueryService<SearchGlobalQuery, Sea
 
         // First search in card catalog
         var cardsInCatalog = cardRepository.globalSearch(query.term());
+        if (cardsInCatalog.isEmpty()) {
+            return new SearchGlobalResponse(java.util.List.of());
+        }
 
         // Get all collection IDs for the user
         var userCollections = collectionRepository.findByOwner_Username(username);
+        if (userCollections.isEmpty()) {
+            return new SearchGlobalResponse(java.util.List.of());
+        }
+
         var userCollectionIds = userCollections.stream()
                 .map(c -> c.getId())
                 .collect(Collectors.toSet());
 
-        // Filter owned cards to only those matching catalog search and user collections
-        var cardIdsInSearch = cardsInCatalog.stream()
-                .map(c -> c.getId())
+        // Extract scryfallIds from catalog search results
+        var scryfallIdsInSearch = cardsInCatalog.stream()
+                .map(c -> c.getScryfallId())
                 .collect(Collectors.toSet());
 
-        var ownedCards = inventoryRepo.findAll().stream()
-                .filter(co -> userCollectionIds.contains(co.getCollection().getId()) &&
-                        cardIdsInSearch.contains(co.getCardMasterData().getId()))
-                .collect(Collectors.toList());
+        // Efficiently fetch only the owned cards that match the search criteria and user collections
+        var ownedCards = inventoryRepo.findByCollectionIdInAndScryfallIdIn(userCollectionIds, scryfallIdsInSearch);
 
         return new SearchGlobalResponse(mapper.mapList(ownedCards));
     }

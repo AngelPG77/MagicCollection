@@ -55,12 +55,12 @@ public class SearchInCollectionService implements IQueryService<SearchInCollecti
         var ownedCardsInCollection = inventoryRepo.findByCollection_Id(query.collectionId());
 
         // Filter to matching cards
-        var cardIdsInSearch = cardsInCatalog.stream()
-                .map(c -> c.getId())
+        var scryfallIdsInSearch = cardsInCatalog.stream()
+                .map(c -> c.getScryfallId())
                 .collect(Collectors.toSet());
 
         var results = ownedCardsInCollection.stream()
-                .filter(co -> cardIdsInSearch.contains(co.getCardMasterData().getId()))
+                .filter(co -> scryfallIdsInSearch.contains(co.getCardMasterData().getScryfallId()))
                 .collect(Collectors.toList());
 
         return new SearchInCollectionResponse(mapper.mapList(results));

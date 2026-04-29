@@ -49,13 +49,13 @@ public class SearchByTypeService implements IQueryService<SearchByTypeQuery, Sea
                 .collect(Collectors.toSet());
 
         // Filter by cards matching type
-        var cardIdsWithType = cardsWithType.stream()
-                .map(c -> c.getId())
+        var scryfallIdsWithType = cardsWithType.stream()
+                .map(c -> c.getScryfallId())
                 .collect(Collectors.toSet());
 
         var results = inventoryRepo.findAll().stream()
                 .filter(co -> userCollectionIds.contains(co.getCollection().getId()) &&
-                        cardIdsWithType.contains(co.getCardMasterData().getId()))
+                        scryfallIdsWithType.contains(co.getCardMasterData().getScryfallId()))
                 .collect(Collectors.toList());
 
         return new SearchByTypeResponse(mapper.mapList(results));

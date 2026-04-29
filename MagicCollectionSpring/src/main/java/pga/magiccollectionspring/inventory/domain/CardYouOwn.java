@@ -10,7 +10,9 @@ import pga.magiccollectionspring.inventory.domain.enums.Language;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "cards_owned")
+@Table(name = "cards_owned", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"collection_id", "card_master_id", "is_foil", "card_condition", "language"})
+})
 public class CardYouOwn {
 
     @Id

@@ -36,13 +36,13 @@ public interface CardYouOwnRepository extends JpaRepository<CardYouOwn, Long>, I
      */
     @Query("SELECT c FROM CardYouOwn c WHERE " +
             "c.collection.id = :collectionId AND " +
-            "c.cardMasterData.id = :cardId AND " +
+            "c.cardMasterData.scryfallId = :cardId AND " +
             "c.cardCondition = :condition AND " +
             "c.isFoil = :foil AND " +
             "c.language = :language")
     Optional<CardYouOwn> findExactCardInCollection(
             @Param("collectionId") Long collectionId,
-            @Param("cardId") Long cardId,
+            @Param("cardId") String cardId,
             @Param("condition") CardCondition condition,
             @Param("foil") boolean foil,
             @Param("language") Language language
@@ -91,4 +91,13 @@ public interface CardYouOwnRepository extends JpaRepository<CardYouOwn, Long>, I
      */
     @Query("SELECT COUNT(DISTINCT c.cardMasterData.id) FROM CardYouOwn c WHERE c.collection.id = :collectionId")
     Integer getUniqueCardsCount(@Param("collectionId") Long collectionId);
+
+    @Override
+    @Query("SELECT c FROM CardYouOwn c WHERE " +
+            "c.collection.id IN :collectionIds AND " +
+            "c.cardMasterData.scryfallId IN :scryfallIds")
+    List<CardYouOwn> findByCollectionIdInAndScryfallIdIn(
+            @Param("collectionIds") java.util.Collection<Long> collectionIds,
+            @Param("scryfallIds") java.util.Collection<String> scryfallIds
+    );
 }
