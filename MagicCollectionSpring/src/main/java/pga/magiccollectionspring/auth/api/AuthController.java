@@ -23,8 +23,13 @@ import pga.magiccollectionspring.shared.exception.ResourceNotFoundException;
 import pga.magiccollectionspring.shared.security.CurrentUserProvider;
 import pga.magiccollectionspring.user.domain.User;
 import pga.magiccollectionspring.user.domain.IUserRepository;
+import pga.magiccollectionspring.shared.security.JwtService;
+import pga.magiccollectionspring.shared.security.RefreshTokenService;
+import pga.magiccollectionspring.user.domain.RefreshToken;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -37,11 +42,14 @@ public class AuthController {
     private final DeleteUserService deleteUserService;
     private final IUserRepository userRepository;
     private final CurrentUserProvider currentUserProvider;
+    private final RefreshTokenService refreshTokenService;
+    private final JwtService jwtService;
 
     public AuthController(RegisterService registerService, LoginService loginService, 
                           UpdateUserService updateUserService, UpdatePasswordService updatePasswordService,
                           DeleteUserService deleteUserService, IUserRepository userRepository,
-                          CurrentUserProvider currentUserProvider) {
+                          CurrentUserProvider currentUserProvider, RefreshTokenService refreshTokenService,
+                          JwtService jwtService) {
         this.registerService = registerService;
         this.loginService = loginService;
         this.updateUserService = updateUserService;
@@ -49,6 +57,25 @@ public class AuthController {
         this.deleteUserService = deleteUserService;
         this.userRepository = userRepository;
         this.currentUserProvider = currentUserProvider;
+        this.refreshTokenService = refreshTokenService;
+        this.jwtService = jwtService;
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> request) {
+        String refreshToken = request.get("refreshToken");
+        
+        return refreshTokenService.findByToken(refreshToken)
+                .map(refreshTokenService::verifyExpiration)
+                .map(RefreshToken::getUser)
+                .map(user -> {
+                    String token = jwtService.generateToken(user.getUsername());
+                    return ResponseEntity.ok(Map.of(
+                            "token", token,
+                            "refreshToken", refreshToken
+                    ));
+                })
+                .orElseThrow(() -> new RuntimeException("Refresh token is not in database!"));
     }
 
     @PostMapping("/register")
@@ -59,7 +86,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
-        LoginResponse response = loginService.execute(new LoginQuery(request.getUsername(), request.getPassword()));
+        LoginResponse response = loginService.execute(new LoginQuery(request.getUsername(), request.getPassword(), request.isRememberMe()));
         return ResponseEntity.ok(response);
     }
 

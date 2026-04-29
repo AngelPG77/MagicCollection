@@ -3,7 +3,9 @@ package pga.magiccollectionspring.auth.application.query.Login;
 import pga.magiccollectionspring.shared.abstractions.IQueryService;
 import pga.magiccollectionspring.shared.exception.ResourceNotFoundException;
 import pga.magiccollectionspring.shared.security.JwtService;
+import pga.magiccollectionspring.shared.security.RefreshTokenService;
 import pga.magiccollectionspring.user.domain.IUserRepository;
+import pga.magiccollectionspring.user.domain.RefreshToken;
 import pga.magiccollectionspring.user.domain.User;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,13 +16,16 @@ public class LoginService implements IQueryService<LoginQuery, LoginResponse> {
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
     private final IUserRepository userRepository;
 
     public LoginService(AuthenticationManager authenticationManager, 
                         JwtService jwtService, 
+                        RefreshTokenService refreshTokenService,
                         IUserRepository userRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
         this.userRepository = userRepository;
     }
 
@@ -34,6 +39,12 @@ public class LoginService implements IQueryService<LoginQuery, LoginResponse> {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", query.username()));
         
         String token = jwtService.generateToken(query.username());
-        return new LoginResponse(token, user.getId());
+        String refreshToken = null;
+        if (query.rememberMe()) {
+            RefreshToken rt = refreshTokenService.createRefreshToken(user.getId());
+            refreshToken = rt.getToken();
+        }
+        
+        return new LoginResponse(token, refreshToken, user.getId());
     }
 }
