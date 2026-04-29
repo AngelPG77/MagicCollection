@@ -34,8 +34,27 @@ interface CardOwnedDao {
         isFoil: Boolean
     ): CardOwnedEntity?
 
-    @Query("SELECT * FROM cards_owned WHERE collectionId = :collectionId ORDER BY scryfallId")
+    @Query("SELECT * FROM cards_owned WHERE collectionId = :collectionId AND pendingDelete = 0 ORDER BY scryfallId")
     fun observeCardsInCollection(collectionId: Long): Flow<List<CardOwnedEntity>>
+
+    @Query("""
+        UPDATE cards_owned SET pendingDelete = 1 
+        WHERE scryfallId = :scryfallId 
+        AND collectionId = :collectionId 
+        AND language = :language 
+        AND condition = :condition 
+        AND isFoil = :isFoil
+    """)
+    suspend fun markForDeletion(
+        scryfallId: String,
+        collectionId: Long,
+        language: String,
+        condition: String,
+        isFoil: Boolean
+    ): Int
+
+    @Query("SELECT * FROM cards_owned WHERE collectionId = :collectionId AND pendingDelete = 1")
+    suspend fun getPendingDeletions(collectionId: Long): List<CardOwnedEntity>
 
     @Update
     suspend fun updateCardOwned(card: CardOwnedEntity): Int
@@ -47,19 +66,22 @@ interface CardOwnedDao {
     suspend fun getUnsyncedCards(): List<CardOwnedEntity>
 
     @Query("""
-        UPDATE cards_owned SET synced = 1, remoteId = :remoteId
-        WHERE scryfallId = :scryfallId 
-        AND collectionId = :collectionId 
-        AND language = :language 
-        AND condition = :condition 
-        AND isFoil = :isFoil
+        SELECT c.* FROM cards_owned c
+        INNER JOIN collections col ON c.collectionId = col.localId
+        WHERE c.synced = 0 AND col.userId = :userId
     """)
-    suspend fun markAsSynced(
-        scryfallId: String,
-        collectionId: Long,
-        language: String,
-        condition: String,
-        isFoil: Boolean,
-        remoteId: Long
-    ): Int
+    suspend fun getUnsyncedCardsByUserId(userId: Long): List<CardOwnedEntity>
+
+    @Query("SELECT COUNT(*) FROM cards_owned WHERE synced = 0")
+    suspend fun countUnsyncedCards(): Int
+
+    @Query("SELECT COUNT(*) FROM cards_owned WHERE synced = 0")
+    fun observeUnsyncedCardsCount(): Flow<Int>
+
+    @Query("""
+        SELECT COUNT(*) FROM cards_owned c
+        INNER JOIN collections col ON c.collectionId = col.localId
+        WHERE c.synced = 0 AND col.userId = :userId
+    """)
+    fun observeUnsyncedCardsCount(userId: Long): Flow<Int>
 }

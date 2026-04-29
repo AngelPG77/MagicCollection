@@ -21,10 +21,10 @@ interface CollectionDao {
     @Query("SELECT * FROM collections WHERE localId = :localId")
     fun getCollectionByIdAsFlow(localId: Long): Flow<CollectionEntity?>
 
-    @Query("SELECT * FROM collections WHERE userId = :userId")
+    @Query("SELECT * FROM collections WHERE userId = :userId AND pendingDelete = 0")
     fun getCollectionsByUserId(userId: Long): Flow<List<CollectionEntity>>
 
-    @Query("SELECT * FROM collections WHERE userId = :userId")
+    @Query("SELECT * FROM collections WHERE userId = :userId AND pendingDelete = 0")
     suspend fun getCollectionsByUserIdSync(userId: Long): List<CollectionEntity>
 
     @Query("SELECT * FROM collections WHERE name = :name AND userId = :userId")
@@ -36,8 +36,14 @@ interface CollectionDao {
     @Query("SELECT * FROM collections WHERE localId = :localId")
     fun observeCollection(localId: Long): Flow<CollectionEntity?>
 
-    @Query("SELECT * FROM collections WHERE userId = :userId ORDER BY localId DESC")
+    @Query("SELECT * FROM collections WHERE userId = :userId AND pendingDelete = 0 ORDER BY localId DESC")
     fun observeCollectionsByUserId(userId: Long): Flow<List<CollectionEntity>>
+
+    @Query("UPDATE collections SET pendingDelete = 1 WHERE localId = :localId")
+    suspend fun markForDeletion(localId: Long): Int
+
+    @Query("SELECT * FROM collections WHERE userId = :userId AND pendingDelete = 1")
+    suspend fun getPendingDeletions(userId: Long): List<CollectionEntity>
 
     @Update
     suspend fun updateCollection(collection: CollectionEntity): Int
@@ -60,8 +66,11 @@ interface CollectionDao {
     @Query("SELECT * FROM collections WHERE synced = 0 AND userId = :userId")
     suspend fun getUnsyncedCollectionsByUserId(userId: Long): List<CollectionEntity>
 
-    @Query("SELECT COUNT(*) FROM collections WHERE userId = :userId")
-    suspend fun countCollectionsByUserId(userId: Long): Int
+    @Query("SELECT COUNT(*) FROM collections WHERE userId = :userId AND synced = 0")
+    suspend fun countUnsyncedCollections(userId: Long): Int
+
+    @Query("SELECT COUNT(*) FROM collections WHERE userId = :userId AND synced = 0")
+    fun observeUnsyncedCollectionsCount(userId: Long): Flow<Int>
 
     // Statistics operations
     @Query("""

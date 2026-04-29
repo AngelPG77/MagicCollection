@@ -25,5 +25,6 @@ data class CardOwnedEntity(
     val isFoil: Boolean = false,
     val condition: String,
     val language: String = "ENGLISH",
-    val synced: Boolean = false
+    val synced: Boolean = false,
+    val pendingDelete: Boolean = false
 )

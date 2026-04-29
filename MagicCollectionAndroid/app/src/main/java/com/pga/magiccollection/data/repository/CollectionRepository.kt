@@ -1,14 +1,20 @@
 package com.pga.magiccollection.data.repository
 
+import com.pga.magiccollection.data.local.dao.CardOwnedDao
 import com.pga.magiccollection.data.local.dao.CollectionDao
+import com.pga.magiccollection.data.local.entities.CardOwnedEntity
 import com.pga.magiccollection.data.local.entities.CollectionEntity
 import com.pga.magiccollection.data.remote.api.CollectionsApi
+import com.pga.magiccollection.data.remote.api.InventoryApi
+import com.pga.magiccollection.data.remote.dto.CardYouOwnRequestDto
 import com.pga.magiccollection.data.remote.dto.CollectionRequestDto
 import kotlinx.coroutines.flow.Flow
 
 class CollectionRepository(
     private val collectionDao: CollectionDao,
-    private val collectionsApi: CollectionsApi
+    private val cardOwnedDao: CardOwnedDao,
+    private val collectionsApi: CollectionsApi,
+    private val inventoryApi: InventoryApi
 ) {
     fun observeCollections(userId: Long): Flow<List<CollectionEntity>> {
         return collectionDao.observeCollectionsByUserId(userId)
@@ -17,13 +23,23 @@ class CollectionRepository(
     suspend fun createLocalCollection(name: String, userId: Long): Long {
         val normalized = name.trim()
         require(normalized.isNotEmpty()) { "El nombre de la coleccion es obligatorio." }
-        return collectionDao.insertCollection(
+        val localId = collectionDao.insertCollection(
             CollectionEntity(
                 name = normalized,
                 userId = userId,
                 synced = false
             )
         )
+
+        // Intentar sincronizar inmediatamente
+        try {
+            val remote = collectionsApi.createCollection(CollectionRequestDto(name = normalized))
+            collectionDao.markAsSynced(localId, remote.id)
+        } catch (e: Exception) {
+            // Queda como no sincronizada
+        }
+
+        return localId
     }
 
     suspend fun updateCollection(localId: Long, newName: String) {
@@ -38,15 +54,49 @@ class CollectionRepository(
 
     suspend fun deleteCollection(localId: Long) {
         val collection = collectionDao.getCollectionById(localId) ?: return
-        collection.remoteId?.let { collectionsApi.deleteCollection(it) }
-        collectionDao.deleteCollectionById(localId)
+        
+        if (collection.remoteId == null) {
+            collectionDao.deleteCollectionById(localId)
+        } else {
+            collectionDao.markForDeletion(localId)
+            try {
+                collectionsApi.deleteCollection(collection.remoteId)
+                collectionDao.deleteCollectionById(localId)
+            } catch (e: Exception) {
+                // Keep marked for next sync
+            }
+        }
     }
 
-    suspend fun fetchRemoteCollections(userId: Long) {
+    suspend fun syncAll(userId: Long) {
+        // 0. Procesar borrados locales
+        processPendingDeletions(userId)
+
+        // 1. Sincronizar colecciones pendientes de subir
+        val pendingCollections = collectionDao.getUnsyncedCollectionsByUserId(userId)
+        for (col in pendingCollections) {
+            try {
+                val remote = collectionsApi.createCollection(CollectionRequestDto(name = col.name))
+                collectionDao.markAsSynced(col.localId, remote.id)
+            } catch (e: Exception) {
+            }
+        }
+
+        // 2. Descargar colecciones y Reconciliación
         val remoteCollections = collectionsApi.getCollections()
+        val remoteIds = remoteCollections.map { it.id }.toSet()
+
+        // Borrar localmente lo que ya no existe en el servidor
+        val localCollections = collectionDao.getCollectionsByUserIdSync(userId)
+        for (local in localCollections) {
+            if (local.remoteId != null && !remoteIds.contains(local.remoteId)) {
+                collectionDao.deleteCollectionById(local.localId)
+            }
+        }
+
         for (remote in remoteCollections) {
-            val exists = collectionDao.getCollectionByNameAndUserId(remote.name, userId)
-            if (exists == null) {
+            val local = collectionDao.getCollectionByNameAndUserId(remote.name, userId)
+            if (local == null) {
                 collectionDao.insertCollection(
                     CollectionEntity(
                         remoteId = remote.id,
@@ -55,26 +105,90 @@ class CollectionRepository(
                         synced = true
                     )
                 )
-            } else if (exists.remoteId == null) {
-                collectionDao.markAsSynced(exists.localId, remote.id)
+            } else if (local.remoteId == null) {
+                collectionDao.markAsSynced(local.localId, remote.id)
+            }
+        }
+
+        // 3. Sincronizar cartas pendientes de subir
+        val pendingCards = cardOwnedDao.getUnsyncedCardsByUserId(userId)
+        for (card in pendingCards) {
+            try {
+                val collection = collectionDao.getCollectionById(card.collectionId)
+                collection?.remoteId?.let { remoteColId ->
+                    val remoteCard = inventoryApi.addCard(
+                        CardYouOwnRequestDto(
+                            collectionId = remoteColId,
+                            cardName = "",
+                            quantity = card.quantity,
+                            condition = card.condition,
+                            isFoil = card.isFoil,
+                            language = card.language,
+                            scryfallId = card.scryfallId
+                        )
+                    )
+                    // Marcar como sincronizada y actualizar remoteId
+                    cardOwnedDao.updateCardOwned(card.copy(remoteId = remoteCard.id, synced = true))
+                }
+            } catch (e: Exception) {
+            }
+        }
+
+        // 4. Descargar cartas y Reconciliar para cada colección
+        val allCollections = collectionDao.getCollectionsByUserIdSync(userId)
+        for (col in allCollections) {
+            col.remoteId?.let { remoteId ->
+                try {
+                    val remoteCards = inventoryApi.getCardsByCollection(remoteId)
+                    val remoteCardIds = remoteCards.map { it.id }.toSet()
+
+                    // Reconciliación de cartas
+                    // Nota: Necesitaríamos un getCardsByCollectionIdSync en CardOwnedDao para hacerlo eficiente
+                    // Por ahora, solo descargaremos y actualizaremos (Upsert)
+
+                    for (rc in remoteCards) {
+                        val existing = cardOwnedDao.getExactCard(
+                            scryfallId = rc.scryfallId,
+                            collectionId = col.localId,
+                            language = rc.language,
+                            condition = rc.condition,
+                            isFoil = rc.isFoil
+                        )
+                        if (existing == null) {
+                            cardOwnedDao.insertCardOwned(
+                                CardOwnedEntity(
+                                    scryfallId = rc.scryfallId,
+                                    collectionId = col.localId,
+                                    remoteId = rc.id,
+                                    quantity = rc.quantity,
+                                    isFoil = rc.isFoil,
+                                    condition = rc.condition,
+                                    language = rc.language,
+                                    synced = true
+                                )
+                            )
+                        } else {
+                            // UPSERT
+                            cardOwnedDao.updateCardOwned(existing.copy(
+                                remoteId = rc.id,
+                                quantity = rc.quantity,
+                                synced = true
+                            ))
+                        }
+                    }
+                } catch (e: Exception) {
+                }
             }
         }
     }
 
-    suspend fun syncPendingCollections(userId: Long): Int {
-        val pending = collectionDao.getUnsyncedCollectionsByUserId(userId)
-        var syncedCount = 0
-        for (localCollection in pending) {
+    private suspend fun processPendingDeletions(userId: Long) {
+        val pendingCollections = collectionDao.getPendingDeletions(userId)
+        for (col in pendingCollections) {
             try {
-                val remote = collectionsApi.createCollection(
-                    CollectionRequestDto(name = localCollection.name)
-                )
-                collectionDao.markAsSynced(localCollection.localId, remote.id)
-                syncedCount += 1
-            } catch (e: Exception) {
-                // Log error
-            }
+                col.remoteId?.let { collectionsApi.deleteCollection(it) }
+                collectionDao.deleteCollectionById(col.localId)
+            } catch (e: Exception) {}
         }
-        return syncedCount
     }
 }

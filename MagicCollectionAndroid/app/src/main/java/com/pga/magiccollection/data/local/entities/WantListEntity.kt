@@ -6,7 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "collections",
+    tableName = "want_lists",
     foreignKeys = [
         ForeignKey(
             entity = UserEntity::class,
@@ -15,10 +15,9 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index(value = ["userId"])]
-
+    indices = [Index(value = ["userId"]), Index(value = ["name", "userId"], unique = true)]
 )
-data class CollectionEntity(
+data class WantListEntity(
     @PrimaryKey(autoGenerate = true)
     val localId: Long = 0,
     val remoteId: Long? = null,

@@ -10,9 +10,16 @@ import com.pga.magiccollection.data.local.entities.*
         UserEntity::class,
         CollectionEntity::class,
         CardOwnedEntity::class,
-        RecentCardEntity::class
+        RecentCardEntity::class,
+        WantListEntity::class,
+        WantListCardEntity::class,
+        MasterCardEntity::class,
+        CardNameFtsEntity::class,
+        CardLanguageEntity::class,
+        LanguageIndexStateEntity::class,
+        MtgSetEntity::class
     ],
-    version = 2,
+    version = 13,
     exportSchema = false
 )
 abstract class MagicDatabase : RoomDatabase() {
@@ -20,4 +27,10 @@ abstract class MagicDatabase : RoomDatabase() {
     abstract fun collectionDao(): CollectionDao
     abstract fun cardOwnedDao(): CardOwnedDao
     abstract fun recentCardDao(): RecentCardDao
+    abstract fun wantListDao(): WantListDao
+    abstract fun wantListCardDao(): WantListCardDao
+    abstract fun cardSearchIndexDao(): CardSearchIndexDao
+    abstract fun cardLanguageDao(): CardLanguageDao
+    abstract fun languageIndexStateDao(): LanguageIndexStateDao
+    abstract fun mtgSetDao(): MtgSetDao
 }

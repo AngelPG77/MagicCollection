@@ -11,12 +11,15 @@ data class AppPreferences(
     val startScreen: String,
     val searchLanguage: String,
     val appLanguage: String,
-    val themeColor: String
+    val themeColor: String,
+    val downloadedLanguages: Set<String>,
+    val lastIndexUpdate: String?
 )
 
 class GetAppPreferencesUseCase @Inject constructor(
     private val preferenceManager: PreferenceManager
 ) {
+    @Suppress("UNCHECKED_CAST")
     operator fun invoke(): Flow<AppPreferences> {
         return combine(
             preferenceManager.darkTheme,
@@ -24,7 +27,9 @@ class GetAppPreferencesUseCase @Inject constructor(
             preferenceManager.startScreen,
             preferenceManager.searchLanguage,
             preferenceManager.appLanguage,
-            preferenceManager.themeColor
+            preferenceManager.themeColor,
+            preferenceManager.downloadedLanguages,
+            preferenceManager.lastIndexUpdate
         ) { values: Array<Any?> ->
             AppPreferences(
                 darkTheme = values[0] as Boolean,
@@ -32,7 +37,9 @@ class GetAppPreferencesUseCase @Inject constructor(
                 startScreen = values[2] as String,
                 searchLanguage = values[3] as String,
                 appLanguage = values[4] as String,
-                themeColor = values[5] as String
+                themeColor = values[5] as String,
+                downloadedLanguages = values[6] as Set<String>,
+                lastIndexUpdate = values[7] as String?
             )
         }
     }

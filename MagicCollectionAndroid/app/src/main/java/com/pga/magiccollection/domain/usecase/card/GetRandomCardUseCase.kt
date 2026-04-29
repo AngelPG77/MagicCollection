@@ -4,10 +4,10 @@ import com.pga.magiccollection.data.remote.dto.ScryfallCardDto
 import com.pga.magiccollection.data.repository.CardRepository
 import javax.inject.Inject
 
-class GetCardByNameUseCase @Inject constructor(
+class GetRandomCardUseCase @Inject constructor(
     private val cardRepository: CardRepository
 ) {
-    suspend operator fun invoke(name: String, lang: String? = null): ScryfallCardDto {
-        return cardRepository.getCardByName(name, lang)
+    suspend operator fun invoke(): ScryfallCardDto {
+        return cardRepository.getRandomCard()
     }
 }

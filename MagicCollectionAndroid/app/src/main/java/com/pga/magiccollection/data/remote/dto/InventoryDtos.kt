@@ -6,7 +6,8 @@ data class CardYouOwnRequestDto(
     val quantity: Int,
     val condition: String,
     val isFoil: Boolean,
-    val language: String
+    val language: String,
+    val scryfallId: String? = null
 )
 
 data class CardYouOwnDto(

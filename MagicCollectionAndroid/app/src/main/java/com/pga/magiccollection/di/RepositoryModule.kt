@@ -10,6 +10,7 @@ import com.pga.magiccollection.data.remote.api.CollectionsApi
 import com.pga.magiccollection.data.remote.api.InventoryApi
 import com.pga.magiccollection.data.repository.AuthRepository
 import com.pga.magiccollection.data.repository.CardRepository
+import com.pga.magiccollection.data.repository.CardSearchIndexRepository
 import com.pga.magiccollection.data.repository.CollectionRepository
 import com.pga.magiccollection.data.repository.InventoryRepository
 import com.pga.magiccollection.data.repository.SessionRepository
@@ -35,17 +36,22 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideCardRepository(cardsApi: CardsApi): CardRepository {
-        return CardRepository(cardsApi)
+    fun provideCardRepository(
+        cardsApi: CardsApi,
+        cardSearchIndexRepository: CardSearchIndexRepository
+    ): CardRepository {
+        return CardRepository(cardsApi, cardSearchIndexRepository)
     }
 
     @Provides
     @Singleton
     fun provideCollectionRepository(
         collectionDao: CollectionDao,
-        collectionsApi: CollectionsApi
+        cardOwnedDao: CardOwnedDao,
+        collectionsApi: CollectionsApi,
+        inventoryApi: InventoryApi
     ): CollectionRepository {
-        return CollectionRepository(collectionDao, collectionsApi)
+        return CollectionRepository(collectionDao, cardOwnedDao, collectionsApi, inventoryApi)
     }
 
     @Provides
