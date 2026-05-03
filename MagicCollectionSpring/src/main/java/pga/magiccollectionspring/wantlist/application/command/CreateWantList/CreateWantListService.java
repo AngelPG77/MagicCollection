@@ -4,9 +4,8 @@ import pga.magiccollectionspring.shared.abstractions.ICommandService;
 import pga.magiccollectionspring.shared.exception.ConflictException;
 import pga.magiccollectionspring.shared.exception.ResourceNotFoundException;
 import pga.magiccollectionspring.shared.security.CurrentUserProvider;
-import pga.magiccollectionspring.user.domain.IUserRepository;
+import pga.magiccollectionspring.user.application.IUserInternalService;
 import pga.magiccollectionspring.user.domain.User;
-import pga.magiccollectionspring.wantlist.api.WantListMapper;
 import pga.magiccollectionspring.wantlist.domain.IWantListRepository;
 import pga.magiccollectionspring.wantlist.domain.WantList;
 import org.springframework.stereotype.Service;
@@ -16,25 +15,22 @@ import org.springframework.transaction.annotation.Transactional;
 public class CreateWantListService implements ICommandService<CreateWantListCommand, CreateWantListResponse> {
 
     private final IWantListRepository wantListRepository;
-    private final IUserRepository userRepository;
+    private final IUserInternalService userInternalService;
     private final CurrentUserProvider currentUserProvider;
-    private final WantListMapper mapper;
 
     public CreateWantListService(IWantListRepository wantListRepository, 
-                                 IUserRepository userRepository,
-                                 CurrentUserProvider currentUserProvider,
-                                 WantListMapper mapper) {
+                                 IUserInternalService userInternalService,
+                                 CurrentUserProvider currentUserProvider) {
         this.wantListRepository = wantListRepository;
-        this.userRepository = userRepository;
+        this.userInternalService = userInternalService;
         this.currentUserProvider = currentUserProvider;
-        this.mapper = mapper;
     }
 
     @Override
     @Transactional
     public CreateWantListResponse execute(CreateWantListCommand command) {
         String username = currentUserProvider.getCurrentUsername();
-        User owner = userRepository.findByUsername(username)
+        User owner = userInternalService.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", username));
 
         if (wantListRepository.existsByNameAndOwnerId(command.name(), owner.getId())) {
@@ -44,6 +40,6 @@ public class CreateWantListService implements ICommandService<CreateWantListComm
         WantList wantList = new WantList(command.name(), owner);
         WantList saved = wantListRepository.save(wantList);
         
-        return new CreateWantListResponse(mapper.toDto(saved));
+        return new CreateWantListResponse(saved.getId());
     }
 }

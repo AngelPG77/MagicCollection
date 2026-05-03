@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "master_cards", indexes = {
-        @Index(name = "idx_card_name", columnList = "name")
+        @Index(name = "idx_card_name", columnList = "name"),
+        @Index(name = "idx_card_search_filters", columnList = "color_mask, cmc, rarity_rank"),
+        @Index(name = "idx_card_set", columnList = "set_code")
 })
 public class Card {
 

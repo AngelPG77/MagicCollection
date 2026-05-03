@@ -5,6 +5,7 @@ import pga.magiccollectionspring.collection.domain.ICollectionRepository;
 import pga.magiccollectionspring.shared.abstractions.IQueryService;
 import pga.magiccollectionspring.shared.security.CurrentUserProvider;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class GetCollectionsByUserService implements IQueryService<GetCollectionsByUserQuery, GetCollectionsByUserResponse> {
@@ -22,10 +23,11 @@ public class GetCollectionsByUserService implements IQueryService<GetCollections
     }
 
     @Override
+    @Transactional(readOnly = true)
     public GetCollectionsByUserResponse execute(GetCollectionsByUserQuery query) {
         String username = currentUserProvider.getCurrentUsername();
         return new GetCollectionsByUserResponse(
-                collectionMapper.mapList(collectionRepository.findByOwner_Username(username))
+                collectionMapper.mapList(collectionRepository.findByOwner_UsernameWithCards(username))
         );
     }
 }

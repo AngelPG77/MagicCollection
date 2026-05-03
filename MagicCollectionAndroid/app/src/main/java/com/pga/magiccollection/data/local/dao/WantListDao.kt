@@ -4,11 +4,29 @@ import androidx.room.*
 import com.pga.magiccollection.data.local.entities.WantListEntity
 import kotlinx.coroutines.flow.Flow
 
+data class WantListWithCount(
+    val localId: Long,
+    val remoteId: Long?,
+    val name: String,
+    val userId: Long,
+    val synced: Boolean,
+    val cardCount: Int
+)
+
 @Dao
 interface WantListDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(wantList: WantListEntity): Long
 
+    @Query("""
+        SELECT w.localId, w.remoteId, w.name, w.userId, w.synced, COALESCE(SUM(wc.quantity), 0) as cardCount 
+        FROM want_lists w
+        LEFT JOIN want_list_cards wc ON w.localId = wc.wantListLocalId AND wc.pendingDelete = 0
+        WHERE w.userId = :userId AND w.pendingDelete = 0
+        GROUP BY w.localId
+        ORDER BY w.name ASC
+    """)
+    fun observeByUserIdWithCount(userId: Long): Flow<List<WantListWithCount>>
     @Update
     suspend fun update(wantList: WantListEntity)
 

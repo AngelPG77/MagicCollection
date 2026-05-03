@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.unit.LayoutDirection
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Precision
@@ -38,6 +39,7 @@ fun WantListDetailScreen(
     viewModel: WantListViewModel,
     mainViewModel: MainViewModel,
     wantListLocalId: Long,
+    onNavigateToDetail: (String) -> Unit,
     onNavigateToAddCard: () -> Unit,
     onBackClick: () -> Unit
 ) {
@@ -97,8 +99,8 @@ fun WantListDetailScreen(
         }
     ) { padding ->
         val innerPadding = PaddingValues(
-            start = padding.calculateStartPadding(androidx.compose.ui.unit.LayoutDirection.Ltr),
-            end = padding.calculateEndPadding(androidx.compose.ui.unit.LayoutDirection.Ltr),
+            start = padding.calculateStartPadding(LayoutDirection.Ltr),
+            end = padding.calculateEndPadding(LayoutDirection.Ltr),
             bottom = padding.calculateBottomPadding()
         )
         
@@ -135,7 +137,8 @@ fun WantListDetailScreen(
                 items(uiState.selectedWantListCards, key = { it.localId }) { card ->
                     WantListCardItem(
                         card = card,
-                        onClick = { viewModel.showEditCardModal(card) },
+                        onClick = { onNavigateToDetail(card.scryfallId) },
+                        onEdit = { viewModel.showEditCardModal(card) },
                         onRemove = { viewModel.removeCard(card.localId) }
                     )
                 }
@@ -165,6 +168,7 @@ fun WantListDetailScreen(
 fun WantListCardItem(
     card: WantListCardEntity,
     onClick: () -> Unit,
+    onEdit: () -> Unit,
     onRemove: () -> Unit
 ) {
     val context = LocalContext.current
@@ -276,7 +280,7 @@ fun WantListCardItem(
                 }
             }
             
-            // Quantity and Remove
+            // Quantity and Actions
             Column(
                 horizontalAlignment = Alignment.End
             ) {
@@ -289,15 +293,30 @@ fun WantListCardItem(
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                IconButton(
-                    onClick = onRemove,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = stringResource(id = R.string.action_delete),
-                        tint = MaterialTheme.colorScheme.error
-                    )
+                Row {
+                    IconButton(
+                        onClick = onEdit,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    IconButton(
+                        onClick = onRemove,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = stringResource(id = R.string.action_delete),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
         }

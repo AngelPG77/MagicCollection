@@ -70,4 +70,11 @@ interface WantListCardDao {
         WHERE c.synced = 0 AND wl.userId = :userId
     """)
     fun observeUnsyncedCardsCount(userId: Long): Flow<Int>
+
+    @Query("""
+        SELECT DISTINCT c.imageUrl FROM want_list_cards c
+        INNER JOIN want_lists wl ON c.wantListLocalId = wl.localId
+        WHERE wl.userId = :userId AND c.pendingDelete = 0 AND c.imageUrl IS NOT NULL
+    """)
+    suspend fun getAllWantListImageUrls(userId: Long): List<String>
 }

@@ -35,6 +35,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
+import com.pga.magiccollection.ui.screen.CollectionAddCardScreen
+import com.pga.magiccollection.ui.screen.CollectionAddCardViewModel
+import com.pga.magiccollection.ui.screen.CollectionDetailScreen
+import com.pga.magiccollection.ui.screen.CollectionScreen
+import com.pga.magiccollection.ui.screen.CollectionViewModel
 import com.pga.magiccollection.ui.screen.HomeScreen
 import com.pga.magiccollection.ui.screen.MainViewModel
 import com.pga.magiccollection.ui.screen.RegisterScreen
@@ -45,8 +50,13 @@ import com.pga.magiccollection.ui.screen.SearchViewModel
 import com.pga.magiccollection.ui.screen.WantListScreen
 import com.pga.magiccollection.ui.screen.WantListDetailScreen
 import com.pga.magiccollection.ui.screen.WantListViewModel
+import com.pga.magiccollection.ui.screen.CardDetailViewModel
+import com.pga.magiccollection.ui.screen.CardDetailScreen
+import com.pga.magiccollection.ui.screen.WantListAddCardViewModel
+import com.pga.magiccollection.ui.screen.WantListAddCardScreen
 import com.pga.magiccollection.ui.theme.MagicCollectionAppTheme
 import com.pga.magiccollection.ui.component.MagicCollectionSnackbarHost
+import com.pga.magiccollection.ui.screen.ALL_COLLECTIONS_LOCAL_ID
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
 
@@ -109,6 +119,8 @@ sealed class Screen(val route: String, val titleRes: Int, val icon: ImageVector)
     object WantLists : Screen("wantlists", R.string.wantlist_title, Icons.Default.Favorite)
     object WantListDetail : Screen("wantlist_detail/{localId}", R.string.wantlist_title, Icons.Default.Favorite)
     object WantListAddCard : Screen("wantlist_add_card/{localId}", R.string.wantlist_add_card, Icons.Default.Add)
+    object CollectionDetail : Screen("collection_detail/{localId}", R.string.title_collections, Icons.AutoMirrored.Filled.List)
+    object CollectionAddCard : Screen("collection_add_card/{localId}", R.string.title_collections, Icons.Default.Add)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -179,6 +191,17 @@ fun MainNavigation(viewModel: MainViewModel) {
         }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.navigateToLoginEvent.collect {
+            if (navController.currentBackStackEntry?.destination?.route != Screen.Login.route) {
+                navController.navigate(Screen.Login.route) {
+                    launchSingleTop = true
+                    popUpTo(navController.graph.findStartDestination().id)
+                }
+            }
+        }
+    }
+
     val mainItems = listOf(Screen.Home, Screen.Search, Screen.Collections, Screen.Decks, Screen.Scanner)
     
     // Determinar pantalla inicial basada en preferencias
@@ -211,6 +234,8 @@ fun MainNavigation(viewModel: MainViewModel) {
                 currentDestination?.route == Screen.WantLists.route -> Screen.WantLists
                 currentDestination?.route?.startsWith("wantlist_detail") == true -> Screen.WantListDetail
                 currentDestination?.route?.startsWith("wantlist_add_card") == true -> Screen.WantListAddCard
+                currentDestination?.route?.startsWith("collection_detail") == true -> Screen.CollectionDetail
+                currentDestination?.route?.startsWith("collection_add_card") == true -> Screen.CollectionAddCard
                 else -> Screen.Home
             }
 
@@ -228,7 +253,8 @@ fun MainNavigation(viewModel: MainViewModel) {
                             currentScreen == Screen.Login || currentScreen == Screen.Guides || 
                             currentScreen == Screen.Contact || currentScreen == Screen.GridSizeSettings ||
                             currentScreen == Screen.CardDetail || currentScreen == Screen.WantLists ||
-                            currentScreen == Screen.WantListDetail || currentScreen == Screen.WantListAddCard) {
+                            currentScreen == Screen.WantListDetail || currentScreen == Screen.WantListAddCard ||
+                            currentScreen == Screen.CollectionDetail || currentScreen == Screen.CollectionAddCard) {
                             IconButton(onClick = { navController.popBackStack() }) {
                                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(id = R.string.action_back))
                             }
@@ -280,6 +306,7 @@ fun MainNavigation(viewModel: MainViewModel) {
                 HomeScreen(
                     viewModel = viewModel,
                     onNavigateToDetail = { identifier -> navController.navigate("card_detail/$identifier") },
+                    onNavigateToCollections = { navController.navigate(Screen.Collections.route) },
                     onNavigateToWishlist = { navController.navigate(Screen.WantLists.route) },
                     onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
                     onNavigateToLogin = { navController.navigate(Screen.Login.route) },
@@ -294,7 +321,16 @@ fun MainNavigation(viewModel: MainViewModel) {
                     onNavigateToDetail = { scryfallId -> navController.navigate("card_detail/$scryfallId") }
                 )
             }
-            composable(Screen.Collections.route) { WipScreen(Screen.Collections) }
+            composable(Screen.Collections.route) { 
+                val collectionViewModel: CollectionViewModel = hiltViewModel()
+                CollectionScreen(
+                    viewModel = collectionViewModel,
+                    mainViewModel = viewModel,
+                    isLoggedIn = uiState.isLoggedIn,
+                    onNavigateToDetail = { localId -> navController.navigate("collection_detail/$localId") },
+                    onNavigateToLogin = { navController.navigate(Screen.Login.route) }
+                )
+            }
             composable(Screen.Decks.route) { WipScreen(Screen.Decks) }
             composable(Screen.Scanner.route) { WipScreen(Screen.Scanner) }
             composable(Screen.Settings.route) {
@@ -327,12 +363,12 @@ fun MainNavigation(viewModel: MainViewModel) {
                 GridSizeScreen(viewModel = viewModel)
             }
             composable(Screen.CardDetail.route) {
-                val detailViewModel: com.pga.magiccollection.ui.screen.CardDetailViewModel = hiltViewModel()
+                val detailViewModel: CardDetailViewModel = hiltViewModel()
                 val card by detailViewModel.card.collectAsState()
                 val versions by detailViewModel.versions.collectAsState()
                 val isLoading by detailViewModel.isLoading.collectAsState()
 
-                com.pga.magiccollection.ui.screen.CardDetailScreen(
+                CardDetailScreen(
                     card = card,
                     isLoading = isLoading,
                     versions = versions,
@@ -363,6 +399,7 @@ fun MainNavigation(viewModel: MainViewModel) {
                     viewModel = wantListViewModel,
                     mainViewModel = viewModel,
                     wantListLocalId = localId,
+                    onNavigateToDetail = { identifier -> navController.navigate("card_detail/$identifier") },
                     onNavigateToAddCard = { navController.navigate("wantlist_add_card/$localId") },
                     onBackClick = { navController.popBackStack() }
                 )
@@ -372,11 +409,41 @@ fun MainNavigation(viewModel: MainViewModel) {
                 arguments = listOf(navArgument("localId") { type = NavType.LongType })
             ) { backStackEntry ->
                 val localId = backStackEntry.arguments?.getLong("localId") ?: 0L
-                val wantListAddCardViewModel: com.pga.magiccollection.ui.screen.WantListAddCardViewModel = hiltViewModel()
+                val wantListAddCardViewModel: WantListAddCardViewModel = hiltViewModel()
                 
-                com.pga.magiccollection.ui.screen.WantListAddCardScreen(
+                WantListAddCardScreen(
                     viewModel = wantListAddCardViewModel,
                     wantListLocalId = localId,
+                    gridSize = preferences?.gridSize ?: 3,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable(
+                route = Screen.CollectionDetail.route,
+                arguments = listOf(navArgument("localId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val localId = backStackEntry.arguments?.getLong("localId") ?: 0L
+                val collectionViewModel: CollectionViewModel = hiltViewModel()
+                
+                CollectionDetailScreen(
+                    viewModel = collectionViewModel,
+                    mainViewModel = viewModel,
+                    collectionLocalId = localId,
+                    onNavigateToDetail = { identifier -> navController.navigate("card_detail/$identifier") },
+                    onNavigateToAddCard = { navController.navigate("collection_add_card/$localId") },
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable(
+                route = Screen.CollectionAddCard.route,
+                arguments = listOf(navArgument("localId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val localId = backStackEntry.arguments?.getLong("localId") ?: 0L
+                val collectionAddCardViewModel: CollectionAddCardViewModel = hiltViewModel()
+                
+                CollectionAddCardScreen(
+                    viewModel = collectionAddCardViewModel,
+                    collectionLocalId = localId,
                     gridSize = preferences?.gridSize ?: 3,
                     onBackClick = { navController.popBackStack() }
                 )

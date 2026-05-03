@@ -18,6 +18,8 @@ import com.pga.magiccollection.data.local.entities.MtgSetEntity
 import com.pga.magiccollection.data.local.dao.MtgSetDao
 import com.pga.magiccollection.data.repository.CardSearchIndexRepository
 import com.pga.magiccollection.util.ErrorParser
+import androidx.paging.cachedIn
+import androidx.paging.PagingData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -47,7 +49,7 @@ class SearchViewModel @Inject constructor(
 
     private val _searchQuery = MutableStateFlow("")
 
-    private val _navigateToDetailEvent = kotlinx.coroutines.flow.MutableSharedFlow<String>()
+    private val _navigateToDetailEvent = MutableSharedFlow<String>()
     val navigateToDetailEvent = _navigateToDetailEvent.asSharedFlow()
 
     private val commonTypes = listOf(
@@ -122,7 +124,7 @@ class SearchViewModel @Inject constructor(
 
     private fun observeLocalResults() {
         viewModelScope.launch {
-            combine(
+            val queryFlow = combine(
                 _searchQuery.debounce(DEBOUNCE_MS).distinctUntilChanged(),
                 _uiState.map { it.selectedColors }.distinctUntilChanged(),
                 _uiState.map { it.useColorIdentity }.distinctUntilChanged(),
@@ -136,27 +138,38 @@ class SearchViewModel @Inject constructor(
             ) { params ->
                 val query = params[0] as String
                 val isSearchPerformed = params[7] as Boolean
-                
-                // Si la query es vacía y no se ha pulsado buscar ni hay filtros, no mostramos nada
                 val hasFilters = (params[1] as Set<*>).isNotEmpty() || (params[4] as String).isNotBlank()
+                
                 if (query.isBlank() && !isSearchPerformed && !hasFilters) {
                     null
                 } else {
-                    // Reconstruimos la query para el repositorio
                     _uiState.value.toCardIndexQuery().copy(searchText = query)
                 }
-            }
-            .distinctUntilChanged()
-            .flatMapLatest { query ->
-                if (query == null) {
-                    flowOf(emptyList())
-                } else {
-                    observeIndexedCardsUseCase(query)
+            }.distinctUntilChanged()
+
+            // Handle standard Flow for suggestions/small lists
+            launch {
+                queryFlow.flatMapLatest { query ->
+                    if (query == null) {
+                        flowOf(emptyList())
+                    } else {
+                        observeIndexedCardsUseCase(query)
+                    }
+                }.collect { cards ->
+                    _uiState.update { it.copy(searchResults = cards) }
                 }
             }
-            .collect { cards ->
-                _uiState.update { it.copy(searchResults = cards) }
-            }
+
+            // Handle Paged Flow for full search results
+            val pagedFlow = queryFlow.flatMapLatest { query ->
+                if (query == null) {
+                    flowOf(PagingData.empty())
+                } else {
+                    observeIndexedCardsUseCase.invokePaged(query)
+                }
+            }.cachedIn(viewModelScope)
+
+            _uiState.update { it.copy(pagedSearchResults = pagedFlow) }
         }
     }
 

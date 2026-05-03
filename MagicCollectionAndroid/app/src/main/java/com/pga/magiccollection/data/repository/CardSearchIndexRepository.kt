@@ -8,9 +8,10 @@ import androidx.sqlite.db.SupportSQLiteQuery
 import com.pga.magiccollection.data.local.MagicDatabase
 import com.pga.magiccollection.data.local.dao.CardSearchIndexDao
 import com.pga.magiccollection.data.local.dao.LanguageIndexStateDao
+import com.pga.magiccollection.data.local.dao.MasterCardSummaryRow
 import com.pga.magiccollection.data.local.dao.MtgSetDao
 import com.pga.magiccollection.data.local.entities.MasterCardEntity
-import com.pga.magiccollection.data.local.entities.CardNameFtsEntity
+import com.pga.magiccollection.data.local.entities.CardSearchFtsEntity
 import com.pga.magiccollection.data.local.entities.LanguageIndexStateEntity
 import com.pga.magiccollection.data.local.entities.MtgSetEntity
 import com.pga.magiccollection.data.remote.api.CardsApi
@@ -25,6 +26,10 @@ import com.pga.magiccollection.domain.model.search.CardIndexQuery
 import com.pga.magiccollection.domain.model.search.ColorMatchMode
 import com.pga.magiccollection.domain.model.search.IndexedCard
 import com.pga.magiccollection.domain.model.search.SearchSortBy
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -58,7 +63,7 @@ class CardSearchIndexRepository @Inject constructor(
     }
 
     fun observeCards(query: CardIndexQuery): Flow<List<IndexedCard>> {
-        return cardSearchIndexDao.observeCards(buildSearchQuery(query))
+        return cardSearchIndexDao.observeCards(buildSearchQuery(query, paged = false))
             .map { rows ->
                 rows.map { row ->
                     IndexedCard(
@@ -70,9 +75,36 @@ class CardSearchIndexRepository @Inject constructor(
             }
     }
 
+    fun observeCardsPaged(query: CardIndexQuery): Flow<PagingData<IndexedCard>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 50,
+                enablePlaceholders = false,
+                initialLoadSize = 100
+            ),
+            pagingSourceFactory = { cardSearchIndexDao.observeCardsPaged(buildSearchQuery(query, paged = true)) }
+        ).flow.map { pagingData ->
+            pagingData.map { row ->
+                IndexedCard(
+                    scryfallId = row.scryfallId,
+                    name = row.name,
+                    imageUrl = row.imageUrl
+                )
+            }
+        }
+    }
+
     fun getAllSets(): Flow<List<MtgSetEntity>> = mtgSetDao.getAllSets()
 
     fun searchSets(query: String): Flow<List<MtgSetEntity>> = mtgSetDao.searchSets(query)
+
+    suspend fun getMasterCardSummariesByIds(scryfallIds: List<String>): Map<String, MasterCardSummaryRow> {
+        if (scryfallIds.isEmpty()) {
+            return emptyMap()
+        }
+        return cardSearchIndexDao.getMasterCardSummariesByIds(scryfallIds.distinct())
+            .associateBy { it.scryfallId }
+    }
 
     fun hasIndexData(): Flow<Boolean> {
         return cardSearchIndexDao.observeMetadataCount().map { it > 0 }
@@ -129,7 +161,7 @@ class CardSearchIndexRepository @Inject constructor(
                 var hasMore = true
                 var totalCards = 0L
                 val masterBuffer = mutableListOf<MasterCardEntity>()
-                val nameBuffer = mutableListOf<CardNameFtsEntity>()
+                val nameBuffer = mutableListOf<CardSearchFtsEntity>()
 
                 while (hasMore) {
                     val page = cardsApi.getIndexPageForLanguage(
@@ -147,12 +179,13 @@ class CardSearchIndexRepository @Inject constructor(
 
                     page.items.forEach { dto ->
                         masterBuffer.add(toMasterCardEntity(dto))
-                        nameBuffer.add(CardNameFtsEntity(cardId = dto.scryfallId, name = dto.defaultName, language = "en"))
+                        nameBuffer.add(CardSearchFtsEntity(cardId = dto.scryfallId, name = dto.defaultName, oracleText = dto.oracleText, language = "en"))
                         if (normalizedLanguage != "en") {
                             nameBuffer.add(
-                                CardNameFtsEntity(
+                                CardSearchFtsEntity(
                                     cardId = dto.scryfallId,
                                     name = dto.localizedName ?: dto.defaultName,
+                                    oracleText = dto.oracleText,
                                     language = normalizedLanguage
                                 )
                             )
@@ -188,7 +221,7 @@ class CardSearchIndexRepository @Inject constructor(
 
     private suspend fun flushBuffers(
         masterCards: MutableList<MasterCardEntity>,
-        names: MutableList<CardNameFtsEntity>,
+        names: MutableList<CardSearchFtsEntity>,
         lang: String
     ) {
         database.withTransaction {
@@ -269,7 +302,7 @@ class CardSearchIndexRepository @Inject constructor(
                     checksum = snapshotResult.checksum,
                     rowCount = snapshotResult.rows.toLong(),
                     lastError = null
-                )
+                    )
                 snapshotResult.rows
             }
         } catch (error: Exception) {
@@ -315,10 +348,10 @@ class CardSearchIndexRepository @Inject constructor(
         }
 
         val nameEntities = cards.filter { it.scryfallId != null && !it.name.startsWith("A-") }.flatMap { remote ->
-            val list = mutableListOf<CardNameFtsEntity>()
-            list.add(CardNameFtsEntity(cardId = remote.scryfallId!!, name = remote.name, language = "en"))
+            val list = mutableListOf<CardSearchFtsEntity>()
+            list.add(CardSearchFtsEntity(cardId = remote.scryfallId!!, name = remote.name, oracleText = remote.oracleText, language = "en"))
             if (lang != "en" && remote.printedName != null) {
-                list.add(CardNameFtsEntity(cardId = remote.scryfallId!!, name = remote.printedName, language = lang))
+                list.add(CardSearchFtsEntity(cardId = remote.scryfallId!!, name = remote.printedName, oracleText = remote.oracleText, language = lang))
             }
             list
         }
@@ -332,7 +365,7 @@ class CardSearchIndexRepository @Inject constructor(
         }
     }
 
-    private suspend fun flushLanguageNames(names: MutableList<CardNameFtsEntity>) {
+    private suspend fun flushLanguageNames(names: MutableList<CardSearchFtsEntity>) {
         cardSearchIndexDao.insertNames(names)
         names.clear()
     }
@@ -381,11 +414,11 @@ class CardSearchIndexRepository @Inject constructor(
         }
     }
 
-    private fun buildSearchQuery(query: CardIndexQuery): SupportSQLiteQuery {
+    private fun buildSearchQuery(query: CardIndexQuery, paged: Boolean = false): SupportSQLiteQuery {
         val lang = normalizeLanguage(query.language)
         
         // Fallback robusto: idioma activo -> inglés -> nombre base
-        val displayNameExpr = "COALESCE(n_lang.name, n_en.name, m.printedName, m.name)"
+        val displayNameExpr = "COALESCE(fts.name, m.printedName, m.name)"
 
         val sql = StringBuilder()
         val args = mutableListOf<Any>()
@@ -397,9 +430,8 @@ class CardSearchIndexRepository @Inject constructor(
                 $displayNameExpr AS name,
                 m.imageUrl AS imageUrl
             FROM master_cards m
-            LEFT JOIN card_names_fts n_lang ON n_lang.card_id = m.scryfallId AND n_lang.language = ?
-            LEFT JOIN card_names_fts n_en ON n_en.card_id = m.scryfallId AND n_en.language = 'en'
-            WHERE m.isDigital = 0
+            JOIN card_search_fts fts ON fts.card_id = m.scryfallId
+            WHERE m.isDigital = 0 AND fts.language IN (?, 'en')
             """.trimIndent()
         )
         args.add(lang)
@@ -409,20 +441,11 @@ class CardSearchIndexRepository @Inject constructor(
             if (ftsQuery == null) {
                 sql.append(" AND 1 = 0")
             } else {
-                sql.append(
-                    """
-                     AND m.scryfallId IN (
-                        SELECT card_id
-                        FROM card_names_fts
-                        WHERE (language = ? OR language = 'en')
-                          AND card_names_fts MATCH ?
-                     )
-                    """.trimIndent().prependIndent(" ")
-                )
-                args.add(lang)
+                sql.append(" AND card_search_fts MATCH ?")
                 args.add(ftsQuery)
             }
         }
+        
         if (query.typeText.isNotBlank()) {
             sql.append(" AND m.typeLine LIKE ? COLLATE NOCASE")
             args.add("%${query.typeText.trim()}%")
@@ -467,8 +490,11 @@ class CardSearchIndexRepository @Inject constructor(
         }
         val direction = if (query.ascending) "ASC" else "DESC"
         sql.append(" ORDER BY $sortColumn $direction, LOWER($displayNameExpr) ASC")
-        sql.append(" LIMIT ?")
-        args.add(query.limit.coerceIn(20, 500))
+        
+        if (!paged) {
+            sql.append(" LIMIT ?")
+            args.add(query.limit.coerceIn(20, 500))
+        }
 
         return SimpleSQLiteQuery(sql.toString(), args.toTypedArray())
     }
@@ -486,7 +512,8 @@ class CardSearchIndexRepository @Inject constructor(
         if (terms.isEmpty()) {
             return null
         }
-        // Cada término debe buscar en la columna 'name' y permitir prefijo '*'
+        // En FTS4, las expresiones parentizadas con OR por columna pueden devolver 0 resultados.
+        // Para autocompletado estable usamos prefijo por nombre.
         return terms.joinToString(" ") { "name:$it*" }
     }
 
@@ -497,7 +524,7 @@ class CardSearchIndexRepository @Inject constructor(
     ): SnapshotApplyResult {
         var count = 0
         val expectedRows = manifest.totalRows
-        val nameBuffer = mutableListOf<CardNameFtsEntity>()
+        val nameBuffer = mutableListOf<CardSearchFtsEntity>()
         val digest = MessageDigest.getInstance("SHA-256")
 
         cardsApi.downloadLanguageNamesSnapshot(lang).use { responseBody ->
@@ -508,6 +535,7 @@ class CardSearchIndexRepository @Inject constructor(
                     while (reader.hasNext()) {
                         var scryfallId: String? = null
                         var localizedName: String? = null
+                        var oracleText: String? = null
 
                         reader.beginObject()
                         while (reader.hasNext()) {
@@ -518,13 +546,16 @@ class CardSearchIndexRepository @Inject constructor(
                                 "localizedName" -> {
                                     if (reader.peek() == JsonToken.NULL) reader.nextNull() else localizedName = reader.nextString()
                                 }
+                                "oracleText" -> {
+                                    if (reader.peek() == JsonToken.NULL) reader.nextNull() else oracleText = reader.nextString()
+                                }
                                 else -> reader.skipValue()
                             }
                         }
                         reader.endObject()
 
                         if (!scryfallId.isNullOrBlank() && !localizedName.isNullOrBlank()) {
-                            nameBuffer.add(CardNameFtsEntity(cardId = scryfallId, name = localizedName, language = lang))
+                            nameBuffer.add(CardSearchFtsEntity(cardId = scryfallId, name = localizedName, oracleText = oracleText, language = lang))
                             digest.update("$scryfallId|$localizedName\n".toByteArray(Charsets.UTF_8))
                             count++
                         }
@@ -561,7 +592,7 @@ class CardSearchIndexRepository @Inject constructor(
             if (upserts.isNotEmpty()) {
                 val ids = upserts.map { it.scryfallId }
                 cardSearchIndexDao.deleteNamesByLanguage(ids, lang)
-                val entities = upserts.map { CardNameFtsEntity(cardId = it.scryfallId, name = it.localizedName, language = lang) }
+                val entities = upserts.map { CardSearchFtsEntity(cardId = it.scryfallId, name = it.localizedName, oracleText = it.oracleText, language = lang) }
                 cardSearchIndexDao.insertNames(entities)
             }
         }

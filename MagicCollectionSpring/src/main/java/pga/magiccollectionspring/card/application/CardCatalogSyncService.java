@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.ResourceAccessException;
@@ -17,11 +18,11 @@ import pga.magiccollectionspring.card.domain.CardLocalizationId;
 import pga.magiccollectionspring.card.domain.ColorMaskCodec;
 import pga.magiccollectionspring.card.domain.ICardCatalogSyncStateRepository;
 import pga.magiccollectionspring.card.domain.ICardLocalizationRepository;
+import pga.magiccollectionspring.card.domain.IMtgSetRepository;
 import pga.magiccollectionspring.card.domain.ICardRepository;
 import pga.magiccollectionspring.card.domain.port.ScryfallPort;
 import pga.magiccollectionspring.card.infrastructure.dto.BulkDataDTO;
 import pga.magiccollectionspring.card.infrastructure.dto.CardScryfallDTO;
-import pga.magiccollectionspring.card.application.LanguageIndexAsyncService;
 
 import java.io.InputStream;
 import java.time.LocalDateTime;
@@ -49,7 +50,7 @@ public class CardCatalogSyncService {
     private final ICardRepository cardRepository;
     private final ICardLocalizationRepository cardLocalizationRepository;
     private final ICardCatalogSyncStateRepository cardCatalogSyncStateRepository;
-    private final pga.magiccollectionspring.card.domain.IMtgSetRepository mtgSetRepository;
+    private final IMtgSetRepository mtgSetRepository;
     private final ScryfallPort scryfallPort;
     private final ObjectMapper objectMapper;
     private final CardLanguageSupport cardLanguageSupport;
@@ -59,7 +60,7 @@ public class CardCatalogSyncService {
     public CardCatalogSyncService(ICardRepository cardRepository,
                                   ICardLocalizationRepository cardLocalizationRepository,
                                   ICardCatalogSyncStateRepository cardCatalogSyncStateRepository,
-                                  pga.magiccollectionspring.card.domain.IMtgSetRepository mtgSetRepository,
+                                  IMtgSetRepository mtgSetRepository,
                                   ScryfallPort scryfallPort,
                                   ObjectMapper objectMapper,
                                   CardLanguageSupport cardLanguageSupport,
@@ -177,7 +178,7 @@ public class CardCatalogSyncService {
         log.info("Descargando {} ({})...", defaultCards.getName(), sizeInfo);
 
         RestTemplate restTemplate = createRestTemplate();
-        return restTemplate.execute(defaultCards.getDownloadUri(), org.springframework.http.HttpMethod.GET, null, response -> {
+        return restTemplate.execute(defaultCards.getDownloadUri(), HttpMethod.GET, null, response -> {
             InputStream is = response.getBody();
             JsonFactory factory = new JsonFactory();
             try (JsonParser parser = factory.createParser(is)) {
@@ -219,14 +220,14 @@ public class CardCatalogSyncService {
     }
 
     public Card sync(CardScryfallDTO dto) {
-        return sync(dto, java.time.LocalDateTime.now());
+        return sync(dto, LocalDateTime.now());
     }
 
-    public Card sync(CardScryfallDTO dto, java.time.LocalDateTime timestamp) {
+    public Card sync(CardScryfallDTO dto, LocalDateTime timestamp) {
         return sync(dto, timestamp, true);
     }
 
-    private Card sync(CardScryfallDTO dto, java.time.LocalDateTime timestamp, boolean persistLocalization) {
+    private Card sync(CardScryfallDTO dto, LocalDateTime timestamp, boolean persistLocalization) {
         Card card = cardRepository.findById(dto.getScryfallId()).orElseGet(() -> {
             Card c = new Card();
             c.setScryfallId(dto.getScryfallId());
@@ -272,7 +273,7 @@ public class CardCatalogSyncService {
         return saved;
     }
 
-    private void upsertLocalization(CardScryfallDTO dto, java.time.LocalDateTime timestamp) {
+    private void upsertLocalization(CardScryfallDTO dto, LocalDateTime timestamp) {
         CardLocalization localization = buildLocalization(dto, timestamp);
         if (localization != null) {
             cardLocalizationRepository.save(localization);
@@ -280,7 +281,7 @@ public class CardCatalogSyncService {
     }
 
     private void upsertLocalizationInBuffer(CardScryfallDTO dto,
-                                            java.time.LocalDateTime timestamp,
+                                            LocalDateTime timestamp,
                                             Map<CardLocalizationId, CardLocalization> buffer) {
         CardLocalization localization = buildLocalization(dto, timestamp);
         if (localization != null) {
@@ -310,7 +311,7 @@ public class CardCatalogSyncService {
         return changed.size();
     }
 
-    private CardLocalization buildLocalization(CardScryfallDTO dto, java.time.LocalDateTime timestamp) {
+    private CardLocalization buildLocalization(CardScryfallDTO dto, LocalDateTime timestamp) {
         String oracleId = dto.getOracleId();
         String localizedName = resolveLocalizedName(dto);
         if (oracleId == null || oracleId.isBlank() || localizedName == null || localizedName.isBlank()) {
@@ -363,7 +364,7 @@ public class CardCatalogSyncService {
             Set<String> supportedLanguages
     ) {
         RestTemplate restTemplate = createRestTemplate();
-        return restTemplate.execute(allCards.getDownloadUri(), org.springframework.http.HttpMethod.GET, null, response -> {
+        return restTemplate.execute(allCards.getDownloadUri(), HttpMethod.GET, null, response -> {
             InputStream is = response.getBody();
             JsonFactory factory = new JsonFactory();
             try (JsonParser parser = factory.createParser(is)) {

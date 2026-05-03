@@ -14,8 +14,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class WantListUiState(
-    val wantLists: List<WantListEntity> = emptyList(),
-    val filteredWantLists: List<WantListEntity> = emptyList(),
+    val wantLists: List<com.pga.magiccollection.data.local.dao.WantListWithCount> = emptyList(),
+    val filteredWantLists: List<com.pga.magiccollection.data.local.dao.WantListWithCount> = emptyList(),
     val searchQuery: String = "",
     val selectedWantList: WantListEntity? = null,
     val selectedWantListCards: List<WantListCardEntity> = emptyList(),
@@ -78,7 +78,7 @@ class WantListViewModel @Inject constructor(
         }
     }
 
-    private fun filterLists(lists: List<WantListEntity>, query: String): List<WantListEntity> {
+    private fun filterLists(lists: List<com.pga.magiccollection.data.local.dao.WantListWithCount>, query: String): List<com.pga.magiccollection.data.local.dao.WantListWithCount> {
         if (query.isBlank()) return lists
         return lists.filter { it.name.contains(query, ignoreCase = true) }
     }

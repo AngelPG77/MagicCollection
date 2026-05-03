@@ -1,6 +1,6 @@
 package com.pga.magiccollection.ui.screen
 
-import com.pga.magiccollection.data.local.entities.CollectionEntity
+import com.pga.magiccollection.data.local.dao.CollectionWithCount
 import com.pga.magiccollection.data.remote.dto.ScryfallCardDto
 import com.pga.magiccollection.data.remote.dto.IndexVersionDto
 
@@ -23,7 +23,7 @@ data class MainUiState(
     val searchMessage: String? = null,
     val collectionMessage: String? = null,
     val searchResults: List<ScryfallCardDto> = emptyList(),
-    val collections: List<CollectionEntity> = emptyList(),
+    val collections: List<CollectionWithCount> = emptyList(),
     val isProfileSynced: Boolean = true,
 
     // Gestión de cuenta

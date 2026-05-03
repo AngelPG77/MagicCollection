@@ -5,7 +5,9 @@ import com.pga.magiccollection.data.repository.CardSearchIndexRepository
 import com.pga.magiccollection.data.remote.dto.CardSuggestionDto
 import com.pga.magiccollection.data.remote.dto.ScryfallCardDto
 
-class CardRepository(
+import javax.inject.Inject
+
+class CardRepository @Inject constructor(
     private val cardsApi: CardsApi,
     private val cardSearchIndexRepository: CardSearchIndexRepository
 ) {

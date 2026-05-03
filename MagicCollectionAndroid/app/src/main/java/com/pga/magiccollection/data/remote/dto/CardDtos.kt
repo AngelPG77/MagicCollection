@@ -39,6 +39,7 @@ data class CardMetadataIndexDto(
     val scryfallId: String,
     val defaultName: String,
     val localizedName: String?,
+    val oracleText: String?,
     val colorMask: Int,
     val identityMask: Int,
     val manaCost: String?,
@@ -80,7 +81,8 @@ data class LanguageIndexManifestDto(
 
 data class LanguageDeltaItemDto(
     val scryfallId: String,
-    val localizedName: String
+    val localizedName: String,
+    val oracleText: String?
 )
 
 data class LanguageIndexDeltaDto(

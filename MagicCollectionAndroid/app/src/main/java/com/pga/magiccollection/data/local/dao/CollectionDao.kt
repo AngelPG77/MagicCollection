@@ -9,35 +9,52 @@ import androidx.room.Update
 import com.pga.magiccollection.data.local.entities.CollectionEntity
 import kotlinx.coroutines.flow.Flow
 
+data class CollectionWithCount(
+    val localId: Long,
+    val remoteId: Long?,
+    val name: String,
+    val userId: Long,
+    val synced: Boolean,
+    val cardCount: Int
+)
+
 @Dao
 interface CollectionDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCollection(collection: CollectionEntity): Long
+    suspend fun insert(collection: CollectionEntity): Long
+
+    @Query("""
+        SELECT c.localId, c.remoteId, c.name, c.userId, c.synced, COALESCE(SUM(cc.quantity), 0) as cardCount 
+        FROM collections c
+        LEFT JOIN collection_cards cc ON c.localId = cc.collectionLocalId AND cc.pendingDelete = 0
+        WHERE c.userId = :userId AND c.pendingDelete = 0
+        GROUP BY c.localId
+    """)
+    fun observeByUserIdWithCount(userId: Long): Flow<List<CollectionWithCount>>
+    @Query("SELECT * FROM collections WHERE localId = :localId")
+    suspend fun getById(localId: Long): CollectionEntity?
+
+    @Query("SELECT * FROM collections WHERE remoteId = :remoteId")
+    suspend fun getByRemoteId(remoteId: Long): CollectionEntity?
 
     @Query("SELECT * FROM collections WHERE localId = :localId")
-    suspend fun getCollectionById(localId: Long): CollectionEntity?
-
-    @Query("SELECT * FROM collections WHERE localId = :localId")
-    fun getCollectionByIdAsFlow(localId: Long): Flow<CollectionEntity?>
+    fun getByIdAsFlow(localId: Long): Flow<CollectionEntity?>
 
     @Query("SELECT * FROM collections WHERE userId = :userId AND pendingDelete = 0")
-    fun getCollectionsByUserId(userId: Long): Flow<List<CollectionEntity>>
+    fun observeByUserId(userId: Long): Flow<List<CollectionEntity>>
 
     @Query("SELECT * FROM collections WHERE userId = :userId AND pendingDelete = 0")
-    suspend fun getCollectionsByUserIdSync(userId: Long): List<CollectionEntity>
+    suspend fun getByUserId(userId: Long): List<CollectionEntity>
 
     @Query("SELECT * FROM collections WHERE name = :name AND userId = :userId")
-    suspend fun getCollectionByNameAndUserId(name: String, userId: Long): CollectionEntity?
+    suspend fun getByNameAndUserId(name: String, userId: Long): CollectionEntity?
 
     @Query("SELECT EXISTS(SELECT 1 FROM collections WHERE name = :name AND userId = :userId)")
     suspend fun existsByNameAndUserId(name: String, userId: Long): Boolean
 
     @Query("SELECT * FROM collections WHERE localId = :localId")
     fun observeCollection(localId: Long): Flow<CollectionEntity?>
-
-    @Query("SELECT * FROM collections WHERE userId = :userId AND pendingDelete = 0 ORDER BY localId DESC")
-    fun observeCollectionsByUserId(userId: Long): Flow<List<CollectionEntity>>
 
     @Query("UPDATE collections SET pendingDelete = 1 WHERE localId = :localId")
     suspend fun markForDeletion(localId: Long): Int
@@ -46,13 +63,13 @@ interface CollectionDao {
     suspend fun getPendingDeletions(userId: Long): List<CollectionEntity>
 
     @Update
-    suspend fun updateCollection(collection: CollectionEntity): Int
+    suspend fun update(collection: CollectionEntity): Int
 
     @Delete
-    suspend fun deleteCollection(collection: CollectionEntity): Int
+    suspend fun delete(collection: CollectionEntity): Int
 
     @Query("DELETE FROM collections WHERE localId = :localId")
-    suspend fun deleteCollectionById(localId: Long): Int
+    suspend fun deleteById(localId: Long): Int
 
     @Query("UPDATE collections SET synced = 1, remoteId = :remoteId WHERE localId = :localId")
     suspend fun markAsSynced(localId: Long, remoteId: Long): Int
@@ -71,17 +88,4 @@ interface CollectionDao {
 
     @Query("SELECT COUNT(*) FROM collections WHERE userId = :userId AND synced = 0")
     fun observeUnsyncedCollectionsCount(userId: Long): Flow<Int>
-
-    // Statistics operations
-    @Query("""
-        SELECT COALESCE(SUM(quantity), 0) FROM cards_owned 
-        WHERE collectionId = :collectionId
-    """)
-    suspend fun getTotalCardsQuantity(collectionId: Long): Int
-
-    @Query("""
-        SELECT COUNT(DISTINCT scryfallId) FROM cards_owned 
-        WHERE collectionId = :collectionId
-    """)
-    suspend fun getUniqueCardsCount(collectionId: Long): Int
 }

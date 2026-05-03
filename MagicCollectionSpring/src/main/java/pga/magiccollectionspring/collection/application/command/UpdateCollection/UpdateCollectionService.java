@@ -1,6 +1,5 @@
 package pga.magiccollectionspring.collection.application.command.UpdateCollection;
 
-import pga.magiccollectionspring.collection.api.CollectionMapper;
 import pga.magiccollectionspring.collection.domain.Collection;
 import pga.magiccollectionspring.collection.domain.ICollectionRepository;
 import pga.magiccollectionspring.shared.abstractions.ICommandService;
@@ -15,14 +14,11 @@ import org.springframework.stereotype.Service;
 public class UpdateCollectionService implements ICommandService<UpdateCollectionCommand, UpdateCollectionResponse> {
 
     private final ICollectionRepository collectionRepository;
-    private final CollectionMapper collectionMapper;
     private final CurrentUserProvider currentUserProvider;
 
     public UpdateCollectionService(ICollectionRepository collectionRepository,
-                                   CollectionMapper collectionMapper,
                                    CurrentUserProvider currentUserProvider) {
         this.collectionRepository = collectionRepository;
-        this.collectionMapper = collectionMapper;
         this.currentUserProvider = currentUserProvider;
     }
 
@@ -44,6 +40,6 @@ public class UpdateCollectionService implements ICommandService<UpdateCollection
 
         collection.setName(command.newName());
         Collection saved = collectionRepository.save(collection);
-        return new UpdateCollectionResponse(collectionMapper.map(saved));
+        return new UpdateCollectionResponse(saved.getId());
     }
 }

@@ -100,6 +100,27 @@
     <string name="lang_en">English</string>
     <string name="lang_es">Spanish</string>
     
+    <string name="collection_title">Collections</string>
+    <string name="collection_empty">You don\'t have any collections yet</string>
+    <string name="collection_create_title">New collection</string>
+    <string name="collection_edit_title">Edit collection</string>
+    <string name="collection_name_hint">Collection name</string>
+    <string name="collection_name_empty_error">Name cannot be empty</string>
+    <string name="collection_name_exists_error">A collection with this name already exists</string>
+    <string name="collection_detail_empty">No cards found in this view</string>
+    <string name="collection_created_success">Collection created successfully</string>
+    <string name="collection_updated_success">Collection updated successfully</string>
+    <string name="collection_deleted_success">Collection deleted successfully</string>
+    <string name="collection_card_added_success">Card added to collection</string>
+    <string name="collection_card_removed_success">Card removed from collection</string>
+    <string name="collection_add_card">Add card</string>
+    <string name="collection_login_required">Login to manage your collections</string>
+    <string name="collection_search_hint">Search collections…</string>
+    <string name="collection_card_search_hint">Search cards in collection…</string>
+    <string name="collection_all_title">All Collections</string>
+    <string name="collection_all_description">Search across all your collections at once</string>
+    <string name="collection_card_count">%1$d cards</string>
+    
     <string name="wantlist_title">Wishlists</string>
     <string name="wantlist_empty">You don\'t have any wishlists yet</string>
     <string name="wantlist_create_title">New wishlist</string>

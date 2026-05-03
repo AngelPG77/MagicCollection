@@ -1,9 +1,11 @@
 package pga.magiccollectionspring.card.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "card_localizations", indexes = {
@@ -15,15 +17,15 @@ public class CardLocalization {
     @EmbeddedId
     private CardLocalizationId id;
 
-    @jakarta.persistence.Column(name = "localized_name", nullable = false)
+    @Column(name = "localized_name", nullable = false)
     private String localizedName;
 
-    @jakarta.persistence.Column(name = "last_updated")
-    private java.time.LocalDateTime lastUpdated;
+    @Column(name = "last_updated")
+    private LocalDateTime lastUpdated;
 
     public CardLocalization() {}
 
-    public CardLocalization(CardLocalizationId id, String localizedName, java.time.LocalDateTime lastUpdated) {
+    public CardLocalization(CardLocalizationId id, String localizedName, LocalDateTime lastUpdated) {
         this.id = id;
         this.localizedName = localizedName;
         this.lastUpdated = lastUpdated;
@@ -45,11 +47,11 @@ public class CardLocalization {
         this.localizedName = localizedName;
     }
 
-    public java.time.LocalDateTime getLastUpdated() {
+    public LocalDateTime getLastUpdated() {
         return lastUpdated;
     }
 
-    public void setLastUpdated(java.time.LocalDateTime lastUpdated) {
+    public void setLastUpdated(LocalDateTime lastUpdated) {
         this.lastUpdated = lastUpdated;
     }
 }

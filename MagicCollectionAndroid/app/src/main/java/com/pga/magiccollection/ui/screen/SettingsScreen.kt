@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import com.pga.magiccollection.R
 import com.pga.magiccollection.domain.model.card.MtgLanguage
 import com.pga.magiccollection.ui.theme.ThemeColors
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun SettingsScreen(
@@ -152,9 +154,9 @@ fun SettingsScreen(
                 val lastUpdate = preferences!!.lastIndexUpdate
                 val subtitle = if (lastUpdate != null) {
                     val formattedDate = try {
-                        val isoFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                        val isoFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                         val date = isoFormat.parse(lastUpdate)
-                        val displayFormat = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+                        val displayFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                         displayFormat.format(date!!)
                     } catch (e: Exception) {
                         lastUpdate
@@ -342,7 +344,7 @@ fun SettingsScreen(
                     title = stringResource(id = R.string.settings_dark_theme),
                     checked = preferences!!.darkTheme,
                     onCheckedChange = { viewModel.updateDarkTheme(it) },
-                    icon = Icons.Default.Build
+                    icon = if (preferences!!.darkTheme) Icons.Default.DarkMode else Icons.Default.LightMode
                 )
                 ColorSettingsItem(
                     selectedColor = preferences!!.themeColor,
@@ -351,7 +353,7 @@ fun SettingsScreen(
                 TextSettingsItem(
                     title = stringResource(id = R.string.settings_grid_size),
                     subtitle = stringResource(id = R.string.settings_grid_size_columns, preferences!!.gridSize),
-                    icon = Icons.Default.Menu,
+                    icon = Icons.Default.GridView,
                     onClick = onNavigateToGridSize
                 )
             }
@@ -635,7 +637,7 @@ fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = title,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold
         )

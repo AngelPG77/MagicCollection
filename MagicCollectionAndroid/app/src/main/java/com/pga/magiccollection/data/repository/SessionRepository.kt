@@ -5,13 +5,15 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
+import javax.inject.Inject
+
 data class SessionState(
     val isLoggedIn: Boolean,
     val userId: Long,
     val username: String
 )
 
-class SessionRepository(
+class SessionRepository @Inject constructor(
     private val sessionManager: SessionManager
 ) {
     private val _sessionExpiredEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 1)

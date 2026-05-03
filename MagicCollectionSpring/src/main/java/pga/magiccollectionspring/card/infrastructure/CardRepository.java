@@ -97,13 +97,13 @@ public interface CardRepository extends JpaRepository<Card, String>, ICardReposi
      * Optimization: Get all existing Scryfall IDs in one go
      */
     @Query("SELECT c.scryfallId FROM Card c")
-    java.util.Set<String> findAllScryfallIds();
+    Set<String> findAllScryfallIds();
 
     // ========== EXISTENCE CHECKS ==========
     boolean existsByScryfallId(String scryfallId);
 
     @Query("SELECT MAX(c.lastUpdated) FROM Card c")
-    java.time.LocalDateTime findMaxLastUpdated();
+    LocalDateTime findMaxLastUpdated();
 
     @Override
     @Query(

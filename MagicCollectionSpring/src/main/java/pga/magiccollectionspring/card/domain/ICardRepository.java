@@ -42,13 +42,13 @@ public interface ICardRepository extends IRepository<Card, String> {
     List<Card> findByColorAndType(String color, String type);
 
     // Utility
-    java.util.Set<String> findAllScryfallIds();
+    Set<String> findAllScryfallIds();
 
     boolean existsByScryfallId(String scryfallId);
 
     long count();
 
-    java.time.LocalDateTime findMaxLastUpdated();
+    LocalDateTime findMaxLastUpdated();
 
     Page<CardIndexView> findIndexPage(Pageable pageable);
 

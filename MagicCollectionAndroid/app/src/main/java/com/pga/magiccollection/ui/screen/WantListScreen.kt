@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,6 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.unit.LayoutDirection
 import com.pga.magiccollection.R
 import com.pga.magiccollection.data.local.entities.WantListEntity
 import com.pga.magiccollection.ui.component.MagicCollectionSnackbarHost
@@ -113,8 +115,8 @@ fun WantListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(
-                    start = padding.calculateStartPadding(androidx.compose.ui.unit.LayoutDirection.Ltr),
-                    end = padding.calculateEndPadding(androidx.compose.ui.unit.LayoutDirection.Ltr),
+                    start = padding.calculateStartPadding(LayoutDirection.Ltr),
+                    end = padding.calculateEndPadding(LayoutDirection.Ltr),
                     bottom = padding.calculateBottomPadding(),
                     top = 8.dp
                 )
@@ -180,14 +182,23 @@ fun WantListScreen(
                     // Filtered WantLists
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 8.dp),
+                        contentPadding = PaddingValues(bottom = 16.dp, top = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(uiState.filteredWantLists, key = { it.localId }) { wantList ->
                             WantListItem(
-                                wantList = wantList,
+                                name = wantList.name,
+                                cardCount = wantList.cardCount,
                                 onClick = { onNavigateToDetail(wantList.localId) },
-                                onEditClick = { viewModel.showEditDialog(wantList) }
+                                onEditClick = { viewModel.showEditDialog(
+                                    WantListEntity(
+                                        localId = wantList.localId,
+                                        remoteId = wantList.remoteId,
+                                        name = wantList.name,
+                                        userId = wantList.userId,
+                                        synced = wantList.synced
+                                    )
+                                ) }
                             )
                         }
                     }
@@ -222,14 +233,16 @@ fun WantListScreen(
 }
 
 @Composable
-fun WantListItem(
-    wantList: WantListEntity,
+private fun WantListItem(
+    name: String,
+    cardCount: Int? = null,
     onClick: () -> Unit,
-    onEditClick: () -> Unit
+    onEditClick: (() -> Unit)?
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = 16.dp)
             .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -240,23 +253,33 @@ fun WantListItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                Icons.Default.Favorite,
+                Icons.AutoMirrored.Filled.List,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = wantList.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f)
-            )
-            IconButton(onClick = onEditClick) {
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.secondary
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
                 )
+                if (cardCount != null) {
+                    Text(
+                        text = stringResource(id = R.string.collection_card_count, cardCount),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
+            if (onEditClick != null) {
+                IconButton(onClick = onEditClick) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                }
             }
         }
     }

@@ -1,14 +1,13 @@
 package pga.magiccollectionspring.collection.application.command.CreateCollection;
 
-import pga.magiccollectionspring.collection.api.CollectionMapper;
 import pga.magiccollectionspring.collection.domain.Collection;
 import pga.magiccollectionspring.collection.domain.ICollectionRepository;
 import pga.magiccollectionspring.shared.abstractions.ICommandService;
 import pga.magiccollectionspring.shared.exception.ConflictException;
 import pga.magiccollectionspring.shared.exception.ResourceNotFoundException;
 import pga.magiccollectionspring.shared.security.CurrentUserProvider;
+import pga.magiccollectionspring.user.application.IUserInternalService;
 import pga.magiccollectionspring.user.domain.User;
-import pga.magiccollectionspring.user.domain.IUserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -16,17 +15,14 @@ import org.springframework.stereotype.Service;
 public class CreateCollectionService implements ICommandService<CreateCollectionCommand, CreateCollectionResponse> {
 
     private final ICollectionRepository collectionRepository;
-    private final IUserRepository userRepository;
-    private final CollectionMapper collectionMapper;
+    private final IUserInternalService userInternalService;
     private final CurrentUserProvider currentUserProvider;
 
     public CreateCollectionService(ICollectionRepository collectionRepository,
-                                   IUserRepository userRepository,
-                                   CollectionMapper collectionMapper,
+                                   IUserInternalService userInternalService,
                                    CurrentUserProvider currentUserProvider) {
         this.collectionRepository = collectionRepository;
-        this.userRepository = userRepository;
-        this.collectionMapper = collectionMapper;
+        this.userInternalService = userInternalService;
         this.currentUserProvider = currentUserProvider;
     }
 
@@ -34,7 +30,7 @@ public class CreateCollectionService implements ICommandService<CreateCollection
     @Transactional
     public CreateCollectionResponse execute(CreateCollectionCommand command) {
         String username = currentUserProvider.getCurrentUsername();
-        User owner = userRepository.findByUsername(username)
+        User owner = userInternalService.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", username));
 
         if (collectionRepository.existsByNameAndOwner(command.name(), owner)) {
@@ -45,6 +41,6 @@ public class CreateCollectionService implements ICommandService<CreateCollection
         collection.setName(command.name());
         collection.setOwner(owner);
         Collection saved = collectionRepository.save(collection);
-        return new CreateCollectionResponse(collectionMapper.map(saved));
+        return new CreateCollectionResponse(saved.getId());
     }
 }

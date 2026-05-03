@@ -62,16 +62,26 @@ public class WantListController {
 
     @PostMapping
     public ResponseEntity<WantListDTO> createWantList(@RequestBody CreateWantListRequest request) {
+        // Command (Write side)
         var response = createWantListService.execute(new CreateWantListCommand(request.getName()));
-        return ResponseEntity.status(HttpStatus.CREATED).body(response.wantList());
+        
+        // Query (Read side)
+        var result = getWantListByIdService.execute(new GetWantListByIdQuery(response.id())).wantList();
+        
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<WantListDTO> updateWantList(
             @PathVariable Long id,
             @RequestBody UpdateWantListRequest request) {
-        var response = updateWantListService.execute(new UpdateWantListCommand(id, request.getName()));
-        return ResponseEntity.ok(response.wantList());
+        // Command
+        updateWantListService.execute(new UpdateWantListCommand(id, request.getName()));
+        
+        // Query
+        var result = getWantListByIdService.execute(new GetWantListByIdQuery(id)).wantList();
+        
+        return ResponseEntity.ok(result);
     }
 
     @DeleteMapping("/{id}")

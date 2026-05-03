@@ -1,8 +1,13 @@
 package pga.magiccollectionspring.card.infrastructure;
 
+import pga.magiccollectionspring.card.api.dto.CardSuggestionDTO;
 import pga.magiccollectionspring.card.domain.port.ScryfallPort;
+import pga.magiccollectionspring.card.infrastructure.dto.BulkDataDTO;
+import pga.magiccollectionspring.card.infrastructure.dto.BulkDataListResponse;
 import pga.magiccollectionspring.card.infrastructure.dto.CardScryfallDTO;
 import pga.magiccollectionspring.card.infrastructure.dto.ScryfallSearchResponse;
+import pga.magiccollectionspring.card.infrastructure.dto.ScryfallSetDTO;
+import pga.magiccollectionspring.card.infrastructure.dto.ScryfallSetListResponse;
 import pga.magiccollectionspring.shared.exception.ExternalServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +15,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -162,7 +168,7 @@ public class ScryfallAdapter implements ScryfallPort {
 
     @Override
     @Cacheable(value = "cardSuggestions", key = "#query")
-    public CompletableFuture<List<pga.magiccollectionspring.card.api.dto.CardSuggestionDTO>> autocomplete(String query) {
+    public CompletableFuture<List<CardSuggestionDTO>> autocomplete(String query) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 // name:/^.../ -> Búsqueda ultrarrápida por inicio de nombre
@@ -183,16 +189,16 @@ public class ScryfallAdapter implements ScryfallPort {
                 if (response != null && response.getData() != null) {
                     return response.getData().stream()
                             .limit(20)
-                            .map(card -> new pga.magiccollectionspring.card.api.dto.CardSuggestionDTO(
+                            .map(card -> new CardSuggestionDTO(
                                     card.getName(),
                                     card.getImageUris() != null ? card.getImageUris().getSmall() : null,
                                     card.getScryfallId()
                             ))
                             .toList();
                 }
-                return java.util.Collections.emptyList();
+                return Collections.emptyList();
             } catch (Exception e) {
-                return java.util.Collections.emptyList();
+                return Collections.emptyList();
             }
         });
     }
@@ -216,34 +222,34 @@ public class ScryfallAdapter implements ScryfallPort {
     }
 
     @Override
-    public CompletableFuture<List<pga.magiccollectionspring.card.infrastructure.dto.BulkDataDTO>> getBulkDataInfo() {
+    public CompletableFuture<List<BulkDataDTO>> getBulkDataInfo() {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                pga.magiccollectionspring.card.infrastructure.dto.BulkDataListResponse response = scryfallClient.get()
+                BulkDataListResponse response = scryfallClient.get()
                         .uri("/bulk-data")
                         .retrieve()
-                        .body(pga.magiccollectionspring.card.infrastructure.dto.BulkDataListResponse.class);
-                return response != null ? response.getData() : java.util.Collections.emptyList();
+                        .body(BulkDataListResponse.class);
+                return response != null ? response.getData() : Collections.emptyList();
             } catch (Exception e) {
                 log.error("Error obteniendo info de bulk data de Scryfall: {}", e.getMessage());
-                return java.util.Collections.emptyList();
+                return Collections.emptyList();
             }
         });
     }
 
     @Override
-    public CompletableFuture<List<pga.magiccollectionspring.card.infrastructure.dto.ScryfallSetDTO>> getSets() {
+    public CompletableFuture<List<ScryfallSetDTO>> getSets() {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                pga.magiccollectionspring.card.infrastructure.dto.ScryfallSetListResponse response = scryfallClient.get()
+                ScryfallSetListResponse response = scryfallClient.get()
                         .uri("/sets")
                         .retrieve()
-                        .body(pga.magiccollectionspring.card.infrastructure.dto.ScryfallSetListResponse.class);
-                return response != null ? response.getData() : java.util.Collections.emptyList();
+                        .body(ScryfallSetListResponse.class);
+                return response != null ? response.getData() : Collections.emptyList();
             } catch (Exception e) {
                 log.error("Error obteniendo lista de expansiones de Scryfall: {}", e.getMessage());
-                return java.util.Collections.emptyList();
+                return Collections.emptyList();
             }
         });
     }
-    }
+}

@@ -16,6 +16,8 @@ import com.pga.magiccollection.data.local.dao.LanguageIndexStateDao
 import com.pga.magiccollection.data.local.security.PreferenceManager
 import com.pga.magiccollection.data.worker.DownloadLanguageWorker
 import com.pga.magiccollection.data.repository.CardSearchIndexRepository
+import com.pga.magiccollection.data.worker.SyncCatalogWorker
+import com.pga.magiccollection.data.worker.PrefetchImagesWorker
 import com.pga.magiccollection.domain.usecase.auth.*
 import com.pga.magiccollection.domain.usecase.card.*
 import com.pga.magiccollection.domain.usecase.collection.*
@@ -27,11 +29,15 @@ import com.pga.magiccollection.util.ErrorParser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.abs
 import java.util.concurrent.TimeUnit
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.Date
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -69,6 +75,8 @@ class MainViewModel @Inject constructor(
     
     private val _navigateToDetailEvent = MutableSharedFlow<String>()
     val navigateToDetailEvent = _navigateToDetailEvent.asSharedFlow()
+    private val _navigateToLoginEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val navigateToLoginEvent = _navigateToLoginEvent.asSharedFlow()
 
     // Flujos de Datos para Home y Settings
     val recentCards = getRecentCardsUseCase()
@@ -113,58 +121,58 @@ class MainViewModel @Inject constructor(
             resetIndexProgressThrottle()
             _uiState.update { it.copy(isUpdatingIndex = true, indexProgress = 0f) }
             lastIndexProgress = 0f
-            try {
-                val downloadedLangs = preferenceManager.downloadedLanguages.first().ifEmpty { setOf("en") }
-
-                val extraLanguages = downloadedLangs
-                    .map { it.trim().lowercase() }
-                    .filter { it.isNotBlank() && it != "en" }
-                    .distinct()
-                val totalSteps = 1 + extraLanguages.size
-                var currentStep = 0
-
-                cardSearchIndexRepository.bootstrapIndex("en") { progress ->
-                    val globalProgress = (currentStep.toFloat() + progress) / totalSteps.toFloat()
-                    updateIndexProgress(globalProgress)
-                }
+            
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
                 
-                // Actualizar estado en la base de datos para evitar que se pida actualizar de nuevo
-                languageIndexStateDao.upsert(
-                    com.pga.magiccollection.data.local.entities.LanguageIndexStateEntity(
-                        languageCode = "en",
-                        installedVersion = version.version,
-                        checksum = version.checksum, // Added checksum
-                        status = "READY",
-                        lastSyncAt = System.currentTimeMillis(),
-                        rowCount = version.totalRows // Use totalRows from server
-                    )
-                )
+            val workRequest = OneTimeWorkRequestBuilder<SyncCatalogWorker>()
+                .setConstraints(constraints)
+                .build()
                 
-                currentStep++
-
-                extraLanguages.forEach { lang ->
-                    cardSearchIndexRepository.downloadLanguage(lang) { progress ->
-                        val globalProgress = (currentStep.toFloat() + progress) / totalSteps.toFloat()
-                        updateIndexProgress(globalProgress)
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                SyncCatalogWorker.WORK_NAME,
+                ExistingWorkPolicy.REPLACE,
+                workRequest
+            )
+            
+            downloadJob?.cancel()
+            downloadJob = viewModelScope.launch {
+                WorkManager.getInstance(context)
+                    .getWorkInfoByIdFlow(workRequest.id)
+                    .collect { workInfo ->
+                        if (workInfo != null) {
+                            when (workInfo.state) {
+                                WorkInfo.State.RUNNING -> {
+                                    val progress = workInfo.progress.getFloat(SyncCatalogWorker.KEY_PROGRESS, 0f)
+                                    updateIndexProgress(progress)
+                                }
+                                WorkInfo.State.SUCCEEDED -> {
+                                    val steps = workInfo.outputData.getInt(SyncCatalogWorker.KEY_STEPS, 1)
+                                    _uiState.update { it.copy(
+                                        isUpdatingIndex = false,
+                                        indexProgress = 0f,
+                                        authMessageRes = R.string.index_updated_count,
+                                        authMessageArgs = listOf(steps.toString()),
+                                        showUpdateDialog = false
+                                    )}
+                                    resetIndexProgressThrottle()
+                                }
+                                WorkInfo.State.FAILED -> {
+                                    val error = workInfo.outputData.getString(SyncCatalogWorker.KEY_ERROR) ?: "Unknown Error"
+                                    _uiState.update { it.copy(
+                                        isUpdatingIndex = false,
+                                        indexProgress = 0f,
+                                        authMessageRes = R.string.index_update_error,
+                                        authMessageArgs = listOf(error),
+                                        showUpdateDialog = false
+                                    )}
+                                    resetIndexProgressThrottle()
+                                }
+                                else -> {}
+                            }
+                        }
                     }
-                    currentStep++
-                }
-                
-                preferenceManager.setLastIndexUpdate(version.lastUpdated)
-                _uiState.update { it.copy(
-                    authMessageRes = R.string.index_updated_count,
-                    authMessageArgs = listOf(totalSteps.toString()),
-                    showUpdateDialog = false 
-                ) }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(
-                    authMessageRes = R.string.index_update_error,
-                    authMessageArgs = listOf(handleError(e)),
-                    showUpdateDialog = false
-                ) }
-            } finally {
-                _uiState.update { it.copy(isUpdatingIndex = false, indexProgress = 0f) }
-                resetIndexProgressThrottle()
             }
         }
     }
@@ -175,6 +183,7 @@ class MainViewModel @Inject constructor(
             observeSessionExpiredUseCase().collect {
                 logout()
                 _uiState.update { it.copy(authMessageRes = R.string.msg_session_expired) }
+                _navigateToLoginEvent.tryEmit(Unit)
             }
         }
     }
@@ -199,6 +208,25 @@ class MainViewModel @Inject constructor(
                 syncCollectionsUseCase(userId)
                 syncWantListsUseCase(userId)
                 _uiState.update { it.copy(authMessageRes = R.string.msg_profile_synced) }
+                
+                // Proactive Offline-First Pre-fetching
+                val workData = Data.Builder()
+                    .putLong(PrefetchImagesWorker.KEY_USER_ID, userId)
+                    .build()
+                val constraints = Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
+                val prefetchRequest = OneTimeWorkRequestBuilder<PrefetchImagesWorker>()
+                    .setInputData(workData)
+                    .setConstraints(constraints)
+                    .build()
+                
+                WorkManager.getInstance(context).enqueueUniqueWork(
+                    PrefetchImagesWorker.WORK_NAME,
+                    ExistingWorkPolicy.REPLACE,
+                    prefetchRequest
+                )
+                
             } catch (e: Exception) {
                 _uiState.update { it.copy(authMessage = handleError(e)) }
             } finally {
@@ -243,7 +271,7 @@ class MainViewModel @Inject constructor(
                 
                 cardSearchIndexRepository.syncSets()
                 
-                kotlinx.coroutines.delay(2000)
+                delay(2000)
 
                 val downloadedLangs = preferenceManager.downloadedLanguages.first().ifEmpty { setOf("en") }
                 
@@ -254,8 +282,8 @@ class MainViewModel @Inject constructor(
                     }
                 }
                 
-                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault())
-                val nowIso = sdf.format(java.util.Date())
+                val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+                val nowIso = sdf.format(Date())
                 preferenceManager.setLastIndexUpdate(nowIso)
                 
                 _uiState.update { it.copy(authMessageRes = R.string.msg_sync_completed) }

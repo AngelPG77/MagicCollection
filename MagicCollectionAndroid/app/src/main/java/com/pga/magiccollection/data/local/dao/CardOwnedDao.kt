@@ -38,6 +38,14 @@ interface CardOwnedDao {
     fun observeCardsInCollection(collectionId: Long): Flow<List<CardOwnedEntity>>
 
     @Query("""
+        SELECT co.* FROM cards_owned co
+        INNER JOIN collections c ON co.collectionId = c.localId
+        WHERE c.userId = :userId AND co.pendingDelete = 0
+        ORDER BY co.scryfallId
+    """)
+    fun observeCardsOwnedByUser(userId: Long): Flow<List<CardOwnedEntity>>
+
+    @Query("""
         UPDATE cards_owned SET pendingDelete = 1 
         WHERE scryfallId = :scryfallId 
         AND collectionId = :collectionId 
@@ -84,4 +92,12 @@ interface CardOwnedDao {
         WHERE c.synced = 0 AND col.userId = :userId
     """)
     fun observeUnsyncedCardsCount(userId: Long): Flow<Int>
+
+    @Query("""
+        SELECT DISTINCT m.imageUrl FROM master_cards m
+        INNER JOIN cards_owned c ON m.scryfallId = c.scryfallId
+        INNER JOIN collections col ON c.collectionId = col.localId
+        WHERE col.userId = :userId AND c.pendingDelete = 0 AND m.imageUrl IS NOT NULL
+    """)
+    suspend fun getAllOwnedImageUrls(userId: Long): List<String>
 }

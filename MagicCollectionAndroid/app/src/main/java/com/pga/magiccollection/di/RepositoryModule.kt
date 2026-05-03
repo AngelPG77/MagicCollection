@@ -23,49 +23,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object RepositoryModule {
-
-    @Provides
-    @Singleton
-    fun provideAuthRepository(
-        authApi: AuthApi,
-        userDao: UserDao,
-        sessionManager: SessionManager
-    ): AuthRepository {
-        return AuthRepository(authApi, userDao, sessionManager)
-    }
-
-    @Provides
-    @Singleton
-    fun provideCardRepository(
-        cardsApi: CardsApi,
-        cardSearchIndexRepository: CardSearchIndexRepository
-    ): CardRepository {
-        return CardRepository(cardsApi, cardSearchIndexRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideCollectionRepository(
-        collectionDao: CollectionDao,
-        cardOwnedDao: CardOwnedDao,
-        collectionsApi: CollectionsApi,
-        inventoryApi: InventoryApi
-    ): CollectionRepository {
-        return CollectionRepository(collectionDao, cardOwnedDao, collectionsApi, inventoryApi)
-    }
-
-    @Provides
-    @Singleton
-    fun provideInventoryRepository(
-        cardOwnedDao: CardOwnedDao,
-        inventoryApi: InventoryApi
-    ): InventoryRepository {
-        return InventoryRepository(cardOwnedDao, inventoryApi)
-    }
-
-    @Provides
-    @Singleton
-    fun provideSessionRepository(sessionManager: SessionManager): SessionRepository {
-        return SessionRepository(sessionManager)
-    }
+    // Todos los repositorios ahora usan @Inject constructor
+    // Hilt los provee automáticamente.
 }

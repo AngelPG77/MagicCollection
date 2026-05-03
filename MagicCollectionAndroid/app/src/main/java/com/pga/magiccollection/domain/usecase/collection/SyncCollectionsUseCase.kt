@@ -7,6 +7,6 @@ class SyncCollectionsUseCase @Inject constructor(
     private val collectionRepository: CollectionRepository
 ) {
     suspend operator fun invoke(userId: Long) {
-        collectionRepository.syncAll(userId)
+        collectionRepository.syncCollections(userId)
     }
 }

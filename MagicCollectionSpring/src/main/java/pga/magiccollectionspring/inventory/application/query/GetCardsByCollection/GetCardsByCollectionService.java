@@ -1,7 +1,7 @@
 package pga.magiccollectionspring.inventory.application.query.GetCardsByCollection;
 
+import pga.magiccollectionspring.collection.application.ICollectionInternalService;
 import pga.magiccollectionspring.collection.domain.Collection;
-import pga.magiccollectionspring.collection.domain.ICollectionRepository;
 import pga.magiccollectionspring.inventory.api.CardYouOwnMapper;
 import pga.magiccollectionspring.inventory.domain.ICardYouOwnRepository;
 import pga.magiccollectionspring.shared.abstractions.IQueryService;
@@ -14,24 +14,24 @@ import org.springframework.stereotype.Service;
 public class GetCardsByCollectionService implements IQueryService<GetCardsByCollectionQuery, GetCardsByCollectionResponse> {
 
     private final ICardYouOwnRepository inventoryRepo;
-    private final ICollectionRepository collectionRepository;
-    private final CardYouOwnMapper mapper;
+    private final ICollectionInternalService collectionInternalService;
+    private final CardYouOwnMapper cardYouOwnMapper;
     private final CurrentUserProvider currentUserProvider;
 
     public GetCardsByCollectionService(ICardYouOwnRepository inventoryRepo,
-                                       ICollectionRepository collectionRepository,
-                                       CardYouOwnMapper mapper,
+                                       ICollectionInternalService collectionInternalService,
+                                       CardYouOwnMapper cardYouOwnMapper,
                                        CurrentUserProvider currentUserProvider) {
         this.inventoryRepo = inventoryRepo;
-        this.collectionRepository = collectionRepository;
-        this.mapper = mapper;
+        this.collectionInternalService = collectionInternalService;
+        this.cardYouOwnMapper = cardYouOwnMapper;
         this.currentUserProvider = currentUserProvider;
     }
 
     @Override
     public GetCardsByCollectionResponse execute(GetCardsByCollectionQuery query) {
         String username = currentUserProvider.getCurrentUsername();
-        Collection collection = collectionRepository.findById(query.collectionId())
+        Collection collection = collectionInternalService.findById(query.collectionId())
                 .orElseThrow(() -> new ResourceNotFoundException("Coleccion", query.collectionId()));
 
         if (!collection.getOwner().getUsername().equals(username)) {
@@ -39,7 +39,7 @@ public class GetCardsByCollectionService implements IQueryService<GetCardsByColl
         }
 
         return new GetCardsByCollectionResponse(
-                mapper.mapList(inventoryRepo.findByCollection_Id(query.collectionId()))
+                cardYouOwnMapper.mapList(inventoryRepo.findByCollection_Id(query.collectionId()))
         );
     }
 }

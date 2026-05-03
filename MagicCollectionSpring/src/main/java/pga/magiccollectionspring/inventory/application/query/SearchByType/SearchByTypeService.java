@@ -1,37 +1,38 @@
 package pga.magiccollectionspring.inventory.application.query.SearchByType;
 
-import pga.magiccollectionspring.card.domain.ICardRepository;
-import pga.magiccollectionspring.collection.domain.ICollectionRepository;
+import pga.magiccollectionspring.card.application.ICardInternalService;
+import pga.magiccollectionspring.collection.application.ICollectionInternalService;
 import pga.magiccollectionspring.inventory.api.CardYouOwnMapper;
 import pga.magiccollectionspring.inventory.domain.ICardYouOwnRepository;
 import pga.magiccollectionspring.shared.abstractions.IQueryService;
 import pga.magiccollectionspring.shared.security.CurrentUserProvider;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 /**
  * Service to search owned cards by card type across all user collections.
- * Uses ICardRepository to find cards by type, then filters by owned instances.
+ * Decoupled from other modules via internal services.
  */
 @Service
 public class SearchByTypeService implements IQueryService<SearchByTypeQuery, SearchByTypeResponse> {
 
     private final CardYouOwnMapper mapper;
-    private final ICardRepository cardRepository;
+    private final ICardInternalService cardInternalService;
     private final ICardYouOwnRepository inventoryRepo;
-    private final ICollectionRepository collectionRepository;
+    private final ICollectionInternalService collectionInternalService;
     private final CurrentUserProvider currentUserProvider;
 
     public SearchByTypeService(CardYouOwnMapper mapper,
-                               ICardRepository cardRepository,
+                               ICardInternalService cardInternalService,
                                ICardYouOwnRepository inventoryRepo,
-                               ICollectionRepository collectionRepository,
+                               ICollectionInternalService collectionInternalService,
                                CurrentUserProvider currentUserProvider) {
         this.mapper = mapper;
-        this.cardRepository = cardRepository;
+        this.cardInternalService = cardInternalService;
         this.inventoryRepo = inventoryRepo;
-        this.collectionRepository = collectionRepository;
+        this.collectionInternalService = collectionInternalService;
         this.currentUserProvider = currentUserProvider;
     }
 
@@ -39,20 +40,13 @@ public class SearchByTypeService implements IQueryService<SearchByTypeQuery, Sea
     public SearchByTypeResponse execute(SearchByTypeQuery query) {
         String username = currentUserProvider.getCurrentUsername();
 
-        // Search for cards by type in catalog
-        var cardsWithType = cardRepository.findByTypeLineContainingIgnoreCase(query.type());
+        // 1. Get scryfall IDs matching type from Card Module
+        var scryfallIdsWithType = new HashSet<>(cardInternalService.findScryfallIdsByType(query.type()));
 
-        // Get all collection IDs for the user
-        var userCollections = collectionRepository.findByOwner_Username(username);
-        var userCollectionIds = userCollections.stream()
-                .map(c -> c.getId())
-                .collect(Collectors.toSet());
+        // 2. Get all collection IDs for the user from Collection Module
+        var userCollectionIds = new HashSet<>(collectionInternalService.getUserCollectionIds(username));
 
-        // Filter by cards matching type
-        var scryfallIdsWithType = cardsWithType.stream()
-                .map(c -> c.getScryfallId())
-                .collect(Collectors.toSet());
-
+        // 3. Filter owned cards
         var results = inventoryRepo.findAll().stream()
                 .filter(co -> userCollectionIds.contains(co.getCollection().getId()) &&
                         scryfallIdsWithType.contains(co.getCardMasterData().getScryfallId()))

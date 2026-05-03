@@ -47,24 +47,26 @@ public class UpdateCardService implements ICommandService<UpdateCardCommand, Upd
                 : original.getLanguage();
         boolean targetFoil = command.isFoil() != null ? command.isFoil() : original.isFoil();
 
-        return inventoryRepo.findExactCardInCollection(
+        Long resultId = inventoryRepo.findExactCardInCollection(
                 original.getCollection().getId(), original.getCardMasterData().getScryfallId(), targetCond, targetFoil, targetLang)
                 .map(conflict -> {
                     if (!conflict.getId().equals(command.id())) {
                         int numToAdd = command.quantity() != null ? command.quantity() : original.getQuantity();
                         conflict.setQuantity(conflict.getQuantity() + numToAdd);
                         inventoryRepo.deleteById(original.getId());
-                        return new UpdateCardResponse(mapper.map(inventoryRepo.save(conflict)));
+                        return inventoryRepo.save(conflict).getId();
                     }
                     CardYouOwnRequest req = buildRequest(command);
                     mapper.updateFromRequest(req, original);
-                    return new UpdateCardResponse(mapper.map(inventoryRepo.save(original)));
+                    return inventoryRepo.save(original).getId();
                 })
                 .orElseGet(() -> {
                     CardYouOwnRequest req = buildRequest(command);
                     mapper.updateFromRequest(req, original);
-                    return new UpdateCardResponse(mapper.map(inventoryRepo.save(original)));
+                    return inventoryRepo.save(original).getId();
                 });
+                
+        return new UpdateCardResponse(resultId);
     }
 
     private CardYouOwnRequest buildRequest(UpdateCardCommand command) {

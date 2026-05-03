@@ -1,7 +1,7 @@
 package pga.magiccollectionspring.inventory.application.command.AddCard;
 
+import pga.magiccollectionspring.card.application.ICardInternalService;
 import pga.magiccollectionspring.card.domain.Card;
-import pga.magiccollectionspring.card.domain.ICardRepository;
 import pga.magiccollectionspring.collection.domain.Collection;
 import pga.magiccollectionspring.inventory.domain.CardYouOwn;
 import pga.magiccollectionspring.inventory.domain.ICardYouOwnRepository;
@@ -14,19 +14,20 @@ import org.springframework.stereotype.Service;
 public class AddCardPersistenceService {
 
     private final ICardYouOwnRepository inventoryRepo;
-    private final ICardRepository cardRepository;
+    private final ICardInternalService cardInternalService;
 
-    public AddCardPersistenceService(ICardYouOwnRepository inventoryRepo, ICardRepository cardRepository) {
+    public AddCardPersistenceService(ICardYouOwnRepository inventoryRepo, ICardInternalService cardInternalService) {
         this.inventoryRepo = inventoryRepo;
-        this.cardRepository = cardRepository;
+        this.cardInternalService = cardInternalService;
     }
 
     @Transactional
-    public CardYouOwn saveCardAndInventory(Card card, Collection collection, CardCondition cond, Language langProp, boolean isFoil, int quantityToAdd) {
-        // Find if card already exists by scryfallId before saving a new one
-        Card masterCard = cardRepository.findById(card.getScryfallId()).orElseGet(() -> cardRepository.save(card));
+    public Long saveCardAndInventory(Card card, Collection collection, CardCondition cond, Language langProp, boolean isFoil, int quantityToAdd) {
+        // Ensure card exists in master data through internal service
+        Card masterCard = cardInternalService.findById(card.getScryfallId())
+                .orElse(card); // If not found, use the provided one (though internal service should have handled it)
 
-        return inventoryRepo.findExactCardInCollection(collection.getId(), masterCard.getScryfallId(), cond, isFoil, langProp)
+        CardYouOwn result = inventoryRepo.findExactCardInCollection(collection.getId(), masterCard.getScryfallId(), cond, isFoil, langProp)
                 .map(existing -> {
                     existing.setQuantity(existing.getQuantity() + quantityToAdd);
                     return inventoryRepo.save(existing);
@@ -41,5 +42,7 @@ public class AddCardPersistenceService {
                     newEntry.setQuantity(quantityToAdd);
                     return inventoryRepo.save(newEntry);
                 });
+                
+        return result.getId();
     }
 }

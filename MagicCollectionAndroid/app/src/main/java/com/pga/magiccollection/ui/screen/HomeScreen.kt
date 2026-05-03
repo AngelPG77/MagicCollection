@@ -28,6 +28,7 @@ import com.pga.magiccollection.data.local.entities.RecentCardEntity
 fun HomeScreen(
     viewModel: MainViewModel,
     onNavigateToDetail: (String) -> Unit,
+    onNavigateToCollections: () -> Unit,
     onNavigateToWishlist: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToLogin: () -> Unit,
@@ -75,6 +76,7 @@ fun HomeScreen(
         UtilitiesSection(
             isLoggedIn = uiState.isLoggedIn,
             onRandomCard = { viewModel.getRandomCard() },
+            onCollections = onNavigateToCollections,
             onWishlist = onNavigateToWishlist,
             onRules = { /* WIP */ },
             onTrade = { /* WIP */ },
@@ -115,7 +117,7 @@ fun RecentCardsSection(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = stringResource(id = R.string.recent_cards_title),
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
         
@@ -160,6 +162,7 @@ fun RecentCardsSection(
 fun UtilitiesSection(
     isLoggedIn: Boolean,
     onRandomCard: () -> Unit,
+    onCollections: () -> Unit,
     onWishlist: () -> Unit,
     onRules: () -> Unit,
     onTrade: () -> Unit,
@@ -168,12 +171,18 @@ fun UtilitiesSection(
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = stringResource(id = R.string.utilities_title),
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
 
         val buttons = listOf(
             UtilityItem(stringResource(id = R.string.utility_random_card), Icons.Default.Refresh, onRandomCard, true),
+            UtilityItem(
+                label = stringResource(id = R.string.title_collections), 
+                icon = Icons.Default.Folder, 
+                onClick = { if (isLoggedIn) onCollections() else onShowLoginDialog() }, 
+                enabled = true
+            ),
             UtilityItem(
                 label = stringResource(id = R.string.utility_wishlist), 
                 icon = Icons.Default.Favorite, 

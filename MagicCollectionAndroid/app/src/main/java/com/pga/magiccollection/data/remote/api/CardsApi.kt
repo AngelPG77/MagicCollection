@@ -6,6 +6,8 @@ import com.pga.magiccollection.data.remote.dto.LanguageIndexDeltaDto
 import com.pga.magiccollection.data.remote.dto.LanguageIndexInfoDto
 import com.pga.magiccollection.data.remote.dto.LanguageIndexManifestDto
 import com.pga.magiccollection.data.remote.dto.ScryfallCardDto
+import com.pga.magiccollection.data.remote.dto.IndexVersionDto
+import com.pga.magiccollection.data.remote.dto.MtgSetDto
 import okhttp3.ResponseBody
 import retrofit2.http.*
 
@@ -17,7 +19,7 @@ interface CardsApi {
     suspend fun getAllKnownCards(): List<ScryfallCardDto>
 
     @GET("cards/index/version")
-    suspend fun getIndexVersion(): com.pga.magiccollection.data.remote.dto.IndexVersionDto
+    suspend fun getIndexVersion(): IndexVersionDto
 
     @POST("cards/sync-full")
     suspend fun syncFullCatalog()
@@ -75,5 +77,5 @@ interface CardsApi {
     suspend fun getCardById(@Path("id") id: Long): ScryfallCardDto
 
     @GET("cards/sets")
-    suspend fun getSets(): List<com.pga.magiccollection.data.remote.dto.MtgSetDto>
+    suspend fun getSets(): List<MtgSetDto>
 }

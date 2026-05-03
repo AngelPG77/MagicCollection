@@ -3,16 +3,17 @@ package com.pga.magiccollection.data.local.converters
 import androidx.room.TypeConverter
 import com.pga.magiccollection.domain.model.enums.CardCondition
 import com.pga.magiccollection.domain.model.enums.Language
+import java.util.Date
 
 class MagicConverters {
 
     @TypeConverter
-    fun fromTimestamp(value: Long?): java.util.Date? {
-        return value?.let { java.util.Date(it) }
+    fun fromTimestamp(value: Long?): Date? {
+        return value?.let { Date(it) }
     }
 
     @TypeConverter
-    fun dateToTimestamp(date: java.util.Date?): Long? {
+    fun dateToTimestamp(date: Date?): Long? {
         return date?.time
     }
 

@@ -4,6 +4,9 @@ import com.pga.magiccollection.domain.model.search.ColorMatchMode
 import com.pga.magiccollection.domain.model.search.IndexedCard
 import com.pga.magiccollection.domain.model.search.SearchSortBy
 import com.pga.magiccollection.data.local.entities.MtgSetEntity
+import androidx.paging.PagingData
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 data class SearchUiState(
     val query: String = "",
@@ -26,6 +29,7 @@ data class SearchUiState(
     val activeLanguage: String = "en",
     val availableLanguages: List<String> = listOf("en"),
     val searchResults: List<IndexedCard> = emptyList(),
+    val pagedSearchResults: Flow<PagingData<IndexedCard>> = emptyFlow(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val hasIndexData: Boolean = false,

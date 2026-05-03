@@ -8,6 +8,7 @@ import pga.magiccollectionspring.shared.exception.ResourceNotFoundException;
 import pga.magiccollectionspring.shared.exception.UnauthorizedException;
 import pga.magiccollectionspring.shared.security.CurrentUserProvider;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class GetCollectionByIdService implements IQueryService<GetCollectionByIdQuery, GetCollectionByIdResponse> {
@@ -25,6 +26,7 @@ public class GetCollectionByIdService implements IQueryService<GetCollectionById
     }
 
     @Override
+    @Transactional(readOnly = true)
     public GetCollectionByIdResponse execute(GetCollectionByIdQuery query) {
         String username = currentUserProvider.getCurrentUsername();
         Collection collection = collectionRepository.findById(query.id())

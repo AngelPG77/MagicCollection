@@ -4,7 +4,7 @@ import pga.magiccollectionspring.shared.abstractions.ICommandService;
 import pga.magiccollectionspring.shared.exception.ResourceNotFoundException;
 import pga.magiccollectionspring.shared.exception.UnauthorizedException;
 import pga.magiccollectionspring.shared.security.CurrentUserProvider;
-import pga.magiccollectionspring.user.domain.IUserRepository;
+import pga.magiccollectionspring.user.application.IUserInternalService;
 import pga.magiccollectionspring.user.domain.User;
 import pga.magiccollectionspring.wantlist.domain.IWantListRepository;
 import pga.magiccollectionspring.wantlist.domain.WantList;
@@ -16,14 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class AddCardToWantListService implements ICommandService<AddCardToWantListCommand, Long> {
 
     private final IWantListRepository wantListRepository;
-    private final IUserRepository userRepository;
+    private final IUserInternalService userInternalService;
     private final CurrentUserProvider currentUserProvider;
 
     public AddCardToWantListService(IWantListRepository wantListRepository,
-                                    IUserRepository userRepository,
+                                    IUserInternalService userInternalService,
                                     CurrentUserProvider currentUserProvider) {
         this.wantListRepository = wantListRepository;
-        this.userRepository = userRepository;
+        this.userInternalService = userInternalService;
         this.currentUserProvider = currentUserProvider;
     }
 
@@ -31,13 +31,13 @@ public class AddCardToWantListService implements ICommandService<AddCardToWantLi
     @Transactional
     public Long execute(AddCardToWantListCommand command) {
         String username = currentUserProvider.getCurrentUsername();
-        User user = userRepository.findByUsername(username)
+        User user = userInternalService.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", username));
 
         WantList wantList = wantListRepository.findById(command.wantListId())
                 .orElseThrow(() -> new ResourceNotFoundException("Lista de deseados", command.wantListId().toString()));
 
-        if (!wantList.getOwner().getId().equals(user.getId())) {
+        if (!user.getId().equals(wantList.getOwner().getId())) {
             throw new UnauthorizedException("No tienes permiso para modificar esta lista");
         }
 

@@ -18,8 +18,8 @@ class WantListRepository @Inject constructor(
     private val wantListCardDao: WantListCardDao,
     private val wantListApi: WantListApi
 ) {
-    fun observeWantLists(userId: Long): Flow<List<WantListEntity>> {
-        return wantListDao.observeByUserId(userId)
+    fun observeWantLists(userId: Long): Flow<List<com.pga.magiccollection.data.local.dao.WantListWithCount>> {
+        return wantListDao.observeByUserIdWithCount(userId)
     }
 
     fun observeWantListCards(wantListLocalId: Long): Flow<List<WantListCardEntity>> {

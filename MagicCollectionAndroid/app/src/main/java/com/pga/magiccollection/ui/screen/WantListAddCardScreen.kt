@@ -7,11 +7,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,17 +26,19 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.unit.LayoutDirection
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.pga.magiccollection.R
-import com.pga.magiccollection.data.remote.dto.ScryfallCardDto
-import com.pga.magiccollection.domain.model.enums.CardCondition
 import com.pga.magiccollection.domain.model.search.ColorMatchMode
 import com.pga.magiccollection.domain.model.search.SearchSortBy
 import com.pga.magiccollection.ui.component.CardGrid
 import com.pga.magiccollection.ui.component.MagicCollectionSnackbarHost
+import com.pga.magiccollection.ui.component.CardDetailEntryModal
+import com.pga.magiccollection.ui.component.VersionSelectionModal
+import com.pga.magiccollection.ui.component.ColorLogicDropdown
+import com.pga.magiccollection.ui.component.LanguageDropdown
+import com.pga.magiccollection.ui.component.SortDropdown
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -53,12 +53,10 @@ fun WantListAddCardScreen(
     val context = LocalContext.current
     val isSuggestionMode = !uiState.isSearchPerformed && uiState.query.isNotBlank()
 
-    // Estados locales para el input "en curso" antes del onBlur
     var localQuery by remember(uiState.query) { mutableStateOf(uiState.query) }
     var localType by remember(uiState.type) { mutableStateOf(uiState.type) }
     var isSetFieldFocused by remember { mutableStateOf(false) }
 
-    // Definición de colores de Magic
     val mtgColors = mapOf(
         "W" to Color(0xFFFFFBD5),
         "U" to Color(0xFFAAE0FA),
@@ -158,14 +156,13 @@ fun WantListAddCardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(
-                    start = padding.calculateStartPadding(androidx.compose.ui.unit.LayoutDirection.Ltr),
-                    end = padding.calculateEndPadding(androidx.compose.ui.unit.LayoutDirection.Ltr),
+                    start = padding.calculateStartPadding(LayoutDirection.Ltr),
+                    end = padding.calculateEndPadding(LayoutDirection.Ltr),
                     bottom = padding.calculateBottomPadding(),
                     top = 8.dp
                 )
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            // Cabecera con buscador (Igual que SearchScreen)
             Surface(
                 tonalElevation = 2.dp,
                 shadowElevation = 2.dp,
@@ -218,9 +215,9 @@ fun WantListAddCardScreen(
                                 keyboardOptions = KeyboardOptions(
                                     autoCorrectEnabled = false,
                                     keyboardType = KeyboardType.Password,
-                                    imeAction = androidx.compose.ui.text.input.ImeAction.Search
+                                    imeAction = ImeAction.Search
                                 ),
-                                keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                                keyboardActions = KeyboardActions(
                                     onSearch = {
                                         viewModel.onQueryChanged(localQuery)
                                         viewModel.performSearch()
@@ -260,10 +257,8 @@ fun WantListAddCardScreen(
                 }
             }
 
-            // Cuerpo: Filtros o Resultados
             Box(modifier = Modifier.fillMaxSize()) {
                 if (isSuggestionMode || uiState.isSearchPerformed) {
-                    // Mostrar Resultados con Ordenación en la parte superior
                     Column(modifier = Modifier.fillMaxSize()) {
                         Row(
                             modifier = Modifier
@@ -326,7 +321,6 @@ fun WantListAddCardScreen(
                         }
                     }
                 } else {
-                    // Mostrar Filtros
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -360,7 +354,6 @@ fun WantListAddCardScreen(
                             ColorLogicDropdown(selected = uiState.colorLogic, onSelected = viewModel::onColorLogicChanged, modifier = Modifier.weight(1f))
                         }
 
-                        // Filtro de Tipo con sugerencias
                         var isTypeFieldFocused by remember { mutableStateOf(false) }
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(
@@ -384,8 +377,8 @@ fun WantListAddCardScreen(
                                     },
                                 placeholder = { Text(stringResource(id = R.string.search_type_hint_placeholder)) },
                                 singleLine = true,
-                                keyboardOptions = KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
-                                keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                keyboardActions = KeyboardActions(
                                     onDone = { 
                                         viewModel.onTypeConfirmed(localType)
                                     }
@@ -415,7 +408,6 @@ fun WantListAddCardScreen(
                             }
                         }
 
-                        // Edición
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(
                                 text = stringResource(id = R.string.search_filter_edition), 
@@ -471,7 +463,6 @@ fun WantListAddCardScreen(
             }
         }
 
-        // Modals
         if (uiState.showVersionModal) {
             VersionSelectionModal(
                 versions = uiState.cardVersions,
@@ -496,170 +487,6 @@ fun WantListAddCardScreen(
                 onSave = viewModel::saveCard,
                 onDismiss = viewModel::onDismissDetailModal
             )
-        }
-    }
-}
-
-// Copiar componentes auxiliares de SearchScreen.kt para mantener consistencia exacta
-@Composable
-private fun LanguageDropdown(activeLanguage: String, availableLanguages: List<String>, onLanguageSelected: (String) -> Unit) {
-    val canExpand = availableLanguages.size > 1
-    var expanded by remember { mutableStateOf(false) }
-    Box {
-        TextButton(onClick = { if (canExpand) expanded = true }) {
-            Text(activeLanguage.uppercase(), fontWeight = FontWeight.Bold)
-            if (canExpand) Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-        }
-        DropdownMenu(expanded = expanded && canExpand, onDismissRequest = { expanded = false }) {
-            availableLanguages.forEach { code ->
-                DropdownMenuItem(text = { Text(code.uppercase()) }, onClick = { expanded = false; onLanguageSelected(code) })
-            }
-        }
-    }
-}
-
-@Composable
-private fun ColorLogicDropdown(selected: ColorMatchMode, onSelected: (ColorMatchMode) -> Unit, modifier: Modifier = Modifier) {
-    var expanded by remember { mutableStateOf(false) }
-    OutlinedCard(modifier = modifier, onClick = { expanded = true }) {
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(text = when (selected) {
-                ColorMatchMode.EXACTLY -> stringResource(id = R.string.search_color_exactly)
-                ColorMatchMode.AT_MOST -> stringResource(id = R.string.search_color_at_most)
-                ColorMatchMode.INCLUDING -> stringResource(id = R.string.search_color_including)
-            })
-            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-        }
-    }
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-        listOf(ColorMatchMode.EXACTLY, ColorMatchMode.AT_MOST, ColorMatchMode.INCLUDING).forEach { mode ->
-            DropdownMenuItem(text = { Text(stringResource(id = when(mode) {
-                ColorMatchMode.EXACTLY -> R.string.search_color_exactly
-                ColorMatchMode.AT_MOST -> R.string.search_color_at_most
-                ColorMatchMode.INCLUDING -> R.string.search_color_including
-            })) }, onClick = { expanded = false; onSelected(mode) })
-        }
-    }
-}
-
-@Composable
-private fun SortDropdown(selected: SearchSortBy, onSelected: (SearchSortBy) -> Unit, modifier: Modifier = Modifier) {
-    var expanded by remember { mutableStateOf(false) }
-    OutlinedCard(modifier = modifier, onClick = { expanded = true }) {
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(text = when (selected) {
-                SearchSortBy.NAME -> stringResource(id = R.string.search_sort_name)
-                SearchSortBy.RARITY -> stringResource(id = R.string.search_sort_rarity)
-                SearchSortBy.CMC -> stringResource(id = R.string.search_sort_cmc)
-            })
-            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-        }
-    }
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-        listOf(SearchSortBy.NAME, SearchSortBy.RARITY, SearchSortBy.CMC).forEach { sort ->
-            DropdownMenuItem(text = { Text(stringResource(id = when(sort) {
-                SearchSortBy.NAME -> R.string.search_sort_name
-                SearchSortBy.RARITY -> R.string.search_sort_rarity
-                SearchSortBy.CMC -> R.string.search_sort_cmc
-            })) }, onClick = { expanded = false; onSelected(sort) })
-        }
-    }
-}
-
-// Modales específicos para WantList
-@Composable
-fun VersionSelectionModal(versions: List<ScryfallCardDto>, isLoading: Boolean, onVersionSelected: (ScryfallCardDto) -> Unit, onDismiss: () -> Unit) {
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(modifier = Modifier.fillMaxWidth().padding(16.dp), shape = RoundedCornerShape(16.dp)) {
-            Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = stringResource(id = R.string.wantlist_select_version), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(16.dp))
-                if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.padding(32.dp))
-                } else {
-                    LazyRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        items(versions) { version ->
-                            Column(modifier = Modifier.width(150.dp).clickable { onVersionSelected(version) }, horizontalAlignment = Alignment.CenterHorizontally) {
-                                Card(modifier = Modifier.aspectRatio(0.718f)) {
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(LocalContext.current).data(version.imageUris?.normal ?: version.imageUris?.small).crossfade(true).build(),
-                                        contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(text = version.setCode?.uppercase() ?: "", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                                Text(text = version.setName ?: "", style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, maxLines = 2)
-                            }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                TextButton(onClick = onDismiss) { Text(stringResource(id = R.string.action_cancel)) }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CardDetailEntryModal(version: ScryfallCardDto?, quantity: Int, foil: Boolean, condition: String, language: String, isSaving: Boolean, onQuantityChanged: (Int) -> Unit, onFoilChanged: (Boolean) -> Unit, onConditionChanged: (String) -> Unit, onLanguageChanged: (String) -> Unit, onSave: () -> Unit, onDismiss: () -> Unit) {
-    if (version == null) return
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(modifier = Modifier.fillMaxWidth().padding(16.dp), shape = RoundedCornerShape(16.dp)) {
-            Column(modifier = Modifier.padding(16.dp).verticalScroll(rememberScrollState())) {
-                Text(text = stringResource(id = R.string.wantlist_card_details), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Card(modifier = Modifier.weight(0.4f).aspectRatio(0.718f)) {
-                        AsyncImage(model = ImageRequest.Builder(LocalContext.current).data(version.imageUris?.normal ?: version.imageUris?.small).crossfade(true).build(), contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-                    }
-                    Column(modifier = Modifier.weight(0.6f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(stringResource(id = R.string.wantlist_card_quantity_label))
-                            IconButton(onClick = { if (quantity > 1) onQuantityChanged(quantity - 1) }) { Icon(Icons.Default.Remove, contentDescription = null) }
-                            Text(quantity.toString(), fontWeight = FontWeight.Bold)
-                            IconButton(onClick = { onQuantityChanged(quantity + 1) }) { Icon(Icons.Default.Add, contentDescription = null) }
-                        }
-                        if (version.foil == true && version.nonfoil == true) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Checkbox(checked = foil, onCheckedChange = onFoilChanged)
-                                Text(stringResource(id = R.string.wantlist_card_foil))
-                            }
-                        } else if (version.foil == true) {
-                            Text(stringResource(id = R.string.wantlist_card_foil_only), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
-                        }
-                        
-                        // Idioma
-                        var langExp by remember { mutableStateOf(false) }
-                        ExposedDropdownMenuBox(expanded = langExp, onExpandedChange = { langExp = it }) {
-                            OutlinedTextField(value = language.uppercase(), onValueChange = {}, readOnly = true, modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable), label = { Text(stringResource(id = R.string.wantlist_card_language_label)) }, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = langExp) })
-                            ExposedDropdownMenu(expanded = langExp, onDismissRequest = { langExp = false }) {
-                                listOf("en", "es", "fr", "de", "it", "pt", "ja", "ko", "ru", "zhs", "zht").forEach { l ->
-                                    DropdownMenuItem(text = { Text(l.uppercase()) }, onClick = { onLanguageChanged(l); langExp = false })
-                                }
-                            }
-                        }
-
-                        // Estado
-                        var condExp by remember { mutableStateOf(false) }
-                        ExposedDropdownMenuBox(expanded = condExp, onExpandedChange = { condExp = it }) {
-                            OutlinedTextField(value = CardCondition.entries.find { it.name == condition }?.displayName ?: condition, onValueChange = {}, readOnly = true, modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable), label = { Text(stringResource(id = R.string.inventory_condition)) }, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = condExp) })
-                            ExposedDropdownMenu(expanded = condExp, onDismissRequest = { condExp = false }) {
-                                CardCondition.entries.forEach { c ->
-                                    DropdownMenuItem(text = { Text(c.displayName) }, onClick = { onConditionChanged(c.name); condExp = false })
-                                }
-                            }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text(stringResource(id = R.string.action_cancel)) }
-                    Button(onClick = onSave, enabled = !isSaving) {
-                        if (isSaving) CircularProgressIndicator(modifier = Modifier.size(20.dp)) else Text(stringResource(id = R.string.action_save))
-                    }
-                }
-            }
         }
     }
 }

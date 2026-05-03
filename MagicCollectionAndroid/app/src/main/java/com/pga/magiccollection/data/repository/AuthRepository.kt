@@ -6,7 +6,9 @@ import com.pga.magiccollection.data.local.security.SessionManager
 import com.pga.magiccollection.data.remote.api.AuthApi
 import com.pga.magiccollection.data.remote.dto.*
 
-class AuthRepository(
+import javax.inject.Inject
+
+class AuthRepository @Inject constructor(
     private val authApi: AuthApi,
     private val userDao: UserDao,
     private val sessionManager: SessionManager
@@ -26,6 +28,7 @@ class AuthRepository(
         val response = authApi.login(LoginRequestDto(normalizedUsername, password, rememberMe))
         val token = response.token
         val userId = response.userId
+            ?: throw IllegalStateException("Respuesta de login inválida: falta userId")
         val refreshToken = response.refreshToken
         
         // Limpiar cualquier usuario previo con el mismo nombre pero distinto ID (poco probable, pero por seguridad)

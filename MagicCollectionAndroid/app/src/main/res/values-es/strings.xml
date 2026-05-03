@@ -30,9 +30,9 @@
     <string name="settings_search_language">Idioma de búsqueda</string>
     <string name="settings_app_language">Idioma de la app</string>
     <string name="settings_section_appearance">Apariencia</string>
-    <string name="settings_dark_theme">Tema oscuro</string>
+    <string name="settings_dark_theme">Modo oscuro</string>
     <string name="settings_theme_color">Color del tema</string>
-    <string name="settings_grid_size">Tamaño de cuadrícula</string>
+    <string name="settings_grid_size">Columnas en la galería</string>
     <string name="settings_grid_size_columns">%1$d columnas</string>
     <string name="settings_grid_size_preview">Vista previa</string>
     <string name="settings_grid_size_selector">Cartas por fila</string>
@@ -99,6 +99,27 @@
     <string name="dialog_login_required_message">Para usar las listas de deseados y sincronizar tu colección, necesitas una cuenta.</string>
     <string name="lang_en">English</string>
     <string name="lang_es">Español</string>
+    
+    <string name="collection_title">Colecciones</string>
+    <string name="collection_empty">No tienes ninguna colección todavía</string>
+    <string name="collection_create_title">Nueva colección</string>
+    <string name="collection_edit_title">Editar colección</string>
+    <string name="collection_name_hint">Nombre de la colección</string>
+    <string name="collection_name_empty_error">El nombre no puede estar vacío</string>
+    <string name="collection_name_exists_error">Ya existe una colección con ese nombre</string>
+    <string name="collection_detail_empty">No se han encontrado cartas en esta vista</string>
+    <string name="collection_created_success">Colección creada correctamente</string>
+    <string name="collection_updated_success">Colección actualizada correctamente</string>
+    <string name="collection_deleted_success">Colección eliminada correctamente</string>
+    <string name="collection_card_added_success">Carta añadida a la colección</string>
+    <string name="collection_card_removed_success">Carta eliminada de la colección</string>
+    <string name="collection_add_card">Añadir carta</string>
+    <string name="collection_login_required">Inicia sesión para gestionar tus colecciones</string>
+    <string name="collection_search_hint">Buscar colecciones…</string>
+    <string name="collection_card_search_hint">Buscar cartas en la colección…</string>
+    <string name="collection_all_title">Todas las colecciones</string>
+    <string name="collection_all_description">Busca en todas tus colecciones a la vez</string>
+    <string name="collection_card_count">%1$d cartas</string>
     
     <string name="wantlist_title">Listas de deseados</string>
     <string name="wantlist_empty">No tienes ninguna lista todavía</string>
@@ -179,6 +200,7 @@
     <string name="account_deleted_success">Cuenta eliminada correctamente.</string>
     <string name="index_updated_count">Índice actualizado correctamente (%1$s idiomas).</string>
     <string name="index_update_error">Error al actualizar índice: %1$s</string>
+    <string name="wantlist_sync_success">Sincronizadas %1$d listas</string>
     <string name="lang_download_started">Descarga iniciada para el idioma: %1$s</string>
     <string name="lang_download_init">Descarga iniciada para el idioma: %1$s</string>
     <string name="lang_download_success">Descarga completada con éxito.</string>

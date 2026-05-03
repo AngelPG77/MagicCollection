@@ -18,7 +18,7 @@ data class LoginRequestDto(
 data class LoginResponseDto(
     val token: String,
     val refreshToken: String? = null,
-    val userId: Long
+    val userId: Long? = null
 )
 
 data class UpdateUserRequestDto(

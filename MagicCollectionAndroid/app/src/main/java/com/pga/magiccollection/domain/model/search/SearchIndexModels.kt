@@ -1,17 +1,23 @@
 package com.pga.magiccollection.domain.model.search
 
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
+
+@Stable
 enum class ColorMatchMode(val apiValue: String) {
     EXACTLY("exactly"),
     AT_MOST("at_most"),
     INCLUDING("including")
 }
 
+@Stable
 enum class SearchSortBy {
     NAME,
     RARITY,
     CMC
 }
 
+@Immutable
 data class CardIndexQuery(
     val searchText: String = "",
     val language: String = "en",
@@ -26,6 +32,7 @@ data class CardIndexQuery(
     val limit: Int = 200
 )
 
+@Immutable
 data class IndexedCard(
     val scryfallId: String,
     val name: String,

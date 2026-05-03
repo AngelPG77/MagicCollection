@@ -8,11 +8,9 @@ import androidx.room.PrimaryKey
     tableName = "master_cards",
     indices = [
         Index("name"),
-        Index("typeLine"),
-        Index("colorMask"),
+        Index("setCode", "colorMask", "rarityRank", "cmc"),
         Index("identityMask"),
-        Index("rarityRank"),
-        Index("cmc")
+        Index("typeLine")
     ]
 )
 data class MasterCardEntity(

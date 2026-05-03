@@ -34,7 +34,7 @@ class MagicCollectionApp : Application(), Configuration.Provider, ImageLoaderFac
             .diskCache {
                 DiskCache.Builder()
                     .directory(File(cacheDir, "image_cache"))
-                    .maxSizePercent(0.02)
+                    .maxSizeBytes(250L * 1024 * 1024) // 250 MB (Offline-First Optimization)
                     .build()
             }
             .build()

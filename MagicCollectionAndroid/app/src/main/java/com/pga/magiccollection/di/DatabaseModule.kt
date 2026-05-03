@@ -31,11 +31,55 @@ object DatabaseModule {
             }
         }
 
+        val MIGRATION_13_14 = object : Migration(13, 14) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("DROP TABLE IF EXISTS card_names_fts")
+                database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS card_search_fts USING FTS4(card_id, name, oracle_text, language, notindexed=`language`, tokenize=unicode61)")
+            }
+        }
+
+        val MIGRATION_14_15 = object : Migration(14, 15) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Drop inefficient individual indexes
+                database.execSQL("DROP INDEX IF EXISTS index_master_cards_colorMask")
+                database.execSQL("DROP INDEX IF EXISTS index_master_cards_rarityRank")
+                database.execSQL("DROP INDEX IF EXISTS index_master_cards_cmc")
+                
+                // Create optimized compound index for complex filtering
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_master_cards_optimized_search ON master_cards(setCode, colorMask, rarityRank, cmc)")
+            }
+        }
+
+        val MIGRATION_15_16 = object : Migration(15, 16) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `collection_cards` (
+                        `localId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                        `remoteId` INTEGER, 
+                        `collectionLocalId` INTEGER NOT NULL, 
+                        `scryfallId` TEXT NOT NULL, 
+                        `name` TEXT NOT NULL, 
+                        `typeLine` TEXT, 
+                        `manaCost` TEXT, 
+                        `imageUrl` TEXT, 
+                        `quantity` INTEGER NOT NULL, 
+                        `foil` INTEGER NOT NULL, 
+                        `language` TEXT NOT NULL, 
+                        `condition` TEXT NOT NULL, 
+                        `synced` INTEGER NOT NULL DEFAULT 0, 
+                        `pendingDelete` INTEGER NOT NULL DEFAULT 0, 
+                        FOREIGN KEY(`collectionLocalId`) REFERENCES `collections`(`localId`) ON UPDATE NO ACTION ON DELETE CASCADE 
+                    )
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_collection_cards_collectionLocalId` ON `collection_cards` (`collectionLocalId`)")
+            }
+        }
+
         return Room.databaseBuilder(
             context,
             MagicDatabase::class.java,
             "magic_collection.db"
-        ).addMigrations(MIGRATION_12_13)
+        ).addMigrations(MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
             .build()
     }
 
@@ -44,6 +88,9 @@ object DatabaseModule {
 
     @Provides
     fun provideCollectionDao(database: MagicDatabase): CollectionDao = database.collectionDao()
+
+    @Provides
+    fun provideCollectionCardDao(database: MagicDatabase): CollectionCardDao = database.collectionCardDao()
 
     @Provides
     fun provideCardOwnedDao(database: MagicDatabase): CardOwnedDao = database.cardOwnedDao()

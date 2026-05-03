@@ -17,12 +17,21 @@ import pga.magiccollectionspring.card.domain.*;
 import pga.magiccollectionspring.card.domain.port.ScryfallPort;
 import pga.magiccollectionspring.card.infrastructure.dto.CardScryfallDTO;
 import pga.magiccollectionspring.shared.exception.ResourceNotFoundException;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +58,7 @@ public class CardController {
     private final LanguageIndexAsyncService languageIndexAsyncService;
     private final CardLanguageSupport cardLanguageSupport;
     private final CardMapper cardMapper;
-    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     public CardController(SearchCardsService searchCardsService,
                           GetAllCardsService getAllCardsService,
@@ -64,7 +73,7 @@ public class CardController {
                           LanguageIndexAsyncService languageIndexAsyncService,
                           CardLanguageSupport cardLanguageSupport,
                           CardMapper cardMapper,
-                          com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
+                          ObjectMapper objectMapper) {
         this.searchCardsService = searchCardsService;
         this.getAllCardsService = getAllCardsService;
         this.getCardByIdService = getCardByIdService;
@@ -133,13 +142,13 @@ public class CardController {
         int normalizedLimit = Math.min(Math.max(limit, 100), 2000);
 
         int pageNumber = normalizedOffset / normalizedLimit;
-        org.springframework.data.domain.PageRequest pageRequest = org.springframework.data.domain.PageRequest.of(
+        PageRequest pageRequest = PageRequest.of(
                 pageNumber,
                 normalizedLimit,
-                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "name")
+                Sort.by(Sort.Direction.ASC, "name")
         );
 
-        org.springframework.data.domain.Page<CardIndexView> page = cardRepository.findIndexPage(pageRequest);
+        Page<CardIndexView> page = cardRepository.findIndexPage(pageRequest);
         List<CardIndexView> cards = page.getContent();
         Set<String> oracleIds = cards.stream()
                 .map(CardIndexView::getOracleId)
@@ -202,31 +211,31 @@ public class CardController {
     @GetMapping({"/index/{lang}/snapshot", "/index/{lang}/names/snapshot"})
     public StreamingResponseBody getLocalizedNamesSnapshot(
             @PathVariable String lang,
-            jakarta.servlet.http.HttpServletResponse response) {
+            HttpServletResponse response) {
         String normalizedLang = normalizeLanguage(lang);
         LanguageIndexManifestDTO manifest = languageIndexBuildService.getManifest(normalizedLang);
         int pageSize = 2000;
         long startedAt = System.nanoTime();
         long totalCards = manifest.totalRows();
         response.setContentType("application/json");
-        response.setCharacterEncoding(java.nio.charset.StandardCharsets.UTF_8.name());
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setHeader("X-Total-Cards", String.valueOf(totalCards));
         response.setHeader("X-Index-Version", manifest.version());
         response.setHeader("X-Index-Checksum", manifest.checksum());
 
         return outputStream -> {
-            try (com.fasterxml.jackson.core.JsonGenerator jsonGenerator = objectMapper.getFactory().createGenerator(outputStream)) {
+            try (JsonGenerator jsonGenerator = objectMapper.getFactory().createGenerator(outputStream)) {
                 jsonGenerator.writeStartArray();
                 int pageNumber = 0;
                 long emitted = 0L;
 
                 while (true) {
-                    org.springframework.data.domain.PageRequest pageRequest = org.springframework.data.domain.PageRequest.of(
+                    PageRequest pageRequest = PageRequest.of(
                             pageNumber,
                             pageSize,
-                            org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "scryfallId")
+                            Sort.by(Sort.Direction.ASC, "scryfallId")
                     );
-                    org.springframework.data.domain.Slice<CardIndexView> slice =
+                    Slice<CardIndexView> slice =
                             cardRepository.findIndexSlice(pageRequest);
                     List<CardIndexView> cards = slice.getContent();
                     if (cards.isEmpty()) {
@@ -336,7 +345,7 @@ public class CardController {
         return normalized;
     }
 
-    private java.time.LocalDateTime maxDate(java.time.LocalDateTime first, java.time.LocalDateTime second) {
+    private LocalDateTime maxDate(LocalDateTime first, LocalDateTime second) {
         if (first == null) {
             return second;
         }
