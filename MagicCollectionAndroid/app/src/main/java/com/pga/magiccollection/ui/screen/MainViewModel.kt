@@ -50,7 +50,6 @@ class MainViewModel @Inject constructor(
     private val getSessionStateUseCase: GetSessionStateUseCase,
     private val logoutUseCase: LogoutUseCase,
     private val getRecentCardsUseCase: GetRecentCardsUseCase,
-    private val addRecentCardUseCase: AddRecentCardUseCase,
     private val getAppPreferencesUseCase: GetAppPreferencesUseCase,
     private val updateAppPreferenceUseCase: UpdateAppPreferenceUseCase,
     private val updateUsernameUseCase: UpdateUsernameUseCase,

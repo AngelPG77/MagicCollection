@@ -7,6 +7,7 @@ import com.pga.magiccollection.data.remote.dto.ScryfallCardDto
 import com.pga.magiccollection.domain.usecase.card.GetCardByNameUseCase
 import com.pga.magiccollection.domain.usecase.card.GetCardByScryfallIdUseCase
 import com.pga.magiccollection.domain.usecase.card.SearchCardsUseCase
+import com.pga.magiccollection.domain.usecase.home.AddRecentCardUseCase
 import com.pga.magiccollection.domain.usecase.settings.GetAppPreferencesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,7 @@ class CardDetailViewModel @Inject constructor(
     private val getCardByScryfallIdUseCase: GetCardByScryfallIdUseCase,
     private val searchCardsUseCase: SearchCardsUseCase,
     private val getAppPreferencesUseCase: GetAppPreferencesUseCase,
+    private val addRecentCardUseCase: AddRecentCardUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -57,7 +59,21 @@ class CardDetailViewModel @Inject constructor(
                 }
                 
                 _card.value = cardDto
-                
+
+                // Record the visit so the card shows up in Home's "recent cards" carousel.
+                // We pick a reasonable thumbnail size (small → normal fallback) and skip
+                // the insert silently if the DTO is missing a scryfallId (shouldn't happen
+                // in practice but the entity primary key is non-null).
+                cardDto.scryfallId?.takeIf { it.isNotBlank() }?.let { id ->
+                    addRecentCardUseCase(
+                        scryfallId = id,
+                        name = cardDto.printedName ?: cardDto.name,
+                        imageUrl = cardDto.imageUris?.small
+                            ?: cardDto.imageUris?.normal
+                            ?: cardDto.imageUris?.large
+                    )
+                }
+
                 // Try to load versions using exact name search and unique prints
                 try {
                     val versionsQuery = "!\"${cardDto.name}\" include:extras unique:prints"
