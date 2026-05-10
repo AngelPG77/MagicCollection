@@ -10,8 +10,30 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+
+/**
+ * Per-screen overrides for the active guild and a single mana color. Children further down
+ * the tree (e.g. card details) can wrap themselves in [GuildThemeOverride] /
+ * [ManaThemeOverride] to retint UI without touching the user's settings preference.
+ */
+val LocalGuild = compositionLocalOf<Guild?> { null }
+val LocalManaColor = compositionLocalOf<Color?> { null }
+
+/** Wraps [content] forcing the given guild as the active brand. */
+@Composable
+fun GuildThemeOverride(guild: Guild, content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalGuild provides guild, content = content)
+}
+
+/** Wraps [content] forcing the given single mana color as a tint. */
+@Composable
+fun ManaThemeOverride(manaColor: Color, content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalManaColor provides manaColor, content = content)
+}
 
 /**
  * Root theme for the Magic Collection app.

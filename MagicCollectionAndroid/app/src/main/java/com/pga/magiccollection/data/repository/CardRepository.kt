@@ -37,7 +37,7 @@ class CardRepository @Inject constructor(
             artist = artist?.trim()?.ifEmpty { null },
             lang = lang
         )
-        // Sincronizamos con el índice local para que estén disponibles sin conexión
+        // Synchronize with the local index so they are available offline
         cardSearchIndexRepository.ingestRemoteCards(cards, lang ?: "en")
         return cards
     }

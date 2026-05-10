@@ -14,4 +14,7 @@
       so the system day/night picker keeps the launch flash from clashing with Compose.
     -->
     <color name="window_background">#FFFFFBFE</color>
+
+    <!-- Splash screen background — referenced by Theme.App.Starting in themes.xml. -->
+    <color name="splash_background">#FFFFFBFE</color>
 </resources>

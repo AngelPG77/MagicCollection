@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -27,6 +28,7 @@ import coil.request.ImageRequest
 import com.pga.magiccollection.R
 import com.pga.magiccollection.data.remote.dto.ScryfallCardDto
 import com.pga.magiccollection.domain.model.enums.CardCondition
+import com.pga.magiccollection.ui.designsystem.*
 
 @Composable
 fun VersionSelectionModal(
@@ -35,25 +37,44 @@ fun VersionSelectionModal(
     onVersionSelected: (ScryfallCardDto) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
+    val elevation = LocalAppElevation.current
+
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(modifier = Modifier.fillMaxWidth().padding(16.dp), shape = RoundedCornerShape(16.dp)) {
-            Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Surface(
+            modifier = Modifier.fillMaxWidth().padding(spacing.medium), 
+            shape = shapes.extraLarge,
+            tonalElevation = elevation.level3,
+            shadowElevation = elevation.level4
+        ) {
+            Column(modifier = Modifier.padding(spacing.large), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = stringResource(id = R.string.wantlist_select_version), 
-                    style = MaterialTheme.typography.titleLarge, 
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.headlineSmall, 
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.tertiary, // Guild-specific title color
+                    textAlign = TextAlign.Center
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(spacing.large))
                 if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.padding(32.dp))
+                    CircularProgressIndicator(modifier = Modifier.padding(spacing.extraLarge), color = MaterialTheme.colorScheme.primary)
                 } else {
-                    LazyRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    LazyRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.medium)) {
                         items(versions) { version ->
                             Column(
-                                modifier = Modifier.width(150.dp).clickable { onVersionSelected(version) }, 
+                                modifier = Modifier
+                                    .width(160.dp)
+                                    .clip(shapes.medium)
+                                    .clickable { onVersionSelected(version) }
+                                    .padding(spacing.small), 
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Card(modifier = Modifier.aspectRatio(0.718f)) {
+                                Card(
+                                    modifier = Modifier.aspectRatio(0.718f),
+                                    shape = shapes.small,
+                                    elevation = CardDefaults.cardElevation(defaultElevation = elevation.level2)
+                                ) {
                                     AsyncImage(
                                         model = ImageRequest.Builder(LocalContext.current)
                                             .data(version.imageUris?.normal ?: version.imageUris?.small)
@@ -61,15 +82,31 @@ fun VersionSelectionModal(
                                         contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop
                                     )
                                 }
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(text = version.setCode?.uppercase() ?: "", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                                Text(text = version.setName ?: "", style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, maxLines = 2)
+                                Spacer(modifier = Modifier.height(spacing.smallPadding))
+                                Text(
+                                    text = version.setCode?.uppercase() ?: "", 
+                                    style = MaterialTheme.typography.labelLarge, 
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = version.setName ?: "", 
+                                    style = MaterialTheme.typography.bodySmall, 
+                                    textAlign = TextAlign.Center, 
+                                    maxLines = 2,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                TextButton(onClick = onDismiss) { Text(stringResource(id = R.string.action_cancel)) }
+                Spacer(modifier = Modifier.height(spacing.large))
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth()
+                ) { 
+                    Text(stringResource(id = R.string.action_cancel), fontWeight = FontWeight.Bold) 
+                }
             }
         }
     }
@@ -92,12 +129,15 @@ fun CardDetailEntryModal(
     onDismiss: () -> Unit
 ) {
     if (version == null) return
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
+
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(modifier = Modifier.fillMaxWidth().padding(16.dp), shape = RoundedCornerShape(16.dp)) {
-            Column(modifier = Modifier.padding(16.dp).verticalScroll(rememberScrollState())) {
+        Surface(modifier = Modifier.fillMaxWidth().padding(spacing.medium), shape = shapes.large) {
+            Column(modifier = Modifier.padding(spacing.medium).verticalScroll(rememberScrollState())) {
                 Text(text = stringResource(id = R.string.wantlist_card_details), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Spacer(modifier = Modifier.height(spacing.medium))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.medium)) {
                     Card(modifier = Modifier.weight(0.4f).aspectRatio(0.718f)) {
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
@@ -106,7 +146,7 @@ fun CardDetailEntryModal(
                             contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop
                         )
                     }
-                    Column(modifier = Modifier.weight(0.6f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(modifier = Modifier.weight(0.6f), verticalArrangement = Arrangement.spacedBy(spacing.smallPadding)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(stringResource(id = R.string.wantlist_card_quantity_label))
                             IconButton(onClick = { if (quantity > 1) onQuantityChanged(quantity - 1) }) { Icon(Icons.Default.Remove, contentDescription = null) }
@@ -155,7 +195,7 @@ fun CardDetailEntryModal(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(spacing.large))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     TextButton(onClick = onDismiss) { Text(stringResource(id = R.string.action_cancel)) }
                     Button(onClick = onSave, enabled = !isSaving) {

@@ -178,14 +178,14 @@ class CardSearchIndexRepository @Inject constructor(
             }
             mtgSetDao.insertSets(entities)
         } catch (e: Exception) {
-            // Silencioso
+            // Silent
         }
     }
 
     suspend fun bootstrapIndex(language: String, onProgress: suspend (Float) -> Unit = {}): Int = withContext(Dispatchers.IO) {
         val normalizedLanguage = normalizeLanguage(language)
         
-        // Evitar ejecuciones duplicadas para el mismo idioma
+        // Avoid duplicate executions for the same language
         if (activeBootstraps.putIfAbsent(normalizedLanguage, true) == true) {
             android.util.Log.d("CardSearchIndexRepo", "Bootstrap already in progress for $normalizedLanguage, skipping.")
             return@withContext 0
@@ -458,7 +458,7 @@ class CardSearchIndexRepository @Inject constructor(
     private fun buildSearchQuery(query: CardIndexQuery, paged: Boolean = false): SupportSQLiteQuery {
         val lang = normalizeLanguage(query.language)
         
-        // Fallback robusto: idioma activo -> inglés -> nombre base
+        // Robust fallback: active language -> English -> base name
         val displayNameExpr = "COALESCE(fts.name, m.printedName, m.name)"
 
         val sql = StringBuilder()
@@ -555,8 +555,8 @@ class CardSearchIndexRepository @Inject constructor(
         if (terms.isEmpty()) {
             return null
         }
-        // En FTS4, las expresiones parentizadas con OR por columna pueden devolver 0 resultados.
-        // Para autocompletado estable usamos prefijo por nombre.
+        // In FTS4, parenthesized expressions with OR per column may return 0 results.
+        // For stable autocomplete, we use prefix by name.
         return terms.joinToString(" ") { "name:$it*" }
     }
 

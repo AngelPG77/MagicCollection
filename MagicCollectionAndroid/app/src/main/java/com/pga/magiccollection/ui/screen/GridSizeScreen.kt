@@ -16,11 +16,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pga.magiccollection.R
 
 @Composable
 fun GridSizeScreen(viewModel: MainViewModel) {
-    val preferences by viewModel.preferences.collectAsState(initial = null)
+    val preferences by viewModel.preferences.collectAsStateWithLifecycle(initialValue = null)
     
     // Use a local state for immediate feedback, but sync with viewModel
     var gridSize by remember(preferences?.gridSize) { mutableIntStateOf(preferences?.gridSize ?: 3) }

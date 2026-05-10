@@ -29,7 +29,18 @@ data class AppSpacing(
     val screenVertical: Dp = 16.dp,
     val sectionGap: Dp = 24.dp,
     val cardGap: Dp = 12.dp,
-    val listItemVertical: Dp = 8.dp
+    val listItemVertical: Dp = 8.dp,
+
+    // Long-form aliases used by older call sites (CardModals, SearchComponents, etc.)
+    val default: Dp = 0.dp,
+    val extraSmall: Dp = 4.dp,
+    val small: Dp = 8.dp,
+    val smallPadding: Dp = 12.dp,
+    val medium: Dp = 16.dp,
+    val large: Dp = 24.dp,
+    val extraLarge: Dp = 32.dp,
+    val huge: Dp = 48.dp,
+    val listSpacing: Dp = 8.dp
 )
 
 @Immutable

@@ -3,8 +3,8 @@ package pga.magiccollectionspring.shared.exception;
 import java.time.LocalDateTime;
 
 /**
- * Estructura estándar de respuesta de error para la API.
- * Este formato es interpretado por el frontend para mostrar mensajes amigables.
+ * Standard error response structure for the API.
+ * This format is interpreted by the frontend to display friendly messages.
  */
 public record ApiErrorResponse(
         String error,

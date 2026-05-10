@@ -175,6 +175,8 @@ public class LanguageIndexBuildService {
         String normalized = normalizeSupportedLanguage(languageCode);
         synchronized (languageLocks.computeIfAbsent(normalized, ignored -> new Object())) {
             long startedNano = System.nanoTime();
+            log.info("[INDEX-BUILD] Starting index rebuild for language: {}...", normalized);
+            
             meterRegistry.counter("magic.index.build.started", "language", normalized).increment();
             LocalDateTime startedAt = LocalDateTime.now();
 
@@ -198,7 +200,10 @@ public class LanguageIndexBuildService {
             try {
                 buildToken = UUID.randomUUID().toString().replace("-", "");
                 buildLog.setBuildToken(buildToken);
+                
+                log.debug("[INDEX-BUILD][{}] Computing current state and hashing rows...", normalized);
                 BuildState computed = computeState(normalized, buildToken);
+                
                 String previousVersion = state.getVersion();
                 boolean contentChanged = hasContentChanged(state, computed);
                 
@@ -212,6 +217,9 @@ public class LanguageIndexBuildService {
 
                 LanguageIndexInternalService.DiffResult diff;
                 if (contentChanged || !Objects.equals(previousVersion, targetVersion)) {
+                    log.info("[INDEX-BUILD][{}] Changes detected. Publishing version {} (previous: {})", 
+                            normalized, targetVersion, previousVersion);
+                    
                     long targetVersionLong = parseVersion(targetVersion);
                     diff = internalService.applyStageAndPublishDelta(normalized, buildToken, targetVersion, targetVersionLong);
                     state.setChecksum(computed.checksum);
@@ -219,7 +227,7 @@ public class LanguageIndexBuildService {
                     state.setGeneratedAt(computed.generatedAt);
                     state.setSourceLastUpdated(computed.sourceLastUpdated);
                 } else {
-                    log.info("Índice de idioma {} sin cambios de contenido; se mantiene versión {}", normalized, targetVersion);
+                    log.info("[INDEX-BUILD][{}] No changes detected. Maintaining current version: {}", normalized, targetVersion);
                     diff = new LanguageIndexInternalService.DiffResult(0L, 0L);
                     if (state.getChecksum() == null || state.getChecksum().isBlank()) {
                         state.setChecksum(computed.checksum);
@@ -238,9 +246,13 @@ public class LanguageIndexBuildService {
                 
                 internalService.finalizeBuild(state, buildLog, buildToken, normalized);
                 recordBuildMetrics(normalized, true, computed.totalRows, diff.upsertsCount(), diff.deletesCount(), startedNano);
+                
+                log.info("[INDEX-BUILD][{}] Successfully finished in {} ms. Total rows: {}, Upserts: {}, Deletes: {}", 
+                        normalized, buildLog.getDurationMs(), computed.totalRows, diff.upsertsCount(), diff.deletesCount());
+                
                 return toManifest(state);
             } catch (Exception ex) {
-                log.error("Failed to rebuild language index for {}", normalized, ex);
+                log.error("[INDEX-BUILD][{}] Critical failure during rebuild: {}", normalized, ex.getMessage(), ex);
                 finalizeBuildLogFailure(buildLog, ex, startedNano);
                 internalService.markAsFailed(state, buildLog, buildToken, normalized);
                 recordBuildMetrics(normalized, false, 0L, 0L, 0L, startedNano);
@@ -282,6 +294,9 @@ public class LanguageIndexBuildService {
                 totalRows++;
             }
             page++;
+            if (page % 5 == 0) {
+                log.debug("[INDEX-BUILD][{}] Processed {} rows so far...", languageCode, totalRows);
+            }
         } while (slice.hasNext());
         if (!stageRowsBuffer.isEmpty()) {
             indexLanguageStageRowRepository.saveAll(stageRowsBuffer);

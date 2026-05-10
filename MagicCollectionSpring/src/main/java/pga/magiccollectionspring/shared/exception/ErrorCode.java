@@ -1,11 +1,11 @@
 package pga.magiccollectionspring.shared.exception;
 
 /**
- * Códigos de error estandarizados para que el frontend pueda identificar
- * el tipo de error y mostrar mensajes apropiados.
+ * Standardized error codes so the frontend can identify
+ * the type of error and display appropriate messages.
  */
 public enum ErrorCode {
-    // Errores de autenticación (401)
+    // Authentication errors (401)
     TOKEN_EXPIRED,
     TOKEN_INVALID,
     TOKEN_MISSING,
@@ -13,29 +13,29 @@ public enum ErrorCode {
     SESSION_NOT_FOUND,
     CURRENT_PASSWORD_INCORRECT,
 
-    // Errores de autorización (403)
+    // Authorization errors (403)
     ACCESS_DENIED,
     INSUFFICIENT_PERMISSIONS,
 
-    // Errores de recursos (404)
+    // Resource errors (404)
     USER_NOT_FOUND,
     CARD_NOT_FOUND,
     COLLECTION_NOT_FOUND,
     RESOURCE_NOT_FOUND,
 
-    // Errores de conflicto (409)
+    // Conflict errors (409)
     USERNAME_ALREADY_EXISTS,
     EMAIL_ALREADY_EXISTS,
     RESOURCE_CONFLICT,
 
-    // Errores de validación (400)
+    // Validation errors (400)
     VALIDATION_ERROR,
     INVALID_REQUEST,
 
-    // Errores de servidor (500, 502)
+    // Server errors (500, 502)
     INTERNAL_ERROR,
     EXTERNAL_SERVICE_ERROR,
 
-    // Error genérico
+    // Generic error
     UNKNOWN_ERROR
 }

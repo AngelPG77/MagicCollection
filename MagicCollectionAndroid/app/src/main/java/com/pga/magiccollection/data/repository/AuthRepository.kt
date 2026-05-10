@@ -15,23 +15,23 @@ class AuthRepository @Inject constructor(
 ) {
     suspend fun register(username: String, password: String): String {
         val normalizedUsername = username.trim()
-        require(normalizedUsername.isNotEmpty()) { "El username es obligatorio." }
-        require(password.isNotBlank()) { "La password es obligatoria." }
+        require(normalizedUsername.isNotEmpty()) { "Username is required." }
+        require(password.isNotBlank()) { "Password is required." }
         return authApi.register(RegisterRequestDto(normalizedUsername, password)).message
     }
 
     suspend fun login(username: String, password: String, rememberMe: Boolean = false) {
         val normalizedUsername = username.trim()
-        require(normalizedUsername.isNotEmpty()) { "El username es obligatorio." }
-        require(password.isNotBlank()) { "La password es obligatoria." }
+        require(normalizedUsername.isNotEmpty()) { "Username is required." }
+        require(password.isNotBlank()) { "Password is required." }
 
         val response = authApi.login(LoginRequestDto(normalizedUsername, password, rememberMe))
         val token = response.token
         val userId = response.userId
-            ?: throw IllegalStateException("Respuesta de login inválida: falta userId")
+            ?: throw IllegalStateException("Invalid login response: userId missing")
         val refreshToken = response.refreshToken
         
-        // Limpiar cualquier usuario previo con el mismo nombre pero distinto ID (poco probable, pero por seguridad)
+        // Clear any previous user with the same name but different ID (unlikely, but for security)
         val existingUser = userDao.getUserByUsername(normalizedUsername)
         if (existingUser != null && existingUser.id != userId) {
             userDao.deleteUserById(existingUser.id)
@@ -58,7 +58,7 @@ class AuthRepository @Inject constructor(
         if (response.success) {
             val userId = sessionManager.getUserId()
             userDao.insertUser(UserEntity(id = userId, username = newUsername))
-            // Guardar el nuevo token si viene en la respuesta
+            // Save the new token if it comes in the response
             val newToken = response.token ?: sessionManager.getAuthToken() ?: ""
             sessionManager.saveSession(
                 token = newToken,

@@ -45,7 +45,7 @@ class CardDetailViewModel @Inject constructor(
             _isLoading.value = true
             try {
                 val preferences = getAppPreferencesUseCase().first()
-                val lang = preferences.searchLanguage // Usar idioma de búsqueda, no idioma de app
+                val lang = preferences.searchLanguage // Use search language, not app language
                 
                 // Determine if identifier is a UUID (Scryfall ID) or a Name
                 val isUuid = cardIdentifier.matches(Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"))

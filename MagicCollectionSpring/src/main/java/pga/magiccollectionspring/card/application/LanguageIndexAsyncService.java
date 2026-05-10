@@ -17,13 +17,13 @@ public class LanguageIndexAsyncService {
 
     @Async
     public void rebuildAllSupportedLanguagesAsync() {
-        log.info("Iniciando rebuild asíncrono de todos los idiomas soportados...");
+        log.info("[ASYNC-INDEX] Starting background rebuild for all supported languages...");
         List<String> languages = languageIndexBuildService.getSupportedLanguages();
         for (String lang : languages) {
             try {
                 rebuildLanguageAsync(lang);
             } catch (Exception e) {
-                log.error("Error al encolar rebuild para {}: {}", lang, e.getMessage());
+                log.error("[ASYNC-INDEX] Failed to queue rebuild for {}: {}", lang, e.getMessage());
             }
         }
     }
@@ -31,10 +31,10 @@ public class LanguageIndexAsyncService {
     @Async
     public void rebuildLanguageAsync(String languageCode) {
         try {
-            log.info("Iniciando rebuild asíncrono para el idioma: {}", languageCode);
+            log.info("[ASYNC-INDEX] Triggering background rebuild for language: {}", languageCode);
             languageIndexBuildService.rebuildLanguage(languageCode);
         } catch (Exception e) {
-            log.error("Error reconstruyendo índice para {}: {}", languageCode, e.getMessage());
+            log.error("[ASYNC-INDEX] Background rebuild failed for {}: {}", languageCode, e.getMessage());
         }
     }
 }

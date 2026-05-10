@@ -11,11 +11,11 @@ enum class CardCondition(val displayName: String) {
 
     companion object {
         fun fromString(condition: String?): CardCondition {
-            if (condition == null) throw IllegalArgumentException("La condición no puede ser nula")
+            if (condition == null) throw IllegalArgumentException("Condition cannot be null")
             return CardCondition.entries.find {
                 it.displayName.equals(condition, ignoreCase = true) ||
                         it.name.equals(condition, ignoreCase = true)
-            } ?: throw IllegalArgumentException("Condición no válida: $condition")
+            } ?: throw IllegalArgumentException("Invalid condition: $condition")
         }
     }
 }

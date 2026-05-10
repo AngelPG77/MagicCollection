@@ -13,8 +13,8 @@ import pga.magiccollectionspring.shared.exception.ErrorCode;
 import java.io.IOException;
 
 /**
- * Manejador personalizado para errores de autenticación de Spring Security.
- * Convierte las respuestas 401/403 por defecto en respuestas JSON estructuradas.
+ * Custom handler for Spring Security authentication errors.
+ * Converts default 401/403 responses into structured JSON responses.
  */
 @Component
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
@@ -42,26 +42,26 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             switch (errorAttribute) {
                 case "expired" -> {
                     code = ErrorCode.TOKEN_EXPIRED;
-                    message = "La sesión ha expirado. Por favor, inicia sesión nuevamente.";
+                    message = "The session has expired. Please log in again.";
                 }
                 case "invalid" -> {
                     code = ErrorCode.TOKEN_INVALID;
-                    message = "Token de autenticación inválido. Por favor, inicia sesión nuevamente.";
+                    message = "Invalid authentication token. Please log in again.";
                 }
                 default -> {
                     code = ErrorCode.TOKEN_MISSING;
-                    message = "No hay una sesión autenticada.";
+                    message = "No authenticated session found.";
                 }
             }
         } else {
-            // Si no hay jwt_error pero sí había header Authorization, el token es inválido
+            // If there is no jwt_error but there was an Authorization header, the token is invalid
             String authHeader = request.getHeader("Authorization");
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 code = ErrorCode.TOKEN_INVALID;
-                message = "Token de autenticación inválido. Por favor, inicia sesión nuevamente.";
+                message = "Invalid authentication token. Please log in again.";
             } else {
                 code = ErrorCode.TOKEN_MISSING;
-                message = "Se requiere autenticación para acceder a este recurso.";
+                message = "Authentication is required to access this resource.";
             }
         }
 

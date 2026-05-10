@@ -35,6 +35,7 @@ public class ScryfallAdapter implements ScryfallPort {
     public CompletableFuture<Optional<CardScryfallDTO>> findCardByName(String cardName, String lang) {
         return CompletableFuture.supplyAsync(() -> {
             try {
+                log.info("[SCRYFALL] Fetching card by name: '{}' (lang={})", cardName, lang);
                 CardScryfallDTO dto = scryfallClient.get()
                         .uri(uriBuilder -> uriBuilder
                                 .path("/cards/named")
@@ -43,15 +44,15 @@ public class ScryfallAdapter implements ScryfallPort {
                                 .build())
                         .retrieve()
                         .onStatus(status -> status.value() == 404, (req, res) -> {
-                            throw new ExternalServiceException("Carta no encontrada en Scryfall: " + cardName);
+                            throw new ExternalServiceException("Card not found on Scryfall: " + cardName);
                         })
                         .body(CardScryfallDTO.class);
                 return Optional.ofNullable(dto);
             } catch (ExternalServiceException e) {
                 throw e;
             } catch (Exception e) {
-                log.error("Error llamando a Scryfall para la carta '{}': {}", cardName, e.getMessage());
-                throw new ExternalServiceException("Error al conectar con Scryfall", e);
+                log.error("[SCRYFALL] Error fetching card '{}': {}", cardName, e.getMessage());
+                throw new ExternalServiceException("Error connecting to Scryfall", e);
             }
         });
     }
@@ -60,21 +61,22 @@ public class ScryfallAdapter implements ScryfallPort {
     public CompletableFuture<Optional<CardScryfallDTO>> findCardByScryfallId(String scryfallId, String lang) {
         return CompletableFuture.supplyAsync(() -> {
             try {
+                log.info("[SCRYFALL] Fetching card by Scryfall ID: '{}'", scryfallId);
                 CardScryfallDTO dto = scryfallClient.get()
                         .uri(uriBuilder -> uriBuilder
                                 .path("/cards/" + scryfallId)
                                 .build())
                         .retrieve()
                         .onStatus(status -> status.value() == 404, (req, res) -> {
-                            throw new ExternalServiceException("Carta no encontrada en Scryfall con ID: " + scryfallId);
+                            throw new ExternalServiceException("Card not found on Scryfall with ID: " + scryfallId);
                         })
                         .body(CardScryfallDTO.class);
                 return Optional.ofNullable(dto);
             } catch (ExternalServiceException e) {
                 throw e;
             } catch (Exception e) {
-                log.error("Error llamando a Scryfall para la carta con ID '{}': {}", scryfallId, e.getMessage());
-                throw new ExternalServiceException("Error al conectar con Scryfall", e);
+                log.error("[SCRYFALL] Error fetching card ID '{}': {}", scryfallId, e.getMessage());
+                throw new ExternalServiceException("Error connecting to Scryfall", e);
             }
         });
     }
@@ -149,7 +151,7 @@ public class ScryfallAdapter implements ScryfallPort {
                 }
 
                 String finalQuery = q.toString().trim();
-                log.info("Buscando en Scryfall con q='{}'", finalQuery);
+                log.info("[SCRYFALL] Searching with query: '{}'", finalQuery);
 
                 ScryfallSearchResponse response = scryfallClient.get()
                         .uri(uriBuilder -> uriBuilder
@@ -158,10 +160,14 @@ public class ScryfallAdapter implements ScryfallPort {
                                 .build())
                         .retrieve()
                         .body(ScryfallSearchResponse.class);
+                
+                int resultCount = (response != null && response.getData() != null) ? response.getData().size() : 0;
+                log.info("[SCRYFALL] Search finished. Found {} results.", resultCount);
+                
                 return response != null ? response : new ScryfallSearchResponse();
             } catch (Exception e) {
-                log.error("Error buscando en Scryfall: {}", e.getMessage());
-                throw new ExternalServiceException("Error al buscar en Scryfall", e);
+                log.error("[SCRYFALL] Search failed: {}", e.getMessage());
+                throw new ExternalServiceException("Error searching on Scryfall", e);
             }
         });
     }
@@ -171,9 +177,6 @@ public class ScryfallAdapter implements ScryfallPort {
     public CompletableFuture<List<CardSuggestionDTO>> autocomplete(String query) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                // name:/^.../ -> Búsqueda ultrarrápida por inicio de nombre
-                // order:edhrec -> Prioriza cartas populares
-                // game:paper -> Solo cartas físicas
                 String optimizedQuery = "name:/^" + query.trim() + "/ game:paper order:edhrec";
                 
                 ScryfallSearchResponse response = scryfallClient.get()
@@ -207,6 +210,7 @@ public class ScryfallAdapter implements ScryfallPort {
     public CompletableFuture<Optional<CardScryfallDTO>> getRandomCard() {
         return CompletableFuture.supplyAsync(() -> {
             try {
+                log.info("[SCRYFALL] Fetching random card...");
                 CardScryfallDTO dto = scryfallClient.get()
                         .uri(uriBuilder -> uriBuilder
                                 .path("/cards/random")
@@ -215,8 +219,8 @@ public class ScryfallAdapter implements ScryfallPort {
                         .body(CardScryfallDTO.class);
                 return Optional.ofNullable(dto);
             } catch (Exception e) {
-                log.error("Error obteniendo carta aleatoria de Scryfall: {}", e.getMessage());
-                throw new ExternalServiceException("Error al obtener carta aleatoria", e);
+                log.error("[SCRYFALL] Error fetching random card: {}", e.getMessage());
+                throw new ExternalServiceException("Error obtaining random card", e);
             }
         });
     }
@@ -225,13 +229,14 @@ public class ScryfallAdapter implements ScryfallPort {
     public CompletableFuture<List<BulkDataDTO>> getBulkDataInfo() {
         return CompletableFuture.supplyAsync(() -> {
             try {
+                log.info("[SCRYFALL] Fetching bulk data information...");
                 BulkDataListResponse response = scryfallClient.get()
                         .uri("/bulk-data")
                         .retrieve()
                         .body(BulkDataListResponse.class);
                 return response != null ? response.getData() : Collections.emptyList();
             } catch (Exception e) {
-                log.error("Error obteniendo info de bulk data de Scryfall: {}", e.getMessage());
+                log.error("[SCRYFALL] Error fetching bulk data info: {}", e.getMessage());
                 return Collections.emptyList();
             }
         });
@@ -241,13 +246,14 @@ public class ScryfallAdapter implements ScryfallPort {
     public CompletableFuture<List<ScryfallSetDTO>> getSets() {
         return CompletableFuture.supplyAsync(() -> {
             try {
+                log.info("[SCRYFALL] Fetching all expansion sets...");
                 ScryfallSetListResponse response = scryfallClient.get()
                         .uri("/sets")
                         .retrieve()
                         .body(ScryfallSetListResponse.class);
                 return response != null ? response.getData() : Collections.emptyList();
             } catch (Exception e) {
-                log.error("Error obteniendo lista de expansiones de Scryfall: {}", e.getMessage());
+                log.error("[SCRYFALL] Error fetching set list: {}", e.getMessage());
                 return Collections.emptyList();
             }
         });

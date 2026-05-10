@@ -14,37 +14,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-const val ALL_COLLECTIONS_LOCAL_ID = 0L
-
-data class OwnedCardUiItem(
-    val card: CollectionCardEntity,
-    val collectionName: String
-)
-
-data class CollectionUiState(
-    val collections: List<CollectionWithCount> = emptyList(),
-    val filteredCollections: List<CollectionWithCount> = emptyList(),
-    val globalCardCount: Int = 0,
-    val collectionsSearchQuery: String = "",
-    val selectedCollection: CollectionEntity? = null,
-    val isAllCollectionsMode: Boolean = false,
-    val collectionCards: List<OwnedCardUiItem> = emptyList(),
-    val filteredCollectionCards: List<OwnedCardUiItem> = emptyList(),
-    val cardsSearchQuery: String = "",
-    val isLoading: Boolean = false,
-    val message: String? = null,
-    val showCreateDialog: Boolean = false,
-    val showEditDialog: Boolean = false,
-    val editingCollection: CollectionEntity? = null,
-    val nameInput: String = "",
-    val nameError: String? = null,
-    val isSessionExpired: Boolean = false
-)
 
 @HiltViewModel
 class CollectionViewModel @Inject constructor(
@@ -67,6 +42,9 @@ class CollectionViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(CollectionUiState())
     val uiState: StateFlow<CollectionUiState> = _uiState.asStateFlow()
 
+    private val _events = MutableSharedFlow<CollectionUiEvent>()
+    val events = _events.asSharedFlow()
+
     private val session = getSessionStateUseCase()
     private var cardsJob: Job? = null
 
@@ -77,7 +55,24 @@ class CollectionViewModel @Inject constructor(
         }
     }
 
-    private fun observeCollections() {
+    fun onAction(action: CollectionUiAction) {
+        when (action) {
+            is CollectionUiAction.SearchCollections -> onCollectionsSearchQueryChanged(action.query)
+            is CollectionUiAction.SearchCards -> onCardsSearchQueryChanged(action.query)
+            is CollectionUiAction.ToggleCreateDialog -> showCreateDialog(action.show)
+            is CollectionUiAction.ToggleEditDialog -> showEditDialog(action.collection)
+            is CollectionUiAction.NameInputChanged -> onNameInputChanged(action.name)
+            is CollectionUiAction.CreateCollection -> createCollection()
+            is CollectionUiAction.UpdateCollection -> updateCollection()
+            is CollectionUiAction.DeleteCollection -> deleteCollection()
+            is CollectionUiAction.ClearMessage -> clearMessage()
+            is CollectionUiAction.LoadCollectionCards -> loadCollectionCards(action.localId)
+            is CollectionUiAction.RemoveCard -> removeCard(action.card)
+            is CollectionUiAction.UpdateCardQuantity -> updateCardQuantity(action.card, action.newQuantity)
+        }
+    }
+
+    fun observeCollections() {
         viewModelScope.launch {
             observeCollectionsUseCase(session.userId).collectLatest { collections ->
                 _uiState.update {
@@ -301,7 +296,7 @@ class CollectionViewModel @Inject constructor(
         }
     }
 
-    private fun syncCollections() {
+    fun syncCollections() {
         viewModelScope.launch {
             try {
                 syncCollectionsUseCase(session.userId)
@@ -318,6 +313,7 @@ class CollectionViewModel @Inject constructor(
         if (ErrorParser.isSessionError(e)) {
             logoutUseCase()
             _uiState.update { it.copy(isSessionExpired = true) }
+            viewModelScope.launch { _events.emit(CollectionUiEvent.NavigateToLogin) }
         }
         return ErrorParser.parseError(e)
     }

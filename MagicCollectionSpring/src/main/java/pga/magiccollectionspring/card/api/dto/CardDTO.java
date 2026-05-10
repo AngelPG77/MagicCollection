@@ -1,26 +1,68 @@
 package pga.magiccollectionspring.card.api.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
+/**
+ * DTO representing detailed information of a card.
+ */
+@Schema(description = "Detailed information of a Magic card")
 public class CardDTO {
+    @Schema(description = "Unique internal ID (UUID)", example = "550e8400-e29b-41d4-a716-446655440000")
     private String id;
+    
+    @Schema(description = "Card name in English", example = "Black Lotus")
     private String name;
+    
+    @Schema(description = "Printed name (if translation exists)", example = "Loto Negro")
     private String printedName;
+    
+    @Schema(description = "Expansion/Set code", example = "LEA")
     private String setCode;
+    
+    @Schema(description = "Unique Scryfall ID", example = "bd8fa327-dd41-4737-8f19-2cf5eb1f7cdd")
     private String scryfallId;
+    
+    @Schema(description = "Card text (abilities)", example = "Add {B}{B}{B} to your mana pool.")
     private String oracleText;
+    
+    @Schema(description = "Type line", example = "Artifact")
     private String typeLine;
+    
+    @Schema(description = "Mana cost", example = "{0}")
     private String manaCost;
+    
+    @Schema(description = "Converted mana cost (legacy)")
     private Integer convertedManaCost;
+    
+    @Schema(description = "Mana Value (CMC)", example = "0.0")
     private Float cmc;
+    
+    @Schema(description = "Rarity", example = "rare")
     private String rarity;
+    
+    @Schema(description = "Numeric rarity rank")
     private Integer rarityRank;
+    
+    @Schema(description = "Binary color mask")
     private Integer colorMask;
+    
+    @Schema(description = "Binary color identity mask")
     private Integer identityMask;
+    
+    @Schema(description = "List of colors")
     private List<String> colors;
+    
+    @Schema(description = "List of color identity")
     private List<String> colorIdentity;
+    
+    @Schema(description = "Power", example = "0")
     private String power;
+    
+    @Schema(description = "Toughness", example = "0")
     private String toughness;
+    
+    @Schema(description = "URLs of the card images")
     private ImageUrisDTO imageUris;
 
     public CardDTO() {}
@@ -104,6 +146,7 @@ public class CardDTO {
     public ImageUrisDTO getImageUris() { return imageUris; }
     public void setImageUris(ImageUrisDTO imageUris) { this.imageUris = imageUris; }
 
+    @Schema(description = "Links to card images in different sizes")
     public static class ImageUrisDTO {
         private String small;
         private String normal;

@@ -24,15 +24,15 @@ public class UpdatePasswordService implements ICommandService<UpdatePasswordComm
     @Transactional
     public UpdatePasswordResponse execute(UpdatePasswordCommand command) {
         User user = userRepository.findById(command.userId())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", command.userId().toString()));
+                .orElseThrow(() -> new ResourceNotFoundException("User", command.userId().toString()));
 
         if (!passwordEncoder.matches(command.currentPassword(), user.getPassword())) {
-            throw new UnauthorizedException("La contraseña actual es incorrecta");
+            throw new UnauthorizedException("The current password is incorrect");
         }
 
         user.setPassword(passwordEncoder.encode(command.newPassword()));
         userRepository.save(user);
 
-        return new UpdatePasswordResponse(true, "Contraseña actualizada con exito");
+        return new UpdatePasswordResponse(true, "Password updated successfully");
     }
 }

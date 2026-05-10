@@ -25,7 +25,7 @@ object NetworkModule {
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor { message ->
-            // Redactar tokens de autorización en los logs (seguridad)
+            // Redact authorization tokens in logs (security)
             val sanitizedMessage = if (message.contains("Authorization:", ignoreCase = true)) {
                 message.replace(Regex("Bearer [A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+"), "Bearer [REDACTED]")
             } else {
@@ -34,7 +34,7 @@ object NetworkModule {
             android.util.Log.i("okhttp.OkHttpClient", sanitizedMessage)
         }.apply {
             level = if (BuildConfig.DEBUG) {
-                // Cambiado de BODY a HEADERS para evitar OOM con respuestas grandes (como el índice de cartas)
+                // Changed from BODY to HEADERS to avoid OOM with large responses (like the card index)
                 HttpLoggingInterceptor.Level.HEADERS
             } else {
                 HttpLoggingInterceptor.Level.BASIC

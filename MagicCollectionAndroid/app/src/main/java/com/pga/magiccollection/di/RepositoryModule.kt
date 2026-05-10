@@ -23,6 +23,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object RepositoryModule {
-    // Todos los repositorios ahora usan @Inject constructor
-    // Hilt los provee automáticamente.
+    // All repositories now use @Inject constructor
+    // Hilt provides them automatically.
 }

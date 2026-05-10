@@ -1,25 +1,25 @@
 package com.pga.magiccollection.domain.model.enums
 
 enum class Language(val code: String, val displayName: String) {
-    ENGLISH("EN", "Inglés"),
-    SPANISH("ES", "Español"),
-    FRENCH("FR", "Francés"),
-    GERMAN("DE", "Alemán"),
-    ITALIAN("IT", "Italiano"),
-    PORTUGUESE("PT", "Portugués"),
-    JAPANESE("JP", "Japonés"),
-    CHINESE("CN", "Chino"),
-    RUSSIAN("RU", "Ruso"),
-    KOREAN("KR", "Coreano");
+    ENGLISH("EN", "English"),
+    SPANISH("ES", "Spanish"),
+    FRENCH("FR", "French"),
+    GERMAN("DE", "German"),
+    ITALIAN("IT", "Italian"),
+    PORTUGUESE("PT", "Portuguese"),
+    JAPANESE("JP", "Japanese"),
+    CHINESE("CN", "Chinese"),
+    RUSSIAN("RU", "Russian"),
+    KOREAN("KR", "Korean");
 
     companion object {
         fun fromCode(text: String?): Language {
-            if (text == null) throw IllegalArgumentException("El idioma no puede estar vacío")
+            if (text == null) throw IllegalArgumentException("Language cannot be empty")
             return values().find {
                 it.code.equals(text, ignoreCase = true) ||
                         it.name.equals(text, ignoreCase = true) ||
                         it.displayName.equals(text, ignoreCase = true)
-            } ?: throw IllegalArgumentException("Idioma no soportado: $text")
+            } ?: throw IllegalArgumentException("Unsupported language: $text")
         }
     }
 }

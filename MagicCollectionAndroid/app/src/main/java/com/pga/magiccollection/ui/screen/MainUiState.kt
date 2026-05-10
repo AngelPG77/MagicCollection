@@ -26,7 +26,7 @@ data class MainUiState(
     val collections: List<CollectionWithCount> = emptyList(),
     val isProfileSynced: Boolean = true,
 
-    // Gestión de cuenta
+    // Account management
     val showUpdateUsernameDialog: Boolean = false,
     val showChangePasswordDialog: Boolean = false,
     val showDeleteAccountDialog: Boolean = false,
@@ -38,13 +38,13 @@ data class MainUiState(
     val isCurrentPasswordVisible: Boolean = false,
     val isRepeatPasswordVisible: Boolean = false,
 
-    // Idiomas
+    // Languages
     val showDownloadDialog: Boolean = false,
     val selectedLanguageToDownload: String? = null,
     val downloadProgress: Float = 0f,
     val isDownloading: Boolean = false,
 
-    // Actualización de Índices
+    // Index Update
     val showUpdateDialog: Boolean = false,
     val showForceScanDialog: Boolean = false,
     val indexVersion: IndexVersionDto? = null,

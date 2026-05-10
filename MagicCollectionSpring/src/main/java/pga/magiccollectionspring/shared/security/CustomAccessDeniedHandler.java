@@ -13,8 +13,8 @@ import pga.magiccollectionspring.shared.exception.ErrorCode;
 import java.io.IOException;
 
 /**
- * Manejador personalizado para errores de acceso denegado (403).
- * Convierte las respuestas 403 por defecto en respuestas JSON estructuradas.
+ * Custom handler for access denied errors (403).
+ * Converts default 403 responses into structured JSON responses.
  */
 @Component
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
@@ -35,7 +35,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 
         ApiErrorResponse errorResponse = ApiErrorResponse.of(
-                "No tienes permisos para realizar esta acción.",
+                "You do not have permissions to perform this action.",
                 ErrorCode.ACCESS_DENIED,
                 HttpServletResponse.SC_FORBIDDEN
         );

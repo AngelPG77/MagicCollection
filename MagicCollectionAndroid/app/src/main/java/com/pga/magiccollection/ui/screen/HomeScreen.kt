@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Precision
@@ -35,8 +36,8 @@ fun HomeScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val recentCards by viewModel.recentCards.collectAsState(initial = emptyList())
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val recentCards by viewModel.recentCards.collectAsStateWithLifecycle(initialValue = emptyList())
     
     var showLoginDialog by remember { mutableStateOf(false) }
 
@@ -67,13 +68,13 @@ fun HomeScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        // Sección de Cartas Recientes
+        // Recent Cards Section
         RecentCardsSection(
             cards = recentCards,
             onCardClick = onNavigateToDetail
         )
 
-        // Sección de Utilidades
+        // Utilities Section
         UtilitiesSection(
             isLoggedIn = uiState.isLoggedIn,
             onRandomCard = { viewModel.getRandomCard() },

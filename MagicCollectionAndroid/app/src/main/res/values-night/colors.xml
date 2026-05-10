@@ -2,4 +2,5 @@
 <resources>
     <!-- Dark variant of the launch-flash window background (Material 3 dark surface). -->
     <color name="window_background">#FF1C1B1F</color>
+    <color name="splash_background">#FF1C1B1F</color>
 </resources>

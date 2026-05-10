@@ -285,7 +285,7 @@ class WantListViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             try {
                 syncWantListsUseCase(session.userId)
-                // Se elimina el mensaje de éxito por petición del usuario
+                // Success message removed at user request
             } catch (e: Exception) {
                 _uiState.update { it.copy(message = handleError(e)) }
             } finally {

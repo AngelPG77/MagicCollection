@@ -14,10 +14,15 @@ public class CardSyncScheduledService {
         this.syncService = syncService;
     }
 
-    // Ejecutar cada 24 horas. Inicialmente 10 segundos después del arranque.
+    // Execute every 24 hours. Initially 10 seconds after startup.
     @Scheduled(fixedRate = 86400000, initialDelay = 10000)
     public void syncDaily() {
-        log.info("Iniciando tarea programada de sincronización con Scryfall...");
-        syncService.syncFullCatalog();
+        log.info("[SCHEDULED-TASK] Starting daily synchronization with Scryfall...");
+        try {
+            syncService.syncFullCatalog();
+            log.info("[SCHEDULED-TASK] Daily synchronization finished successfully.");
+        } catch (Exception e) {
+            log.error("[SCHEDULED-TASK] Daily synchronization failed: {}", e.getMessage(), e);
+        }
     }
 }

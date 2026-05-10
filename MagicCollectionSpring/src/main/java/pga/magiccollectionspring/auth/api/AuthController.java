@@ -28,11 +28,18 @@ import pga.magiccollectionspring.shared.security.RefreshTokenService;
 import pga.magiccollectionspring.user.domain.RefreshToken;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import java.util.Map;
 
+/**
+ * Controller for authentication and user management.
+ */
 @RestController
 @RequestMapping("/auth")
+@Tag(name = "Authentication", description = "Endpoints for registration, login, and user account management")
 public class AuthController {
 
     private final RegisterService registerService;
@@ -61,7 +68,15 @@ public class AuthController {
         this.jwtService = jwtService;
     }
 
+    /**
+     * Refreshes the JWT access token.
+     * @param request Map containing the refreshToken.
+     * @return New access token.
+     */
     @PostMapping("/refresh-token")
+    @Operation(summary = "Refresh JWT token", description = "Generates a new access token from a valid refresh token")
+    @ApiResponse(responseCode = "200", description = "Token refreshed successfully")
+    @ApiResponse(responseCode = "403", description = "Invalid or expired refresh token")
     public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> request) {
         String refreshToken = request.get("refreshToken");
         
@@ -78,45 +93,80 @@ public class AuthController {
                 .orElseThrow(() -> new RuntimeException("Refresh token is not in database!"));
     }
 
+    /**
+     * Registers a new user.
+     * @param request Registration data.
+     * @return Registration response.
+     */
     @PostMapping("/register")
+    @Operation(summary = "Register new user", description = "Creates a new user account in the system")
+    @ApiResponse(responseCode = "200", description = "User registered successfully")
     public ResponseEntity<RegisterResponse> register(@RequestBody RegisterRequest request) {
         RegisterResponse response = registerService.execute(new RegisterCommand(request.getUsername(), request.getPassword()));
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Logs into the system.
+     * @param request Access credentials.
+     * @return JWT token and user information.
+     */
     @PostMapping("/login")
+    @Operation(summary = "Login", description = "Authenticates the user and returns a JWT token")
+    @ApiResponse(responseCode = "200", description = "Login successful")
+    @ApiResponse(responseCode = "401", description = "Incorrect credentials")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
         LoginResponse response = loginService.execute(new LoginQuery(request.getUsername(), request.getPassword(), request.isRememberMe()));
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Updates the username.
+     * @param request New username.
+     * @return Update response.
+     */
     @PutMapping("/update-username")
+    @Operation(summary = "Update username", description = "Changes the username of the authenticated user")
+    @ApiResponse(responseCode = "200", description = "Username updated")
     public ResponseEntity<UpdateUserResponse> updateUsername(@RequestBody UpdateUserRequest request) {
         String username = currentUserProvider.getCurrentUsername();
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", username));
+                .orElseThrow(() -> new ResourceNotFoundException("User", username));
         
         UpdateUserResponse response = updateUserService.execute(
                 new UpdateUserCommand(user.getId(), request.getNewUsername()));
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Updates the user password.
+     * @param request Current and new passwords.
+     * @return Update response.
+     */
     @PutMapping("/update-password")
+    @Operation(summary = "Update password", description = "Changes the password of the authenticated user")
+    @ApiResponse(responseCode = "200", description = "Password updated")
     public ResponseEntity<UpdatePasswordResponse> updatePassword(@RequestBody UpdatePasswordRequest request) {
         String username = currentUserProvider.getCurrentUsername();
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", username));
+                .orElseThrow(() -> new ResourceNotFoundException("User", username));
         
         UpdatePasswordResponse response = updatePasswordService.execute(
                 new UpdatePasswordCommand(user.getId(), request.getCurrentPassword(), request.getNewPassword()));
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Deletes the current user account.
+     * @return Deletion response.
+     */
     @DeleteMapping("/delete")
+    @Operation(summary = "Delete account", description = "Deletes the account of the authenticated user")
+    @ApiResponse(responseCode = "200", description = "Account deleted successfully")
     public ResponseEntity<DeleteUserResponse> deleteUser() {
         String username = currentUserProvider.getCurrentUsername();
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", username));
+                .orElseThrow(() -> new ResourceNotFoundException("User", username));
         
         DeleteUserResponse response = deleteUserService.execute(new DeleteUserCommand(user.getId()));
         return ResponseEntity.ok(response);

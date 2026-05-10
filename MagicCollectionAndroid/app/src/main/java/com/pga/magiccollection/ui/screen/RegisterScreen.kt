@@ -17,6 +17,7 @@ import com.pga.magiccollection.R
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun RegisterScreen(
@@ -24,12 +25,12 @@ fun RegisterScreen(
     initialLoginMode: Boolean,
     onSuccess: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     // reset mode when route changes
     var isLoginMode by remember(initialLoginMode) { mutableStateOf(initialLoginMode) }
     var isPasswordVisible by remember { mutableStateOf(false) }
 
-    // Si el login es exitoso, volvemos atrás o a la pantalla principal
+    // If login is successful, go back or to the main screen
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) {
             onSuccess()
@@ -107,11 +108,11 @@ fun RegisterScreen(
         if (uiState.authMessage != null) {
             Text(
                 text = uiState.authMessage!!,
-                color = if (uiState.authMessage!!.contains("Error") || 
-                    uiState.authMessage!!.contains("No") || 
-                    uiState.authMessage!!.contains("incorrectos") ||
-                    uiState.authMessage!!.contains("Prohibido") ||
-                    uiState.authMessage!!.contains("existe")) 
+                color = if (uiState.authMessage!!.contains("Error", ignoreCase = true) || 
+                    uiState.authMessage!!.contains("No", ignoreCase = true) || 
+                    uiState.authMessage!!.contains("Incorrect", ignoreCase = true) ||
+                    uiState.authMessage!!.contains("Forbidden", ignoreCase = true) ||
+                    uiState.authMessage!!.contains("exists", ignoreCase = true)) 
                     MaterialTheme.colorScheme.error 
                 else 
                     MaterialTheme.colorScheme.primary,
@@ -142,7 +143,7 @@ fun RegisterScreen(
         TextButton(
             onClick = { 
                 isLoginMode = !isLoginMode 
-                // Limpiar mensaje al cambiar de modo
+                // Clear message when changing mode
                 viewModel.onUsernameChanged(uiState.usernameInput)
             },
             modifier = Modifier.padding(top = 16.dp)

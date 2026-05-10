@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ApiErrorResponse> handleUnauthorized(UnauthorizedException ex) {
-        ErrorCode code = ex.getMessage().toLowerCase().contains("contraseña") 
+        ErrorCode code = ex.getMessage().toLowerCase().contains("password") 
                 ? ErrorCode.CURRENT_PASSWORD_INCORRECT 
                 : ErrorCode.SESSION_NOT_FOUND;
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -50,7 +50,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiErrorResponse> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiErrorResponse.of("Usuario o contraseña incorrectos", ErrorCode.CREDENTIALS_INVALID, 401));
+                .body(ApiErrorResponse.of("Incorrect username or password", ErrorCode.CREDENTIALS_INVALID, 401));
     }
 
     @ExceptionHandler(InternalAuthenticationServiceException.class)
@@ -60,7 +60,7 @@ public class GlobalExceptionHandler {
                     .body(ApiErrorResponse.of(ex.getCause().getMessage(), ErrorCode.USER_NOT_FOUND, 404));
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiErrorResponse.of("Error de autenticación", ErrorCode.CREDENTIALS_INVALID, 401));
+                .body(ApiErrorResponse.of("Authentication error", ErrorCode.CREDENTIALS_INVALID, 401));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -68,10 +68,10 @@ public class GlobalExceptionHandler {
         String causeMessage = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage();
         if (causeMessage != null && causeMessage.contains("refresh_tokens")) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(ApiErrorResponse.of("No se pudo crear la sesión persistente. Inténtalo de nuevo.", ErrorCode.RESOURCE_CONFLICT, 409));
+                    .body(ApiErrorResponse.of("Could not create persistent session. Please try again.", ErrorCode.RESOURCE_CONFLICT, 409));
         }
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ApiErrorResponse.of("Conflicto de datos.", ErrorCode.RESOURCE_CONFLICT, 409));
+                .body(ApiErrorResponse.of("Data conflict.", ErrorCode.RESOURCE_CONFLICT, 409));
     }
 
     @ExceptionHandler(ExternalServiceException.class)
@@ -90,7 +90,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleGeneric(Exception ex) {
         ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiErrorResponse.of("Error interno del servidor. Por favor, inténtalo más tarde.", 
+                .body(ApiErrorResponse.of("Internal server error. Please try again later.", 
                         ErrorCode.INTERNAL_ERROR, 500));
     }
 }

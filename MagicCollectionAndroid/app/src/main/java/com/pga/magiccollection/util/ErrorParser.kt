@@ -6,7 +6,7 @@ import retrofit2.HttpException
 import java.io.IOException
 
 /**
- * Códigos de error del backend para mostrar mensajes específicos
+ * Backend error codes to show specific messages
  */
 object ErrorCode {
     const val TOKEN_EXPIRED = "TOKEN_EXPIRED"
@@ -27,21 +27,21 @@ object ErrorParser {
     private val gson = Gson()
 
     /**
-     * Parsea errores del backend y devuelve un mensaje legible para el usuario.
-     * Prioriza el campo "error" del JSON, pero también interpreta códigos de error
-     * para casos especiales como sesión expirada.
+     * Parses backend errors and returns a user-friendly message.
+     * Prioritizes the "error" field from JSON, but also interprets error codes
+     * for special cases like expired sessions.
      */
     fun parseError(e: Throwable): String {
         return when (e) {
             is HttpException -> parseHttpException(e)
-            is IOException -> "Sin conexión: verifica tu internet."
-            else -> e.message ?: "Ha ocurrido un error inesperado."
+            is IOException -> "No connection: please check your internet."
+            else -> e.message ?: "An unexpected error has occurred."
         }
     }
 
     /**
-     * Parsea el código de error si existe, útil para tomar decisiones en el ViewModel
-     * como cerrar sesión automáticamente si el token expiró.
+     * Parses the error code if it exists, useful for making decisions in the ViewModel
+     * such as automatically logging out if the token expired.
      */
     fun parseErrorCode(e: Throwable): String? {
         if (e !is HttpException) return null
@@ -61,22 +61,22 @@ object ErrorParser {
             val mapType = object : TypeToken<Map<String, Any>>() {}.type
             val errorMap: Map<String, Any> = gson.fromJson(errorBody, mapType)
 
-            // Obtener mensaje de error del backend
+            // Get error message from backend
             val errorMessage = errorMap["error"]?.toString()
                 ?: errorMap["message"]?.toString()
 
-            // Si hay mensaje, usarlo directamente
+            // If message exists, use it directly
             if (!errorMessage.isNullOrBlank()) {
                 return errorMessage
             }
 
-            // Si hay código de error, generar mensaje apropiado
+            // If error code exists, generate appropriate message
             val errorCode = errorMap["code"]?.toString()
             if (errorCode != null) {
                 return getMessageForCode(errorCode, e.code())
             }
 
-            // Fallback por código HTTP
+            // Fallback by HTTP code
             getMessageForHttpCode(e.code())
         } catch (ex: Exception) {
             getMessageForHttpCode(e.code())
@@ -85,39 +85,39 @@ object ErrorParser {
 
     private fun getMessageForCode(code: String, httpStatus: Int): String {
         return when (code) {
-            ErrorCode.TOKEN_EXPIRED -> "La sesión ha expirado. Por favor, inicia sesión nuevamente."
-            ErrorCode.TOKEN_INVALID -> "Token de autenticación inválido."
-            ErrorCode.TOKEN_MISSING -> "Se requiere autenticación para esta acción."
-            ErrorCode.CREDENTIALS_INVALID -> "Usuario o contraseña incorrectos."
-            ErrorCode.SESSION_NOT_FOUND -> "No hay una sesión activa."
-            ErrorCode.CURRENT_PASSWORD_INCORRECT -> "La contraseña actual es incorrecta."
-            ErrorCode.ACCESS_DENIED -> "No tienes permisos para realizar esta acción."
-            ErrorCode.USER_NOT_FOUND -> "Usuario no encontrado."
-            ErrorCode.USERNAME_ALREADY_EXISTS -> "El nombre de usuario ya está en uso."
-            ErrorCode.VALIDATION_ERROR -> "Datos inválidos. Revisa la información ingresada."
-            ErrorCode.INTERNAL_ERROR -> "Error del servidor. Inténtalo más tarde."
-            ErrorCode.EXTERNAL_SERVICE_ERROR -> "Servicio temporalmente no disponible."
+            ErrorCode.TOKEN_EXPIRED -> "The session has expired. Please log in again."
+            ErrorCode.TOKEN_INVALID -> "Invalid authentication token."
+            ErrorCode.TOKEN_MISSING -> "Authentication is required for this action."
+            ErrorCode.CREDENTIALS_INVALID -> "Incorrect username or password."
+            ErrorCode.SESSION_NOT_FOUND -> "No active session found."
+            ErrorCode.CURRENT_PASSWORD_INCORRECT -> "The current password is incorrect."
+            ErrorCode.ACCESS_DENIED -> "You do not have permission to perform this action."
+            ErrorCode.USER_NOT_FOUND -> "User not found."
+            ErrorCode.USERNAME_ALREADY_EXISTS -> "Username is already in use."
+            ErrorCode.VALIDATION_ERROR -> "Invalid data. Please check the entered information."
+            ErrorCode.INTERNAL_ERROR -> "Server error. Please try again later."
+            ErrorCode.EXTERNAL_SERVICE_ERROR -> "Service temporarily unavailable."
             else -> getMessageForHttpCode(httpStatus)
         }
     }
 
     private fun getMessageForHttpCode(code: Int): String {
         return when (code) {
-            400 -> "Solicitud inválida. Revisa los datos ingresados."
-            401 -> "Credenciales incorrectas o sesión expirada."
-            403 -> "No tienes permisos para esta acción."
-            404 -> "Recurso no encontrado."
-            409 -> "Ya existe un recurso con esos datos."
-            500 -> "Error del servidor. Inténtalo más tarde."
-            502 -> "Servicio temporalmente no disponible."
-            503 -> "Servidor en mantenimiento. Inténtalo más tarde."
-            else -> "Error inesperado ($code)"
+            400 -> "Invalid request. Please check the entered data."
+            401 -> "Incorrect credentials or expired session."
+            403 -> "You do not have permission for this action."
+            404 -> "Resource not found."
+            409 -> "A resource with this data already exists."
+            500 -> "Server error. Please try again later."
+            502 -> "Service temporarily unavailable."
+            503 -> "Server under maintenance. Please try again later."
+            else -> "Unexpected error ($code)"
         }
     }
 
     /**
-     * Verifica si el error indica que la sesión expiró o es inválida,
-     * útil para decidir si cerrar la sesión automáticamente.
+     * Checks if the error indicates the session expired or is invalid,
+     * useful for deciding whether to log out automatically.
      */
     fun isSessionError(e: Throwable): Boolean {
         val code = parseErrorCode(e)
@@ -129,4 +129,3 @@ object ErrorParser {
         )
     }
 }
-

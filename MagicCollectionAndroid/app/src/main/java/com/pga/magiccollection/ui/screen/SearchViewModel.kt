@@ -95,7 +95,7 @@ class SearchViewModel @Inject constructor(
                         )
                     }
                     
-                    // Verificación proactiva de integridad solo si ha cambiado el idioma efectivo
+                    // Proactive integrity check only if the effective language has changed
                     checkAndRepairLanguageIntegrity(languageState.effectiveLanguage)
 
                     if (languageState.preferredLanguage != languageState.effectiveLanguage) {
@@ -335,7 +335,7 @@ class SearchViewModel @Inject constructor(
 
                 ingestRemoteCardsUseCase(results, state.activeLanguage)
                 
-                // Si hay exactamente un resultado y el usuario buscó por nombre, navegamos directamente
+                // If there is exactly one result and the user searched by name, navigate directly
                 if (results.size == 1 && state.query.isNotBlank()) {
                     results.first().scryfallId?.let { id ->
                         _navigateToDetailEvent.emit(id)

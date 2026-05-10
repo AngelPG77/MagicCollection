@@ -40,6 +40,27 @@ enum class Guild(
     Boros("Boros", MtgManaColor.Red, MtgManaColor.White),
     Simic("Simic", MtgManaColor.Green, MtgManaColor.Blue);
 
+    /** Alias kept for callers that ask for `guild.guildName` rather than `displayName`. */
+    val guildName: String get() = displayName
+
+    /**
+     * A more saturated/dark version of the guild colors, intended for text on light
+     * surfaces. Computed lazily from the primary so each guild "reads" well at high
+     * contrast without redefining the value table.
+     */
+    val readable: Color get() = when (this) {
+        Azorius -> Color(0xFF003D5B)
+        Dimir -> Color(0xFF0A2233)
+        Rakdos -> Color(0xFF8B0000)
+        Gruul -> Color(0xFF004422)
+        Selesnya -> Color(0xFF004422)
+        Orzhov -> Color(0xFF1A1718)
+        Izzet -> Color(0xFF003D5B)
+        Golgari -> Color(0xFF004422)
+        Boros -> Color(0xFF8B0000)
+        Simic -> Color(0xFF003D5B)
+    }
+
     companion object {
         val Default = Azorius
 
@@ -47,6 +68,32 @@ enum class Guild(
         fun fromPreferenceValue(value: String?): Guild {
             if (value == null) return Default
             return entries.firstOrNull { it.name.equals(value, ignoreCase = true) } ?: Default
+        }
+
+        /** Same as [fromPreferenceValue] but with a non-null contract. */
+        fun fromName(name: String): Guild = fromPreferenceValue(name)
+
+        /**
+         * Resolves a guild from a card's color identity (e.g. ["W","U"] → Azorius).
+         * Returns null when the input doesn't match an exact two-color guild — callers
+         * decide whether to fall back to a default theme.
+         */
+        fun fromColors(colors: List<String>): Guild? {
+            if (colors.size != 2) return null
+            val c = colors.map { it.uppercase() }.toSet()
+            return when {
+                c == setOf("W", "U") -> Azorius
+                c == setOf("U", "B") -> Dimir
+                c == setOf("B", "R") -> Rakdos
+                c == setOf("R", "G") -> Gruul
+                c == setOf("G", "W") -> Selesnya
+                c == setOf("W", "B") -> Orzhov
+                c == setOf("U", "R") -> Izzet
+                c == setOf("B", "G") -> Golgari
+                c == setOf("R", "W") -> Boros
+                c == setOf("G", "U") -> Simic
+                else -> null
+            }
         }
     }
 }

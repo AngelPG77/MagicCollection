@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.dokka)
 }
 
 android {
@@ -55,13 +56,20 @@ android {
 
 kapt {
     correctErrorTypes = true
+    arguments {
+        arg("dagger.fastInit", "enabled")
+        arg("dagger.hilt.android.internal.disableAndroidSuperclassValidation", "true")
+        arg("dagger.hilt.android.internal.projectType", "APP")
+    }
 }
 
 dependencies {
     // Core & Compose
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -69,6 +77,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material3.windowSize)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.ui.text.google.fonts)
     implementation(libs.androidx.navigation.compose)
