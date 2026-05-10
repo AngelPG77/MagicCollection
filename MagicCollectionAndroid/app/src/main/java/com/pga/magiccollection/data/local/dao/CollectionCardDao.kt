@@ -65,6 +65,21 @@ interface CollectionCardDao {
         WHERE col.userId = :userId AND c.pendingDelete = 0
     """)
     suspend fun getAllUserCards(userId: Long): List<CollectionCardEntity>
+
+    @Query("""
+        SELECT COUNT(*) FROM collection_cards c
+        INNER JOIN collections col ON c.collectionLocalId = col.localId
+        WHERE col.userId = :userId AND c.synced = 0
+    """)
+    fun observeUnsyncedCardsCount(userId: Long): Flow<Int>
+
+    @Query("""
+        SELECT c.imageUrl FROM collection_cards c
+        INNER JOIN collections col ON c.collectionLocalId = col.localId
+        WHERE col.userId = :userId AND c.pendingDelete = 0 AND c.imageUrl IS NOT NULL
+    """)
+    suspend fun getAllImageUrls(userId: Long): List<String>
+
     @Query("DELETE FROM collection_cards WHERE localId = :localId")
     suspend fun deleteById(localId: Long): Int
 

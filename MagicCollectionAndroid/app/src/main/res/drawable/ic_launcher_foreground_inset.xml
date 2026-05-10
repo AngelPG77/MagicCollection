@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Wrapper that adds 18dp insets around ic_launcher_foreground so the golden ring
+  of the medallion stays within the 72dp adaptive-icon safe zone instead of sitting
+  on the clip boundary (which caused a golden-aura artefact on circular launchers).
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:drawable="@mipmap/ic_launcher_foreground"
+        android:left="18dp"
+        android:top="18dp"
+        android:right="18dp"
+        android:bottom="18dp" />
+</layer-list>

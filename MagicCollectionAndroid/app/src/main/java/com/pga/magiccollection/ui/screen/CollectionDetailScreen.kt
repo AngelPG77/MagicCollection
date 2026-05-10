@@ -1,37 +1,24 @@
 package com.pga.magiccollection.ui.screen
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.unit.LayoutDirection
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import coil.size.Precision
+import androidx.compose.ui.unit.dp
 import com.pga.magiccollection.R
-import com.pga.magiccollection.data.local.entities.CollectionCardEntity
-import com.pga.magiccollection.domain.model.enums.CardCondition
+import com.pga.magiccollection.ui.component.EditOwnedCardModal
 import com.pga.magiccollection.ui.component.EmptyState
 import com.pga.magiccollection.ui.component.GuildSearchBar
 import com.pga.magiccollection.ui.component.MagicCollectionSnackbarHost
+import com.pga.magiccollection.ui.component.OwnedCardItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +31,7 @@ fun CollectionDetailScreen(
     onBackClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    
+
     LaunchedEffect(collectionLocalId) {
         viewModel.loadCollectionCards(collectionLocalId)
     }
@@ -54,17 +41,13 @@ fun CollectionDetailScreen(
     } else {
         uiState.selectedCollection?.name
     }
-    
+
     LaunchedEffect(listName) {
-        if (listName != null) {
-            mainViewModel.setTopBarTitle(listName)
-        }
+        if (listName != null) mainViewModel.setTopBarTitle(listName)
     }
 
     DisposableEffect(Unit) {
-        onDispose {
-            mainViewModel.setTopBarTitle(null)
-        }
+        onDispose { mainViewModel.setTopBarTitle(null) }
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -100,7 +83,7 @@ fun CollectionDetailScreen(
             end = padding.calculateEndPadding(LayoutDirection.Ltr),
             bottom = padding.calculateBottomPadding()
         )
-        
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -127,11 +110,18 @@ fun CollectionDetailScreen(
                 ) {
                     items(uiState.filteredCollectionCards, key = { it.card.localId }) { item ->
                         Box(modifier = Modifier.animateItem()) {
-                            CollectionCardItem(
-                                item = item,
-                                onClick = { onNavigateToDetail(item.card.scryfallId) },
-                                onRemove = { viewModel.removeCard(item.card) },
-                                onQuantityChanged = { newQuantity -> viewModel.updateCardQuantity(item.card, newQuantity) }
+                            OwnedCardItem(
+                                name = item.card.name,
+                                typeLine = item.card.typeLine,
+                                imageUrl = item.card.imageUrl,
+                                quantity = item.card.quantity,
+                                foil = item.card.foil,
+                                language = item.card.language,
+                                condition = item.card.condition,
+                                manaCost = item.card.manaCost,
+                                collectionName = if (uiState.isAllCollectionsMode) item.collectionName else null,
+                                onEdit = { viewModel.showEditCardModal(item.card) },
+                                onClick = { onNavigateToDetail(item.card.scryfallId) }
                             )
                         }
                     }
@@ -139,138 +129,25 @@ fun CollectionDetailScreen(
             }
         }
     }
-}
 
-@Composable
-fun CollectionCardItem(
-    item: OwnedCardUiItem,
-    onClick: () -> Unit,
-    onRemove: () -> Unit,
-    onQuantityChanged: (Int) -> Unit
-) {
-    val card = item.card
-    val context = LocalContext.current
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            // Card Image
-            Card(
-                modifier = Modifier
-                    .width(80.dp)
-                    .aspectRatio(0.718f),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data(card.imageUrl)
-                        .size(160, 223)
-                        .precision(Precision.INEXACT)
-                        .crossfade(false)
-                        .build(),
-                    contentDescription = card.name,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(12.dp))
-            
-            // Card Info
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = card.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                
-                if (!card.typeLine.isNullOrBlank()) {
-                    Text(
-                        text = card.typeLine,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontStyle = FontStyle.Italic,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
-                
-                if (item.collectionName.isNotEmpty()) {
-                    Text(
-                        text = item.collectionName,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    SuggestionChip(
-                        onClick = {},
-                        label = { Text(text = card.language.uppercase(), style = MaterialTheme.typography.labelSmall) }
-                    )
-                    SuggestionChip(
-                        onClick = {},
-                        label = { Text(text = card.condition.replace("_", " "), style = MaterialTheme.typography.labelSmall) }
-                    )
-                    if (card.foil) {
-                        SuggestionChip(
-                            onClick = {},
-                            label = { Text(text = stringResource(id = R.string.wantlist_card_foil), style = MaterialTheme.typography.labelSmall) }
-                        )
-                    }
-                }
-            }
-            
-            // Quantity and Remove
-            Column(
-                horizontalAlignment = Alignment.End
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { if (card.quantity > 1) onQuantityChanged(card.quantity - 1) }, modifier = Modifier.size(24.dp)) {
-                        Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.action_decrement_quantity), modifier = Modifier.size(16.dp))
-                    }
-                    Text(
-                        text = card.quantity.toString(),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 4.dp)
-                    )
-                    IconButton(onClick = { onQuantityChanged(card.quantity + 1) }, modifier = Modifier.size(24.dp)) {
-                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.action_increment_quantity), modifier = Modifier.size(16.dp))
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                IconButton(
-                    onClick = onRemove,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = stringResource(id = R.string.action_delete),
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
-        }
+    if (uiState.showEditCardModal) {
+        EditOwnedCardModal(
+            imageUrl = uiState.editingCard?.imageUrl,
+            quantity = uiState.editQuantity,
+            foil = uiState.editFoil,
+            condition = uiState.editCondition,
+            language = uiState.editLanguage,
+            isSaving = uiState.isSavingCard,
+            onQuantityChanged = viewModel::onEditQuantityChanged,
+            onFoilChanged = viewModel::onEditFoilChanged,
+            onConditionChanged = viewModel::onEditConditionChanged,
+            onLanguageChanged = viewModel::onEditLanguageChanged,
+            onSave = viewModel::saveEditedCard,
+            onDelete = {
+                uiState.editingCard?.let { viewModel.removeCard(it) }
+                viewModel.showEditCardModal(null)
+            },
+            onDismiss = { viewModel.showEditCardModal(null) }
+        )
     }
 }

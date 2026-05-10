@@ -19,7 +19,6 @@ import java.util.Set;
 /**
  * Spring Data JPA Repository for Card (MasterCard) entity.
  * Handles persistence operations for the card library/catalog.
- * Separate from CardYouOwn which deals with user-owned instances.
  */
 @Repository
 public interface CardRepository extends JpaRepository<Card, String>, ICardRepository {

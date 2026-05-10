@@ -29,6 +29,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import com.pga.magiccollection.BuildConfig
 import com.pga.magiccollection.R
 import com.pga.magiccollection.domain.model.card.MtgLanguage
 import com.pga.magiccollection.ui.component.GuildBadge
@@ -36,6 +37,30 @@ import com.pga.magiccollection.ui.theme.Guild
 import com.pga.magiccollection.ui.theme.LocalAppSpacing
 import java.text.SimpleDateFormat
 import java.util.Locale
+
+/**
+ * Returns the MtgLanguage name translated to the active UI locale (via the Compose
+ * LocalContext that the activity overrides). Falls back to the enum's native name
+ * when no string resource exists for that code.
+ */
+@Composable
+fun localizedLanguageName(language: MtgLanguage): String {
+    val resId = when (language.code) {
+        "en" -> R.string.lang_en
+        "es" -> R.string.lang_es
+        "fr" -> R.string.lang_fr
+        "de" -> R.string.lang_de
+        "it" -> R.string.lang_it
+        "pt" -> R.string.lang_pt
+        "ja" -> R.string.lang_ja
+        "ko" -> R.string.lang_ko
+        "ru" -> R.string.lang_ru
+        "zhs" -> R.string.lang_zhs
+        "zht" -> R.string.lang_zht
+        else -> null
+    }
+    return if (resId != null) stringResource(id = resId) else language.displayName
+}
 
 @Composable
 fun SettingsScreen(
@@ -234,7 +259,7 @@ fun SettingsScreen(
                 ) {
                     TextSettingsItem(
                         title = stringResource(id = R.string.settings_search_language),
-                        subtitle = MtgLanguage.fromCode(preferences!!.searchLanguage).displayName,
+                        subtitle = localizedLanguageName(MtgLanguage.fromCode(preferences!!.searchLanguage)),
                         icon = Icons.Default.Search,
                         onClick = { showLanguageDropdown = true }
                     )
@@ -255,7 +280,7 @@ fun SettingsScreen(
                                 text = {
                                     Column {
                                         Text(
-                                            text = lang.displayName,
+                                            text = localizedLanguageName(lang),
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                         )
@@ -301,9 +326,14 @@ fun SettingsScreen(
                         appLangItemWidth = coordinates.size.width
                     }
                 ) {
+                    val appLangSubtitle = when (preferences!!.appLanguage) {
+                        "en" -> stringResource(id = R.string.lang_en)
+                        "es" -> stringResource(id = R.string.lang_es)
+                        else -> stringResource(id = R.string.lang_system)
+                    }
                     TextSettingsItem(
                         title = stringResource(id = R.string.settings_app_language),
-                        subtitle = if (preferences!!.appLanguage == "en") stringResource(id = R.string.lang_en) else stringResource(id = R.string.lang_es),
+                        subtitle = appLangSubtitle,
                         icon = Icons.Default.Language,
                         onClick = { showAppLangDropdown = true }
                     )
@@ -314,7 +344,11 @@ fun SettingsScreen(
                         offset = DpOffset(0.dp, 4.dp),
                         modifier = Modifier.width(with(density) { appLangItemWidth.toDp() })
                     ) {
-                        listOf("en" to R.string.lang_en, "es" to R.string.lang_es).forEach { (code, labelRes) ->
+                        listOf(
+                            "system" to R.string.lang_system,
+                            "en" to R.string.lang_en,
+                            "es" to R.string.lang_es
+                        ).forEach { (code, labelRes) ->
                             val isSelected = preferences!!.appLanguage == code
                             DropdownMenuItem(
                                 text = {
@@ -326,7 +360,11 @@ fun SettingsScreen(
                                 },
                                 leadingIcon = {
                                     Icon(
-                                        imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Default.Language,
+                                        imageVector = when {
+                                            isSelected -> Icons.Default.CheckCircle
+                                            code == "system" -> Icons.Default.PhoneAndroid
+                                            else -> Icons.Default.Language
+                                        },
                                         contentDescription = null,
                                         modifier = Modifier.size(28.dp),
                                         tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
@@ -372,7 +410,7 @@ fun SettingsScreen(
 
             // Sección Acerca de
             SettingsSection(title = stringResource(id = R.string.settings_section_about)) {
-                TextSettingsItem(title = stringResource(id = R.string.settings_version), subtitle = "1.5.0", icon = Icons.Default.Info)
+                TextSettingsItem(title = stringResource(id = R.string.settings_version), subtitle = BuildConfig.VERSION_NAME, icon = Icons.Default.Info)
                 TextSettingsItem(
                     title = stringResource(id = R.string.title_guides), 
                     icon = Icons.AutoMirrored.Filled.List,
@@ -402,7 +440,7 @@ fun DownloadLanguageDialog(
         text = {
             Column {
                 if (isDownloading) {
-                    Text(stringResource(id = R.string.msg_downloading_names, language.displayName))
+                    Text(stringResource(id = R.string.msg_downloading_names, localizedLanguageName(language)))
                     Spacer(modifier = Modifier.height(16.dp))
                     LinearProgressIndicator(
                         progress = { progress },
@@ -414,7 +452,7 @@ fun DownloadLanguageDialog(
                         modifier = Modifier.align(Alignment.End)
                     )
                 } else {
-                    Text(stringResource(id = R.string.msg_confirm_download_names, language.displayName))
+                    Text(stringResource(id = R.string.msg_confirm_download_names, localizedLanguageName(language)))
                     Text(
                         text = stringResource(id = R.string.required_space, language.estimatedSizeMb),
                         style = MaterialTheme.typography.bodySmall,

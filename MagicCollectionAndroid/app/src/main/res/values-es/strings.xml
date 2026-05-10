@@ -106,9 +106,29 @@
     <string name="card_detail_no_versions">No se encontraron versiones</string>
     <string name="card_detail_not_found">Carta no encontrada</string>
     <string name="dialog_login_required_message">Para usar las listas de deseados y sincronizar tu colección, necesitas una cuenta.</string>
-    <string name="lang_en">English</string>
+    <string name="lang_system">Seguir el idioma del sistema</string>
+    <string name="lang_en">Inglés</string>
     <string name="lang_es">Español</string>
-    
+    <string name="lang_fr">Francés</string>
+    <string name="lang_de">Alemán</string>
+    <string name="lang_it">Italiano</string>
+    <string name="lang_pt">Portugués</string>
+    <string name="lang_ja">Japonés</string>
+    <string name="lang_ko">Coreano</string>
+    <string name="lang_ru">Ruso</string>
+    <string name="lang_zhs">Chino (Simplificado)</string>
+    <string name="lang_zht">Chino (Tradicional)</string>
+
+    <!-- Notificaciones WorkManager (bandeja del sistema) -->
+    <string name="notif_channel_catalog_sync">Sincronización de catálogo</string>
+    <string name="notif_channel_language_download">Descarga de idioma</string>
+    <string name="notif_syncing_catalog">Sincronizando catálogo</string>
+    <string name="notif_downloading_language">Descargando idioma</string>
+    <string name="notif_progress">%1$s: %2$d%%</string>
+    <string name="notif_progress_simple">Progreso: %1$d%%</string>
+    <string name="unknown_error_msg">Error desconocido</string>
+
+
     <string name="collection_title">Colecciones</string>
     <string name="collection_empty">No tienes ninguna colección todavía</string>
     <string name="collection_create_title">Nueva colección</string>
@@ -122,6 +142,7 @@
     <string name="collection_deleted_success">Colección eliminada correctamente</string>
     <string name="collection_card_added_success">Carta añadida a la colección</string>
     <string name="collection_card_removed_success">Carta eliminada de la colección</string>
+    <string name="collection_card_updated_success">Carta actualizada</string>
     <string name="collection_add_card">Añadir carta</string>
     <string name="collection_login_required">Inicia sesión para gestionar tus colecciones</string>
     <string name="collection_search_hint">Buscar colecciones…</string>
@@ -139,6 +160,10 @@
     <string name="wantlist_name_exists_error">Ya existe una lista con ese nombre</string>
     <string name="wantlist_detail_empty">No hay cartas en esta lista</string>
     <string name="wantlist_detail_title">Detalle de lista</string>
+    <string name="wantlist_created_success">Lista creada correctamente</string>
+    <string name="wantlist_updated_success">Lista actualizada correctamente</string>
+    <string name="wantlist_deleted_success">Lista eliminada correctamente</string>
+    <string name="wantlist_card_removed_success">Carta eliminada correctamente</string>
     <string name="wantlist_card_added_success">Carta añadida correctamente</string>
     <string name="wantlist_card_updated_success">Carta actualizada correctamente</string>
     <string name="wantlist_add_card">Añadir carta</string>
@@ -164,11 +189,8 @@
     <string name="search_color_at_most">Como mucho estos</string>
     <string name="search_color_including">Incluyendo estos</string>
     <string name="search_filter_type">Tipo</string>
-    <string name="search_filter_text">Texto de la carta</string>
-    <string name="search_filter_mana_cost">Coste de maná</string>
     <string name="search_filter_set">Edición / Set</string>
     <string name="search_filter_rarity">Rareza</string>
-    <string name="search_filter_artist">Artista</string>
     <string name="search_filter_edition">Edición / Expansión</string>
     <string name="search_filter_edition_hint">Buscar por nombre o código…</string>
     <string name="search_clear_filters">Limpiar todos los filtros</string>

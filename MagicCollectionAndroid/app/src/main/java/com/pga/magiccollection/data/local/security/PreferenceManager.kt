@@ -27,7 +27,7 @@ class PreferenceManager(private val context: Context) {
     val gridSize: Flow<Int> = context.dataStore.data.map { it[GRID_SIZE] ?: 3 }
     val startScreen: Flow<String> = context.dataStore.data.map { it[START_SCREEN] ?: "home" }
     val searchLanguage: Flow<String> = context.dataStore.data.map { it[SEARCH_LANGUAGE] ?: "en" }
-    val appLanguage: Flow<String> = context.dataStore.data.map { it[APP_LANGUAGE] ?: "es" }
+    val appLanguage: Flow<String> = context.dataStore.data.map { it[APP_LANGUAGE] ?: "system" }
     val themeColor: Flow<String> = context.dataStore.data.map { it[THEME_COLOR] ?: "Azorius" }
     val dynamicColor: Flow<Boolean> = context.dataStore.data.map { it[DYNAMIC_COLOR] ?: true }
     val lastIndexUpdate: Flow<String?> = context.dataStore.data.map { it[LAST_INDEX_UPDATE] }

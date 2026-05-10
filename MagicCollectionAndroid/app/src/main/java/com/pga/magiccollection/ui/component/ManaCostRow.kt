@@ -96,7 +96,8 @@ private fun ManaPip(token: String, size: Dp) {
             style = MaterialTheme.typography.labelLarge.copy(
                 fontSize = (size.value * 0.58f).sp,
                 fontWeight = FontWeight.Black,
-                letterSpacing = 0.sp
+                letterSpacing = 0.sp,
+                color = androidx.compose.ui.graphics.Color(0xFF1C1B1F)
             )
         )
     }

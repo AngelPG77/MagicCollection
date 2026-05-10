@@ -83,9 +83,9 @@ class DownloadLanguageWorker @AssistedInject constructor(
         createNotificationChannel()
         val percent = (progress.coerceIn(0f, 1f) * 100).toInt()
         val notification = NotificationCompat.Builder(applicationContext, NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("Downloading language")
-            .setContentText("$langCode: $percent%")
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(applicationContext.getString(R.string.notif_downloading_language))
+            .setContentText(applicationContext.getString(R.string.notif_progress, langCode.uppercase(), percent))
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setProgress(100, percent, false)
@@ -99,16 +99,15 @@ class DownloadLanguageWorker @AssistedInject constructor(
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val existing = manager.getNotificationChannel(NOTIFICATION_CHANNEL_ID)
         if (existing != null) return
         val channel = NotificationChannel(
             NOTIFICATION_CHANNEL_ID,
-            "Language download",
+            applicationContext.getString(R.string.notif_channel_language_download),
             NotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = "Language index download progress"
+            description = applicationContext.getString(R.string.notif_downloading_language)
             setShowBadge(false)
             lockscreenVisibility = Notification.VISIBILITY_PRIVATE
         }

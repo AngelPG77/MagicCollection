@@ -8,7 +8,7 @@ import coil.imageLoader
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import coil.request.SuccessResult
-import com.pga.magiccollection.data.local.dao.CardOwnedDao
+import com.pga.magiccollection.data.local.dao.CollectionCardDao
 import com.pga.magiccollection.data.local.dao.WantListCardDao
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -20,7 +20,7 @@ import timber.log.Timber
 class PrefetchImagesWorker @AssistedInject constructor(
     @Assisted private val context: Context,
     @Assisted params: WorkerParameters,
-    private val cardOwnedDao: CardOwnedDao,
+    private val collectionCardDao: CollectionCardDao,
     private val wantListCardDao: WantListCardDao
 ) : CoroutineWorker(context, params) {
 
@@ -29,9 +29,9 @@ class PrefetchImagesWorker @AssistedInject constructor(
         if (userId == -1L) return@withContext Result.failure()
 
         try {
-            val ownedUrls = cardOwnedDao.getAllOwnedImageUrls(userId)
+            val ownedUrls = collectionCardDao.getAllImageUrls(userId)
             val wantListUrls = wantListCardDao.getAllWantListImageUrls(userId)
-            
+
             val allUrls = (ownedUrls + wantListUrls).distinct()
             
             Timber.d("Prefetching ${allUrls.size} images for user $userId")

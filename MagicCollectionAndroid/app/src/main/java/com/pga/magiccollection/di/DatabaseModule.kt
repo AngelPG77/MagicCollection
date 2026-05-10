@@ -54,24 +54,33 @@ object DatabaseModule {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("""
                     CREATE TABLE IF NOT EXISTS `collection_cards` (
-                        `localId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-                        `remoteId` INTEGER, 
-                        `collectionLocalId` INTEGER NOT NULL, 
-                        `scryfallId` TEXT NOT NULL, 
-                        `name` TEXT NOT NULL, 
-                        `typeLine` TEXT, 
-                        `manaCost` TEXT, 
-                        `imageUrl` TEXT, 
-                        `quantity` INTEGER NOT NULL, 
-                        `foil` INTEGER NOT NULL, 
-                        `language` TEXT NOT NULL, 
-                        `condition` TEXT NOT NULL, 
-                        `synced` INTEGER NOT NULL DEFAULT 0, 
-                        `pendingDelete` INTEGER NOT NULL DEFAULT 0, 
-                        FOREIGN KEY(`collectionLocalId`) REFERENCES `collections`(`localId`) ON UPDATE NO ACTION ON DELETE CASCADE 
+                        `localId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `remoteId` INTEGER,
+                        `collectionLocalId` INTEGER NOT NULL,
+                        `scryfallId` TEXT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `typeLine` TEXT,
+                        `manaCost` TEXT,
+                        `imageUrl` TEXT,
+                        `quantity` INTEGER NOT NULL,
+                        `foil` INTEGER NOT NULL,
+                        `language` TEXT NOT NULL,
+                        `condition` TEXT NOT NULL,
+                        `synced` INTEGER NOT NULL DEFAULT 0,
+                        `pendingDelete` INTEGER NOT NULL DEFAULT 0,
+                        FOREIGN KEY(`collectionLocalId`) REFERENCES `collections`(`localId`) ON UPDATE NO ACTION ON DELETE CASCADE
                     )
                 """)
                 database.execSQL("CREATE INDEX IF NOT EXISTS `index_collection_cards_collectionLocalId` ON `collection_cards` (`collectionLocalId`)")
+            }
+        }
+
+        // v17: drop the legacy `cards_owned` table — replaced entirely by
+        // `collection_cards`. The Inventory* layer that wrote to it was removed
+        // from the app, so any leftover rows are orphan data.
+        val MIGRATION_16_17 = object : Migration(16, 17) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("DROP TABLE IF EXISTS cards_owned")
             }
         }
 
@@ -79,8 +88,13 @@ object DatabaseModule {
             context,
             MagicDatabase::class.java,
             "magic_collection.db"
-        ).addMigrations(MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
-            .build()
+        ).addMigrations(
+            MIGRATION_12_13,
+            MIGRATION_13_14,
+            MIGRATION_14_15,
+            MIGRATION_15_16,
+            MIGRATION_16_17
+        ).build()
     }
 
     @Provides
@@ -91,9 +105,6 @@ object DatabaseModule {
 
     @Provides
     fun provideCollectionCardDao(database: MagicDatabase): CollectionCardDao = database.collectionCardDao()
-
-    @Provides
-    fun provideCardOwnedDao(database: MagicDatabase): CardOwnedDao = database.cardOwnedDao()
 
     @Provides
     fun provideRecentCardDao(database: MagicDatabase): RecentCardDao = database.recentCardDao()

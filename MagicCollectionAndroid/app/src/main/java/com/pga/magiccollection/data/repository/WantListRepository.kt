@@ -257,8 +257,15 @@ class WantListRepository @Inject constructor(
                                 synced = true
                             )
                         )
+                    } else if (!existingCard.synced) {
+                        // CLIENT-WINS: local tiene cambios pendientes (push debió fallar).
+                        // Conservamos la quantity local, solo enlazamos el remoteId para que
+                        // el siguiente push sea un UPDATE en vez de un CREATE.
+                        if (existingCard.remoteId != card.id) {
+                            wantListCardDao.update(existingCard.copy(remoteId = card.id))
+                        }
                     } else {
-                        // UPSERT: Siempre actualizar con los datos del servidor para cartas ya sincronizadas
+                        // Carta ya sincronizada: aceptamos los datos del servidor.
                         val updated = existingCard.copy(
                             remoteId = card.id,
                             quantity = card.quantity,

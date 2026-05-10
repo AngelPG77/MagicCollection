@@ -12,16 +12,17 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkInfo
 import com.pga.magiccollection.R
+import com.pga.magiccollection.data.connectivity.NetworkConnectivityObserver
 import com.pga.magiccollection.data.local.dao.LanguageIndexStateDao
 import com.pga.magiccollection.data.local.security.PreferenceManager
 import com.pga.magiccollection.data.worker.DownloadLanguageWorker
 import com.pga.magiccollection.data.repository.CardSearchIndexRepository
 import com.pga.magiccollection.data.worker.SyncCatalogWorker
 import com.pga.magiccollection.data.worker.PrefetchImagesWorker
+import com.pga.magiccollection.data.worker.SyncDataWorker
 import com.pga.magiccollection.domain.usecase.auth.*
 import com.pga.magiccollection.domain.usecase.card.*
 import com.pga.magiccollection.domain.usecase.collection.*
-import com.pga.magiccollection.domain.usecase.inventory.*
 import com.pga.magiccollection.domain.usecase.home.*
 import com.pga.magiccollection.domain.usecase.settings.*
 import com.pga.magiccollection.domain.usecase.wantlist.*
@@ -62,7 +63,8 @@ class MainViewModel @Inject constructor(
     private val syncWantListsUseCase: SyncWantListsUseCase,
     private val cardSearchIndexRepository: CardSearchIndexRepository,
     private val languageIndexStateDao: LanguageIndexStateDao,
-    private val preferenceManager: PreferenceManager
+    private val preferenceManager: PreferenceManager,
+    private val connectivityObserver: NetworkConnectivityObserver
 ) : ViewModel() {
     private companion object {
         const val INDEX_PROGRESS_STEP = 0.01f
@@ -86,12 +88,65 @@ class MainViewModel @Inject constructor(
     private var syncJob: Job? = null
     private var sessionExpiredJob: Job? = null
     private var downloadJob: Job? = null
+    private var connectivityJob: Job? = null
     private var lastIndexProgress = -1f
 
     init {
         loadSession()
         observeSessionExpired()
         checkIndexVersion()
+        observeConnectivity()
+    }
+
+    /**
+     * Watches the device's network state and, on every offline → online transition,
+     * enqueues a [SyncDataWorker] to flush any locally-pending changes that didn't
+     * make it to the backend while the connection was down.
+     *
+     * The first emission (cold start) is treated as the baseline — we don't sync on
+     * boot from here because the per-screen ViewModels already do that on `init`.
+     * What we care about is *transitions* during a running session.
+     */
+    private fun observeConnectivity() {
+        connectivityJob?.cancel()
+        connectivityJob = viewModelScope.launch {
+            var previous: Boolean? = null
+            connectivityObserver.observe().collect { isConnected ->
+                if (previous == false && isConnected) {
+                    enqueueBackgroundSync()
+                }
+                previous = isConnected
+            }
+        }
+    }
+
+    /**
+     * Enqueues [SyncDataWorker] with a CONNECTED network constraint. WorkManager
+     * itself defers the run until the device has connectivity and retries with
+     * exponential backoff on failure — i.e., the worker is the durable counterpart
+     * to the in-VM `syncAll()`.
+     *
+     * Uses ExistingWorkPolicy.KEEP so that piling up triggers (e.g. flapping
+     * connectivity) collapses to a single in-flight job.
+     */
+    private fun enqueueBackgroundSync() {
+        val userId = _uiState.value.currentUserId
+        if (userId == -1L) return
+
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val request = OneTimeWorkRequestBuilder<SyncDataWorker>()
+            .setConstraints(constraints)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30L, TimeUnit.SECONDS)
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            SyncDataWorker.WORK_NAME,
+            ExistingWorkPolicy.KEEP,
+            request
+        )
     }
 
     private fun checkIndexVersion() {
@@ -217,7 +272,7 @@ class MainViewModel @Inject constructor(
                 syncCollectionsUseCase(userId)
                 syncWantListsUseCase(userId)
                 _uiState.update { it.copy(authMessageRes = R.string.msg_profile_synced) }
-                
+
                 // Proactive Offline-First Pre-fetching
                 val workData = Data.Builder()
                     .putLong(PrefetchImagesWorker.KEY_USER_ID, userId)
@@ -229,15 +284,18 @@ class MainViewModel @Inject constructor(
                     .setInputData(workData)
                     .setConstraints(constraints)
                     .build()
-                
+
                 WorkManager.getInstance(context).enqueueUniqueWork(
                     PrefetchImagesWorker.WORK_NAME,
                     ExistingWorkPolicy.REPLACE,
                     prefetchRequest
                 )
-                
+
             } catch (e: Exception) {
                 _uiState.update { it.copy(authMessage = handleError(e)) }
+                // Foreground sync failed — schedule a durable retry that WorkManager
+                // will replay once connectivity / backend recover.
+                enqueueBackgroundSync()
             } finally {
                 _uiState.update { it.copy(syncLoading = false) }
             }

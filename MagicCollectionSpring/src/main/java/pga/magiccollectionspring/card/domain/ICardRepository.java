@@ -12,7 +12,7 @@ import java.util.Set;
 
 /**
  * Domain repository interface for Card (master card catalog).
- * Handles all card catalog queries, separate from CardYouOwn (owned instances).
+ * Handles all card catalog queries.
  */
 public interface ICardRepository extends IRepository<Card, String> {
     // Basic lookups

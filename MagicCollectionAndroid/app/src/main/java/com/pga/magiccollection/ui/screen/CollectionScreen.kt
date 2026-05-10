@@ -5,9 +5,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AllInclusive
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CreateNewFolder
+import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Lock
@@ -123,7 +123,7 @@ fun CollectionScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.collection_create_title))
+                    Icon(Icons.Default.CreateNewFolder, contentDescription = stringResource(R.string.collection_create_title))
                 }
             }
         }
@@ -166,7 +166,7 @@ fun CollectionScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            Icons.Default.AllInclusive,
+                            Icons.Default.Inventory2,
                             contentDescription = null,
                             modifier = Modifier.size(32.dp)
                         )

@@ -241,7 +241,7 @@ class CollectionRepository @Inject constructor(
                             language = card.language,
                             condition = card.condition
                         )
-                        
+
                         if (existingCard == null) {
                             collectionCardDao.insert(
                                 CollectionCardEntity(
@@ -259,6 +259,13 @@ class CollectionRepository @Inject constructor(
                                     synced = true
                                 )
                             )
+                        } else if (!existingCard.synced) {
+                            // CLIENT-WINS: local has unsynced changes (push must have failed).
+                            // Preserve user's quantity, only attach the remoteId so the next
+                            // push knows it's an UPDATE rather than a CREATE.
+                            if (existingCard.remoteId != card.id) {
+                                collectionCardDao.update(existingCard.copy(remoteId = card.id))
+                            }
                         } else {
                             collectionCardDao.update(existingCard.copy(
                                 remoteId = card.id,

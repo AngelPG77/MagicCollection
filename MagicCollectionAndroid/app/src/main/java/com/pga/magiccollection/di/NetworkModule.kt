@@ -124,18 +124,6 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideInventoryApi(
-        retrofit: Retrofit,
-        @Named("AuthenticatedClient") authenticatedClient: OkHttpClient
-    ): InventoryApi {
-        return retrofit.newBuilder()
-            .client(authenticatedClient)
-            .build()
-            .create(InventoryApi::class.java)
-    }
-
-    @Provides
-    @Singleton
     fun provideWantListApi(
         retrofit: Retrofit,
         @Named("AuthenticatedClient") authenticatedClient: OkHttpClient

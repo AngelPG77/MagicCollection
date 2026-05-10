@@ -101,9 +101,9 @@ class SyncCatalogWorker @AssistedInject constructor(
         createNotificationChannel()
         val percent = (progress.coerceIn(0f, 1f) * 100).toInt()
         val notification = NotificationCompat.Builder(applicationContext, NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("Syncing Catalog")
-            .setContentText("Progress: $percent%")
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(applicationContext.getString(R.string.notif_syncing_catalog))
+            .setContentText(applicationContext.getString(R.string.notif_progress_simple, percent))
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setProgress(100, percent, false)
@@ -123,10 +123,10 @@ class SyncCatalogWorker @AssistedInject constructor(
         if (existing != null) return
         val channel = NotificationChannel(
             NOTIFICATION_CHANNEL_ID,
-            "Catalog Sync",
+            applicationContext.getString(R.string.notif_channel_catalog_sync),
             NotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = "Card database update progress"
+            description = applicationContext.getString(R.string.notif_syncing_catalog)
             setShowBadge(false)
             lockscreenVisibility = Notification.VISIBILITY_PRIVATE
         }

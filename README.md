@@ -19,23 +19,25 @@ MagicCollection/
 
 - Autenticación con JWT (`register`, `login`, actualización de usuario/contraseña, borrado de cuenta).
 - Soporte de **refresh token** (`/auth/refresh-token`) para sesiones persistentes.
-- CRUD de colecciones por usuario autenticado.
-- Inventario de cartas poseidas (`cards_owned`) con merge por variante (idioma/condicion/foil).
+- CRUD de colecciones por usuario autenticado, con cartas embebidas (`POST/PUT/DELETE /collections/{id}/cards`).
 - Modulo de **WantList** completo (`want_lists` + `want_list_cards`).
 - Catalogo maestro de cartas con sincronización parcial/completa desde Scryfall.
 - Sincronización de expansiones (`mtg_sets`).
-- Indices multiidioma con manifest/snapshot/delta/build logs.
+- Indices multiidioma con manifest/snapshot/delta/build logs y endpoint de drift (`/cards/index/sync-status`).
 - Programación de sincronización periodica y health indicator del indice.
 - Swagger/OpenAPI habilitado.
 
 ### Android (`MagicCollectionAndroid`)
 
-- UI Compose con navegacion por pantallas (home, busqueda, detalle, ajustes, auth, wantlists, etc.).
+- UI Compose con navegacion por pantallas (home, busqueda, detalle, ajustes, auth, colecciones, wantlists, etc.).
 - Arquitectura **MVVM + Use Cases + Repositories**.
 - Inyeccion de dependencias con **Hilt**.
-- Persistencia local con **Room** (version 13) y sincronización offline-first.
-- Busqueda local con **FTS4** (`card_names_fts`) + filtros por metadatos (`master_cards`).
-- Descarga de idiomas en segundo plano con **WorkManager** (`DownloadLanguageWorker`).
+- Persistencia local con **Room** (version 17) y sincronización offline-first.
+- Busqueda local con **FTS4** (`card_search_fts`) multiidioma + filtros por metadatos (`master_cards`).
+- Descarga de idiomas y catalogo en segundo plano con **WorkManager** (`DownloadLanguageWorker`, `SyncCatalogWorker`).
+- **Sincronización resiliente**: `SyncDataWorker` + `NetworkConnectivityObserver` reanuda automaticamente la subida de cambios al recuperar conexion; el pull respeta cambios locales con `synced=false` (client-wins).
+- **Tema dinamico por gremio MTG**: 10 paletas (Azorius, Dimir, Rakdos, Gruul, Selesnya, Orzhov, Izzet, Golgari, Boros, Simic) con Material You hibrido (gremio aporta brand colors, sistema aporta surface tokens).
+- Internacionalizacion completa con idioma seguido del sistema por defecto (override manual en Ajustes).
 - Sesion local cifrada (`EncryptedSharedPreferences`) con JWT + refresh token.
 - Interceptor de red con refresco automatico de token ante `401`.
 
@@ -43,7 +45,7 @@ MagicCollection/
 
 ### Backend
 
-- Monolito modular por dominio: `auth`, `user`, `card`, `collection`, `inventory`, `wantlist`, `shared`.
+- Monolito modular por dominio: `auth`, `user`, `card`, `collection`, `wantlist`, `shared`.
 - Patrón por capas: **Controller -> Application Service -> Repository/Domain**.
 - CQRS ligero para comandos/consultas.
 - Contratos de servicio/repositorio en `shared/abstractions` y dominio.
@@ -54,7 +56,9 @@ MagicCollection/
 - `Compose UI -> ViewModel -> UseCase -> Repository -> Room/Retrofit`.
 - Estado de UI centralizado por pantalla (`UiState` + `StateFlow`).
 - Persistencia local desacoplada por DAOs especializados.
-- Sincronización explicita de entidades locales con backend (`synced`, `pendingDelete`, `remoteId`).
+- Sincronización explicita de entidades locales con backend (`synced`, `pendingDelete`, `remoteId`) con política **client-wins** para cambios pendientes.
+- Capa de tema con `CompositionLocalProvider` para gremio activo + colores semanticos (`LocalGuild`, `LocalMtgSemanticColors`, `LocalAppSpacing`).
+- Resiliencia de sync vía `NetworkConnectivityObserver` (callback flow sobre `ConnectivityManager`) + `SyncDataWorker` (`HiltWorker` con `NetworkType.CONNECTED` y backoff exponencial).
 
 ## Estructura de Base de Datos (detalle completo)
 
@@ -84,15 +88,15 @@ El proyecto usa **dos almacenes distintos**:
 - **Clave primaria:** `id`.
 - **Relaciones:** FK `user_id -> users.id`.
 - **Campos clave:** `name`, `user_id`.
-- **Utilidad:** base del inventario (`cards_owned`) y validaciones de ownership.
+- **Utilidad:** base del inventario del usuario (las cartas viven como entidades hijas embebidas accesibles via `/collections/{id}/cards`).
 
-### 4) `cards_owned`
-- **Objetivo:** inventario real poseido por el usuario dentro de colecciones.
+### 4) `collection_cards`
+- **Objetivo:** cartas dentro de cada colección con todas sus variantes (idioma / condición / foil).
 - **Clave primaria:** `id`.
 - **Relaciones:** FK `collection_id -> collections.id`, FK `card_master_id -> master_cards.scryfall_id`.
 - **Restricciones:** unique compuesta (`collection_id`, `card_master_id`, `is_foil`, `card_condition`, `language`).
-- **Campos clave:** `quantity`, `is_foil`, `card_condition`, `language`.
-- **Utilidad:** evita duplicar variantes identicas y permite merge de cantidades.
+- **Campos clave:** `quantity`, `is_foil`, `card_condition`, `language`, snapshot de metadata (`name`, `type_line`, `mana_cost`, `image_url`).
+- **Utilidad:** evita duplicar variantes idénticas, permite merge de cantidades y se sirve a clientes en una sola respuesta junto con la colección padre.
 
 ### 5) `want_lists`
 - **Objetivo:** listas de cartas deseadas por usuario.
@@ -182,12 +186,12 @@ El proyecto usa **dos almacenes distintos**:
 - **Campos clave:** `remoteId`, `name`, `synced`, `pendingDelete`.
 - **Utilidad:** separar identidad local/remota y soportar cola de alta/borrado.
 
-### 3) `cards_owned`
-- **Objetivo:** cartas poseidas en local por variante.
-- **Clave primaria compuesta:** (`scryfallId`, `collectionId`, `language`, `condition`, `isFoil`).
-- **Relaciones:** FK `collectionId -> collections.localId` (`ON DELETE CASCADE`), indice por `collectionId`.
-- **Campos clave:** `remoteId`, `quantity`, `synced`, `pendingDelete`.
-- **Utilidad:** merge de variantes iguales y sincronización robusta con backend.
+### 3) `collection_cards`
+- **Objetivo:** cartas poseidas en local con todas sus variantes (idioma/condicion/foil), incluyendo snapshot de metadata para render sin red.
+- **Clave primaria:** `localId` (autogenerada).
+- **Relaciones:** FK `collectionLocalId -> collections.localId` (`ON DELETE CASCADE`), indice por `collectionLocalId`.
+- **Campos clave:** `remoteId`, `scryfallId`, `name`, `typeLine`, `manaCost`, `imageUrl`, `quantity`, `foil`, `language`, `condition`, `synced`, `pendingDelete`.
+- **Utilidad:** sustituye al modelo relacional anterior (`cards_owned`); embebe metadata para offline puro, sincronización bidireccional con `synced`/`remoteId`/`pendingDelete` y reconciliación por la 4-tupla (`scryfallId`, `foil`, `language`, `condition`).
 
 ### 4) `want_lists`
 - **Objetivo:** listas de deseo locales.
@@ -210,11 +214,11 @@ El proyecto usa **dos almacenes distintos**:
 - **Campos clave:** `printedName`, `setCode`, `manaCost`, `convertedManaCost`, `cmc`, `rarityRank`, `imageUrl`, `isDigital`.
 - **Utilidad:** evita depender de red para filtros/paginación local.
 
-### 7) `card_names_fts` (FTS4 virtual table)
-- **Objetivo:** busqueda textual ultrarapida por nombres.
-- **Tecnica:** FTS4 (`unicode61`), `language` marcado como `notIndexed`.
-- **Campos clave:** `card_id`, `name`, `language`.
-- **Utilidad:** autocompletado y busqueda por prefijos en local, con fallback por idioma.
+### 7) `card_search_fts` (FTS4 virtual table)
+- **Objetivo:** busqueda textual ultrarapida multiidioma sobre nombre y texto oraculo.
+- **Tecnica:** FTS4 (`unicode61`), `language` marcado como `notIndexed` para filtrado por idioma sin penalizar el indice.
+- **Campos clave:** `card_id`, `name`, `oracle_text`, `language`.
+- **Utilidad:** autocompletado, busqueda por prefijos y filtros oracle en local, con fallback de idioma a inglés. La tabla `card_names_fts` previa quedó obsoleta y fue eliminada en la migración 13→14.
 
 ### 8) `downloaded_languages`
 - **Objetivo:** registrar idiomas descargados en el dispositivo.
@@ -266,6 +270,7 @@ El proyecto usa **dos almacenes distintos**:
 ### Indice multiidioma
 - `GET /cards/index/version`
 - `GET /cards/index/languages`
+- `GET /cards/index/sync-status?langs=...` (drift backend ↔ Scryfall y cliente ↔ backend)
 - `GET /cards/index/{lang}/manifest`
 - `GET /cards/index/{lang}/page?offset=...&limit=...`
 - `GET /cards/index/{lang}/delta?sinceVersion=...`
@@ -275,20 +280,15 @@ El proyecto usa **dos almacenes distintos**:
 - `GET /cards/index/{lang}/names/snapshot`
 
 ### Colecciones
-- `POST /collections`
 - `GET /collections`
-- `GET /collections/{id}`
+- `GET /collections/{id}` (incluye `cards: [...]` embebidas)
+- `GET /collections/all-cards` (todas las cartas del usuario en todas sus colecciones)
+- `POST /collections`
 - `PUT /collections/{id}`
 - `DELETE /collections/{id}`
-
-### Inventario
-- `POST /your-cards/add`
-- `PUT /your-cards/update/{id}`
-- `DELETE /your-cards/delete/{id}`
-- `GET /your-cards/collection/{collectionId}`
-- `GET /your-cards/search/global?term=...`
-- `GET /your-cards/search/collection/{collectionId}?term=...`
-- `GET /your-cards/search/type?type=...`
+- `POST /collections/{id}/cards`
+- `PUT /collections/{id}/cards/{cardId}`
+- `DELETE /collections/{id}/cards/{cardId}`
 
 ### WantList
 - `GET /wantlists`

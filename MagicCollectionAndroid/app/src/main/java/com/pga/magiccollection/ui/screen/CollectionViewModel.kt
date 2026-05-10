@@ -305,6 +305,52 @@ class CollectionViewModel @Inject constructor(
         }
     }
 
+    fun showEditCardModal(card: CollectionCardEntity?) {
+        _uiState.update {
+            it.copy(
+                showEditCardModal = card != null,
+                editingCard = card,
+                editQuantity = card?.quantity ?: 1,
+                editFoil = card?.foil ?: false,
+                editCondition = card?.condition ?: "NEAR_MINT",
+                editLanguage = card?.language ?: "en"
+            )
+        }
+    }
+
+    fun onEditQuantityChanged(qty: Int) { _uiState.update { it.copy(editQuantity = qty) } }
+    fun onEditFoilChanged(foil: Boolean) { _uiState.update { it.copy(editFoil = foil) } }
+    fun onEditConditionChanged(cond: String) { _uiState.update { it.copy(editCondition = cond) } }
+    fun onEditLanguageChanged(lang: String) { _uiState.update { it.copy(editLanguage = lang) } }
+
+    fun saveEditedCard() {
+        val card = _uiState.value.editingCard ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSavingCard = true) }
+            try {
+                updateCardInCollectionUseCase(
+                    card.collectionLocalId,
+                    card.localId,
+                    _uiState.value.editQuantity,
+                    _uiState.value.editFoil,
+                    _uiState.value.editLanguage,
+                    _uiState.value.editCondition
+                )
+                _uiState.update {
+                    it.copy(
+                        showEditCardModal = false,
+                        editingCard = null,
+                        message = "collection_card_updated_success"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(message = handleError(e)) }
+            } finally {
+                _uiState.update { it.copy(isSavingCard = false) }
+            }
+        }
+    }
+
     fun clearMessage() {
         _uiState.update { it.copy(message = null) }
     }

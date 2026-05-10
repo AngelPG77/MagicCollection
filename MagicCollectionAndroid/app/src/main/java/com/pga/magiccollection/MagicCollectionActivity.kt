@@ -58,6 +58,7 @@ import com.pga.magiccollection.ui.theme.Guild
 import com.pga.magiccollection.ui.theme.MagicCollectionAppTheme
 import com.pga.magiccollection.ui.component.MagicCollectionSnackbarHost
 import com.pga.magiccollection.ui.screen.ALL_COLLECTIONS_LOCAL_ID
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
 
@@ -66,27 +67,36 @@ class MagicCollectionActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             val preferences by viewModel.preferences.collectAsState(initial = null)
             
             val activity = this@MagicCollectionActivity
-            val localizedContext = remember(preferences?.appLanguage) {
-                val locale = Locale.forLanguageTag(preferences?.appLanguage ?: "es")
-                val config = Configuration(activity.resources.configuration)
-                config.setLocale(locale)
-                val localized = activity.createConfigurationContext(config)
-                
-                object : android.content.ContextWrapper(activity) {
-                    override fun getResources() = localized.resources
-                    override fun getAssets() = localized.assets
-                    override fun getTheme() = activity.theme
-                    override fun getSystemService(name: String): Any? {
-                        return if (name == android.content.Context.LAYOUT_INFLATER_SERVICE) {
-                            localized.getSystemService(name)
-                        } else {
-                            super.getSystemService(name)
+            val localizedContext: android.content.Context = remember(preferences?.appLanguage) {
+                val pref = preferences?.appLanguage
+                // "system" / null / blank → use the activity context as-is, which already
+                // respects the device locale via Android's standard resource resolution.
+                // Any other value is an explicit override (e.g. "en", "es").
+                if (pref.isNullOrBlank() || pref == "system") {
+                    activity
+                } else {
+                    val locale = Locale.forLanguageTag(pref)
+                    val config = Configuration(activity.resources.configuration)
+                    config.setLocale(locale)
+                    val localized = activity.createConfigurationContext(config)
+
+                    object : android.content.ContextWrapper(activity) {
+                        override fun getResources() = localized.resources
+                        override fun getAssets() = localized.assets
+                        override fun getTheme() = activity.theme
+                        override fun getSystemService(name: String): Any? {
+                            return if (name == android.content.Context.LAYOUT_INFLATER_SERVICE) {
+                                localized.getSystemService(name)
+                            } else {
+                                super.getSystemService(name)
+                            }
                         }
                     }
                 }
@@ -119,9 +129,9 @@ class MagicCollectionActivity : ComponentActivity() {
 sealed class Screen(val route: String, val titleRes: Int, val icon: ImageVector) {
     object Home : Screen("home", R.string.title_home, Icons.Default.Home)
     object Search : Screen("search", R.string.title_search, Icons.Default.Search)
-    object Collections : Screen("collections", R.string.title_collections, Icons.AutoMirrored.Filled.List)
-    object Decks : Screen("decks", R.string.title_decks, Icons.Default.PlayArrow)
-    object Scanner : Screen("scanner", R.string.title_scanner, Icons.Default.Add)
+    object Collections : Screen("collections", R.string.title_collections, Icons.Default.Archive)
+    object Decks : Screen("decks", R.string.title_decks, Icons.Default.ContentCopy)
+    object Scanner : Screen("scanner", R.string.title_scanner, Icons.Default.PhotoCamera)
     object Settings : Screen("settings", R.string.title_settings, Icons.Default.Settings)
     object Register : Screen("register", R.string.title_register, Icons.Default.AccountCircle)
     object Login : Screen("login", R.string.login_now, Icons.Default.AccountCircle)

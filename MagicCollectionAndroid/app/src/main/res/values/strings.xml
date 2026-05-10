@@ -106,9 +106,29 @@
     <string name="card_detail_no_versions">No versions found</string>
     <string name="card_detail_not_found">Card not found</string>
     <string name="dialog_login_required_message">To use wishlists and sync your collection, you need an account.</string>
+    <string name="lang_system">Follow system language</string>
     <string name="lang_en">English</string>
     <string name="lang_es">Spanish</string>
-    
+    <string name="lang_fr">French</string>
+    <string name="lang_de">German</string>
+    <string name="lang_it">Italian</string>
+    <string name="lang_pt">Portuguese</string>
+    <string name="lang_ja">Japanese</string>
+    <string name="lang_ko">Korean</string>
+    <string name="lang_ru">Russian</string>
+    <string name="lang_zhs">Chinese (Simplified)</string>
+    <string name="lang_zht">Chinese (Traditional)</string>
+
+    <!-- WorkManager notifications (system tray) -->
+    <string name="notif_channel_catalog_sync">Catalog sync</string>
+    <string name="notif_channel_language_download">Language download</string>
+    <string name="notif_syncing_catalog">Syncing catalog</string>
+    <string name="notif_downloading_language">Downloading language</string>
+    <string name="notif_progress">%1$s: %2$d%%</string>
+    <string name="notif_progress_simple">Progress: %1$d%%</string>
+    <string name="unknown_error_msg">Unknown error</string>
+
+
     <string name="collection_title">Collections</string>
     <string name="collection_empty">You don\'t have any collections yet</string>
     <string name="collection_create_title">New collection</string>
@@ -122,6 +142,7 @@
     <string name="collection_deleted_success">Collection deleted successfully</string>
     <string name="collection_card_added_success">Card added to collection</string>
     <string name="collection_card_removed_success">Card removed from collection</string>
+    <string name="collection_card_updated_success">Card updated</string>
     <string name="collection_add_card">Add card</string>
     <string name="collection_login_required">Login to manage your collections</string>
     <string name="collection_search_hint">Search collections…</string>
@@ -169,11 +190,8 @@
     <string name="search_color_at_most">At most these</string>
     <string name="search_color_including">Including these</string>
     <string name="search_filter_type">Type</string>
-    <string name="search_filter_text">Oracle Text</string>
-    <string name="search_filter_mana_cost">Mana Cost</string>
     <string name="search_filter_set">Set / Edition</string>
     <string name="search_filter_rarity">Rarity</string>
-    <string name="search_filter_artist">Artist</string>
     <string name="search_filter_edition">Edition / Expansion</string>
     <string name="search_filter_edition_hint">Search set name or code…</string>
     <string name="search_clear_filters">Clear all filters</string>
