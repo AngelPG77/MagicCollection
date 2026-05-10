@@ -60,7 +60,9 @@ interface CardSearchIndexDao {
 data class CardSearchRow(
     val scryfallId: String,
     val name: String,
-    val imageUrl: String?
+    val imageUrl: String?,
+    val manaCost: String?,
+    val rarityRank: Int
 )
 
 data class MasterCardSummaryRow(

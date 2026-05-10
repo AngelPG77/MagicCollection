@@ -16,6 +16,14 @@
     
     <string name="action_back">Back</string>
     <string name="action_settings">Settings</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_decrement_quantity">Decrease quantity</string>
+    <string name="action_increment_quantity">Increase quantity</string>
+    <string name="action_remove">Remove</string>
+    <string name="action_search">Search</string>
+    <string name="action_sort_direction">Toggle sort direction</string>
+    <string name="action_show_password">Toggle password visibility</string>
     
     <string name="recent_cards_title">Last visited cards</string>
     <string name="recent_cards_empty">You haven\'t visited any cards yet.</string>
@@ -31,7 +39,8 @@
     <string name="settings_app_language">App language</string>
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_dark_theme">Dark theme</string>
-    <string name="settings_theme_color">Theme color</string>
+    <string name="settings_theme_color">Guild theme</string>
+    <string name="settings_dynamic_color">Material You surfaces</string>
     <string name="settings_grid_size">Grid size</string>
     <string name="settings_grid_size_columns">%1$d columns</string>
     <string name="settings_grid_size_preview">Grid Preview</string>
@@ -194,6 +203,9 @@
     <string name="msg_sync_started_server">Scryfall scan started on server. New cards will appear soon.</string>
     <string name="msg_sync_completed">Synchronization completed successfully.</string>
     <string name="msg_sync_error">Error requesting scan: %1$s</string>
+    <string name="msg_sync_already_up_to_date">You\'re already up to date. No download needed.</string>
+    <string name="msg_sync_server_updating">The server is fetching new cards from Scryfall. Please try again in a moment.</string>
+    <string name="msg_sync_status_check_failed">Could not verify sync status. Try again later.</string>
     <string name="msg_syncing_progress">Syncing… %1$d%%</string>
     <string name="msg_session_expired">Your session has expired. Please login again.</string>
     <string name="msg_profile_synced">Profile synced successfully</string>

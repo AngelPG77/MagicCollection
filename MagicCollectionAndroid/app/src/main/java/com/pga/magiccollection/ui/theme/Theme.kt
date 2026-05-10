@@ -1,97 +1,129 @@
 package com.pga.magiccollection.ui.theme
 
 import android.os.Build
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.core.graphics.ColorUtils
-
-private fun Color.blend(other: Color, ratio: Float): Color {
-    return Color(ColorUtils.blendARGB(this.toArgb(), other.toArgb(), ratio))
-}
-
-private fun getColorScheme(baseColor: Color, isDark: Boolean): androidx.compose.material3.ColorScheme {
-    val primary = baseColor
-    val secondary = baseColor.blend(Color.Gray, 0.4f)
-    val tertiary = baseColor.blend(Color(0xFF9E9E9E), 0.5f)
-
-    return if (isDark) {
-        val primaryContainer = baseColor.blend(Color.Black, 0.75f)
-        val onPrimaryContainer = baseColor.blend(Color.White, 0.85f)
-        val secondaryContainer = secondary.blend(Color.Black, 0.75f)
-        val onSecondaryContainer = secondary.blend(Color.White, 0.85f)
-
-        darkColorScheme(
-            primary = primary,
-            onPrimary = Color.Black,
-            primaryContainer = primaryContainer,
-            onPrimaryContainer = onPrimaryContainer,
-            secondary = secondary,
-            onSecondary = Color.Black,
-            secondaryContainer = secondaryContainer,
-            onSecondaryContainer = onSecondaryContainer,
-            tertiary = tertiary,
-            tertiaryContainer = tertiary.blend(Color.Black, 0.75f),
-            onTertiaryContainer = tertiary.blend(Color.White, 0.85f)
-        )
-    } else {
-        val primaryContainer = baseColor.blend(Color.White, 0.50f)
-        val onPrimaryContainer = baseColor.blend(Color.Black, 0.80f)
-        val secondaryContainer = secondary.blend(Color.White, 0.50f)
-        val onSecondaryContainer = secondary.blend(Color.Black, 0.80f)
-
-        lightColorScheme(
-            primary = primary,
-            onPrimary = Color.White,
-            primaryContainer = primaryContainer,
-            onPrimaryContainer = onPrimaryContainer,
-            secondary = secondary,
-            onSecondary = Color.White,
-            secondaryContainer = secondaryContainer,
-            onSecondaryContainer = onSecondaryContainer,
-            tertiary = tertiary,
-            tertiaryContainer = tertiary.blend(Color.White, 0.50f),
-            onTertiaryContainer = tertiary.blend(Color.Black, 0.80f)
-        )
-    }
-}
-
-val ThemeColors = mapOf(
-    "Purple" to Color(0xFF9C27B0), // Púrpura vibrante (Material Purple 500)
-    "Blue" to Color(0xFF2196F3),
-    "Red" to Color(0xFFF44336),
-    "Green" to Color(0xFF4CAF50),
-    "Orange" to Color(0xFFFF9800)
-)
-
+/**
+ * Root theme for the Magic Collection app.
+ *
+ * The active [Guild] drives `primary`, `secondary`, `tertiary` and their containers
+ * (the brand identity). The `dynamicSurfaces` flag opts into Material You for the *neutral*
+ * surface tokens only — the guild's brand colors are never overridden by the system
+ * wallpaper.
+ *
+ * Brand-color transitions between guilds are animated so a settings change feels like a
+ * theme switch rather than a flash.
+ */
 @Composable
 fun MagicCollectionAppTheme(
+    guild: Guild = Guild.Default,
     darkTheme: Boolean = isSystemInDarkTheme(),
-    themeColor: String = "Purple",
-    dynamicColor: Boolean = true,
+    dynamicSurfaces: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val baseColor = ThemeColors[themeColor] ?: ThemeColors["Purple"]!!
-    
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && themeColor == "Purple" -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        else -> getColorScheme(baseColor, darkTheme)
-    }
+    val guildScheme = GuildSchemes.of(guild, darkTheme)
+    val materialYouScheme = if (dynamicSurfaces && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val context = LocalContext.current
+        if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    } else null
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
+    val baseScheme = if (materialYouScheme != null) {
+        applyMaterialYouSurfaces(guildScheme, materialYouScheme)
+    } else guildScheme
+
+    val animatedScheme = animateBrandColors(baseScheme)
+    val semanticColors = semanticColorsFor(darkTheme)
+
+    CompositionLocalProvider(
+        LocalMtgSemanticColors provides semanticColors,
+        LocalAppSpacing provides AppSpacing(),
+        LocalAppDimens provides AppDimens()
+    ) {
+        MaterialTheme(
+            colorScheme = animatedScheme,
+            typography = Typography,
+            content = content
+        )
+    }
+}
+
+/**
+ * Copies only the *neutral* surface tokens from [materialYou] onto [guildScheme].
+ * Brand tokens (primary, secondary, tertiary, error and their on/container variants)
+ * stay from the guild.
+ */
+private fun applyMaterialYouSurfaces(
+    guildScheme: ColorScheme,
+    materialYou: ColorScheme
+): ColorScheme = guildScheme.copy(
+    background = materialYou.background,
+    onBackground = materialYou.onBackground,
+    surface = materialYou.surface,
+    onSurface = materialYou.onSurface,
+    surfaceVariant = materialYou.surfaceVariant,
+    onSurfaceVariant = materialYou.onSurfaceVariant,
+    surfaceTint = guildScheme.primary,
+    surfaceBright = materialYou.surfaceBright,
+    surfaceDim = materialYou.surfaceDim,
+    surfaceContainer = materialYou.surfaceContainer,
+    surfaceContainerLow = materialYou.surfaceContainerLow,
+    surfaceContainerLowest = materialYou.surfaceContainerLowest,
+    surfaceContainerHigh = materialYou.surfaceContainerHigh,
+    surfaceContainerHighest = materialYou.surfaceContainerHighest,
+    inverseSurface = materialYou.inverseSurface,
+    inverseOnSurface = materialYou.inverseOnSurface,
+    outline = materialYou.outline,
+    outlineVariant = materialYou.outlineVariant,
+    scrim = materialYou.scrim
+)
+
+/**
+ * Animates the brand-facing color tokens (the ones that change when the user picks a
+ * different guild). Surface/neutral tokens snap because they don't change with the guild.
+ */
+@Composable
+private fun animateBrandColors(target: ColorScheme): ColorScheme {
+    val spec = tween<androidx.compose.ui.graphics.Color>(durationMillis = 320)
+
+    val primary by animateColorAsState(target.primary, spec, label = "primary")
+    val onPrimary by animateColorAsState(target.onPrimary, spec, label = "onPrimary")
+    val primaryContainer by animateColorAsState(target.primaryContainer, spec, label = "primaryContainer")
+    val onPrimaryContainer by animateColorAsState(target.onPrimaryContainer, spec, label = "onPrimaryContainer")
+    val inversePrimary by animateColorAsState(target.inversePrimary, spec, label = "inversePrimary")
+
+    val secondary by animateColorAsState(target.secondary, spec, label = "secondary")
+    val onSecondary by animateColorAsState(target.onSecondary, spec, label = "onSecondary")
+    val secondaryContainer by animateColorAsState(target.secondaryContainer, spec, label = "secondaryContainer")
+    val onSecondaryContainer by animateColorAsState(target.onSecondaryContainer, spec, label = "onSecondaryContainer")
+
+    val tertiary by animateColorAsState(target.tertiary, spec, label = "tertiary")
+    val onTertiary by animateColorAsState(target.onTertiary, spec, label = "onTertiary")
+    val tertiaryContainer by animateColorAsState(target.tertiaryContainer, spec, label = "tertiaryContainer")
+    val onTertiaryContainer by animateColorAsState(target.onTertiaryContainer, spec, label = "onTertiaryContainer")
+
+    return target.copy(
+        primary = primary,
+        onPrimary = onPrimary,
+        primaryContainer = primaryContainer,
+        onPrimaryContainer = onPrimaryContainer,
+        inversePrimary = inversePrimary,
+        secondary = secondary,
+        onSecondary = onSecondary,
+        secondaryContainer = secondaryContainer,
+        onSecondaryContainer = onSecondaryContainer,
+        tertiary = tertiary,
+        onTertiary = onTertiary,
+        tertiaryContainer = tertiaryContainer,
+        onTertiaryContainer = onTertiaryContainer
     )
 }

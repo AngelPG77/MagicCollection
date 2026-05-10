@@ -20,6 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.unit.LayoutDirection
 import com.pga.magiccollection.R
 import com.pga.magiccollection.data.local.entities.WantListEntity
+import com.pga.magiccollection.ui.component.EmptyState
 import com.pga.magiccollection.ui.component.MagicCollectionSnackbarHost
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -148,36 +149,17 @@ fun WantListScreen(
                 }
 
                 if (uiState.wantLists.isEmpty()) {
-                    // Empty state (no lists at all)
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                Icons.Default.Favorite,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.secondary
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = stringResource(id = R.string.wantlist_empty),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                    }
+                    EmptyState(
+                        title = stringResource(id = R.string.wantlist_empty),
+                        icon = Icons.Default.Favorite,
+                        modifier = Modifier.fillMaxSize()
+                    )
                 } else if (uiState.filteredWantLists.isEmpty()) {
-                    // No results for filter
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = stringResource(id = R.string.search_no_results),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
+                    EmptyState(
+                        title = stringResource(id = R.string.search_no_results),
+                        icon = Icons.Default.SearchOff,
+                        modifier = Modifier.fillMaxSize()
+                    )
                 } else {
                     // Filtered WantLists
                     LazyColumn(
@@ -186,20 +168,22 @@ fun WantListScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(uiState.filteredWantLists, key = { it.localId }) { wantList ->
-                            WantListItem(
-                                name = wantList.name,
-                                cardCount = wantList.cardCount,
-                                onClick = { onNavigateToDetail(wantList.localId) },
-                                onEditClick = { viewModel.showEditDialog(
-                                    WantListEntity(
-                                        localId = wantList.localId,
-                                        remoteId = wantList.remoteId,
-                                        name = wantList.name,
-                                        userId = wantList.userId,
-                                        synced = wantList.synced
-                                    )
-                                ) }
-                            )
+                            Box(modifier = Modifier.animateItem()) {
+                                WantListItem(
+                                    name = wantList.name,
+                                    cardCount = wantList.cardCount,
+                                    onClick = { onNavigateToDetail(wantList.localId) },
+                                    onEditClick = { viewModel.showEditDialog(
+                                        WantListEntity(
+                                            localId = wantList.localId,
+                                            remoteId = wantList.remoteId,
+                                            name = wantList.name,
+                                            userId = wantList.userId,
+                                            synced = wantList.synced
+                                        )
+                                    ) }
+                                )
+                            }
                         }
                     }
                 }

@@ -113,6 +113,18 @@ public class CardController {
         return ResponseEntity.ok(getAllCardsService.execute(new GetAllCardsQuery()).cards());
     }
 
+    @GetMapping("/index/sync-status")
+    public ResponseEntity<CardSyncStatusDTO> getSyncStatus(
+            @RequestParam(name = "langs", required = false) String langs) {
+        List<String> requestedLanguages = (langs == null || langs.isBlank())
+                ? List.of()
+                : java.util.Arrays.stream(langs.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .toList();
+        return ResponseEntity.ok(cardCatalogSyncService.getSyncStatus(requestedLanguages));
+    }
+
     @GetMapping("/index/version")
     public ResponseEntity<IndexVersionDTO> getIndexVersion() {
         LanguageIndexManifestDTO enManifest = languageIndexBuildService.getManifest("en");

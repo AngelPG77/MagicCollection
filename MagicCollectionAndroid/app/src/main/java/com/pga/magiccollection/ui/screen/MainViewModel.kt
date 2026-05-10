@@ -29,7 +29,6 @@ import com.pga.magiccollection.util.ErrorParser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -99,35 +98,45 @@ class MainViewModel @Inject constructor(
     private fun checkIndexVersion() {
         viewModelScope.launch {
             try {
-                val serverVersion = cardSearchIndexRepository.getIndexVersion()
-                val enState = languageIndexStateDao.getState("en")
-                val installedVersion = enState?.installedVersion
-                
-                if (installedVersion == null || (serverVersion.version != null && serverVersion.version != installedVersion)) {
-                    _uiState.update { it.copy(
-                        showUpdateDialog = true,
-                        indexVersion = serverVersion
-                    ) }
+                val downloadedLangs = preferenceManager.downloadedLanguages.first().ifEmpty { setOf("en") }
+                val report = cardSearchIndexRepository.computeSyncDrift(downloadedLangs + "en")
+
+                if (report.isUpToDate) {
+                    return@launch
                 }
+
+                val serverVersion = cardSearchIndexRepository.getIndexVersion()
+                _uiState.update { it.copy(
+                    showUpdateDialog = true,
+                    indexVersion = serverVersion,
+                    pendingSyncLanguages = report.driftedLanguages
+                ) }
             } catch (e: Exception) {
-                // Silencioso
+                // Silencioso: si falla la comprobación no molestamos al usuario al arrancar.
             }
         }
     }
 
     fun performIndexUpdate() {
         val version = _uiState.value.indexVersion ?: return
+        val pendingLanguages = _uiState.value.pendingSyncLanguages
         viewModelScope.launch {
             resetIndexProgressThrottle()
             _uiState.update { it.copy(isUpdatingIndex = true, indexProgress = 0f) }
             lastIndexProgress = 0f
-            
+
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build()
-                
+
+            val inputBuilder = Data.Builder()
+            if (pendingLanguages.isNotEmpty()) {
+                inputBuilder.putString(SyncCatalogWorker.KEY_LANGUAGES, pendingLanguages.joinToString(","))
+            }
+
             val workRequest = OneTimeWorkRequestBuilder<SyncCatalogWorker>()
                 .setConstraints(constraints)
+                .setInputData(inputBuilder.build())
                 .build()
                 
             WorkManager.getInstance(context).enqueueUniqueWork(
@@ -154,7 +163,8 @@ class MainViewModel @Inject constructor(
                                         indexProgress = 0f,
                                         authMessageRes = R.string.index_updated_count,
                                         authMessageArgs = listOf(steps.toString()),
-                                        showUpdateDialog = false
+                                        showUpdateDialog = false,
+                                        pendingSyncLanguages = emptyList()
                                     )}
                                     resetIndexProgressThrottle()
                                 }
@@ -266,26 +276,45 @@ class MainViewModel @Inject constructor(
             _uiState.update { it.copy(isForceScanning = true, showForceScanDialog = false, indexProgress = 0f) }
             lastIndexProgress = 0f
             try {
-                cardSearchIndexRepository.forceScanScryfall()
-                _uiState.update { it.copy(authMessageRes = R.string.msg_sync_started_server) }
-                
-                cardSearchIndexRepository.syncSets()
-                
-                delay(2000)
-
                 val downloadedLangs = preferenceManager.downloadedLanguages.first().ifEmpty { setOf("en") }
-                
-                downloadedLangs.forEachIndexed { index, lang ->
+                val report = try {
+                    cardSearchIndexRepository.computeSyncDrift(downloadedLangs + "en")
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(
+                        authMessageRes = R.string.msg_sync_status_check_failed
+                    ) }
+                    return@launch
+                }
+
+                if (report.isUpToDate) {
+                    _uiState.update { it.copy(
+                        authMessageRes = R.string.msg_sync_already_up_to_date
+                    ) }
+                    return@launch
+                }
+
+                if (!report.backendInSyncWithScryfall) {
+                    cardSearchIndexRepository.forceScanScryfall()
+                    _uiState.update { it.copy(
+                        authMessageRes = R.string.msg_sync_server_updating
+                    ) }
+                    return@launch
+                }
+
+                cardSearchIndexRepository.syncSets()
+
+                val driftedLanguages = report.driftedLanguages
+                driftedLanguages.forEachIndexed { index, lang ->
                     cardSearchIndexRepository.bootstrapIndex(lang) { progress ->
-                        val globalProgress = (index.toFloat() + progress) / downloadedLangs.size.toFloat()
+                        val globalProgress = (index.toFloat() + progress) / driftedLanguages.size.toFloat()
                         updateIndexProgress(globalProgress)
                     }
                 }
-                
+
                 val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
                 val nowIso = sdf.format(Date())
                 preferenceManager.setLastIndexUpdate(nowIso)
-                
+
                 _uiState.update { it.copy(authMessageRes = R.string.msg_sync_completed) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(
@@ -346,6 +375,10 @@ class MainViewModel @Inject constructor(
 
     fun updateThemeColor(color: String) {
         viewModelScope.launch { updateAppPreferenceUseCase.setThemeColor(color) }
+    }
+
+    fun updateDynamicColor(enabled: Boolean) {
+        viewModelScope.launch { updateAppPreferenceUseCase.setDynamicColor(enabled) }
     }
 
     fun startLanguageDownload(langCode: String) {

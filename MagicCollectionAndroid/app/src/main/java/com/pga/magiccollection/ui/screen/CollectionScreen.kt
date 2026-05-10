@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.pga.magiccollection.R
 import com.pga.magiccollection.data.local.entities.CollectionEntity
+import com.pga.magiccollection.ui.component.EmptyState
 import com.pga.magiccollection.ui.component.MagicCollectionSnackbarHost
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -121,7 +122,7 @@ fun CollectionScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.collection_create_title))
                 }
             }
         }
@@ -133,7 +134,7 @@ fun CollectionScreen(
                     start = padding.calculateStartPadding(LayoutDirection.Ltr),
                     end = padding.calculateEndPadding(LayoutDirection.Ltr),
                     bottom = padding.calculateBottomPadding(),
-                    top = 8.dp
+                    top = 0.dp
                 )
         ) {
             if (isLoggedIn) {
@@ -141,7 +142,7 @@ fun CollectionScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
                         .clickable { onNavigateToDetail(ALL_COLLECTIONS_LOCAL_ID) },
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -194,7 +195,7 @@ fun CollectionScreen(
                         trailingIcon = {
                             if (uiState.collectionsSearchQuery.isNotEmpty()) {
                                 IconButton(onClick = { viewModel.onCollectionsSearchQueryChanged("") }) {
-                                    Icon(Icons.Default.Close, contentDescription = null)
+                                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_clear))
                                 }
                             }
                         },
@@ -203,21 +204,11 @@ fun CollectionScreen(
                 }
 
                 if (uiState.collections.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                Icons.Default.Folder,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.secondary
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = stringResource(id = R.string.collection_empty),
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                    }
+                    EmptyState(
+                        title = stringResource(id = R.string.collection_empty),
+                        icon = Icons.Default.Folder,
+                        modifier = Modifier.fillMaxSize()
+                    )
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -225,20 +216,22 @@ fun CollectionScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(uiState.filteredCollections, key = { it.localId }) { collection ->
-                            CollectionItem(
-                                name = collection.name,
-                                cardCount = collection.cardCount,
-                                onClick = { onNavigateToDetail(collection.localId) },
-                                onEditClick = { viewModel.showEditDialog(
-                                    CollectionEntity(
-                                        localId = collection.localId,
-                                        remoteId = collection.remoteId,
-                                        name = collection.name,
-                                        userId = collection.userId,
-                                        synced = collection.synced
-                                    )
-                                ) }
-                            )
+                            Box(modifier = Modifier.animateItem()) {
+                                CollectionItem(
+                                    name = collection.name,
+                                    cardCount = collection.cardCount,
+                                    onClick = { onNavigateToDetail(collection.localId) },
+                                    onEditClick = { viewModel.showEditDialog(
+                                        CollectionEntity(
+                                            localId = collection.localId,
+                                            remoteId = collection.remoteId,
+                                            name = collection.name,
+                                            userId = collection.userId,
+                                            synced = collection.synced
+                                        )
+                                    ) }
+                                )
+                            }
                         }
                     }
                 }
@@ -309,7 +302,7 @@ private fun CollectionItem(
             }
             if (onEditClick != null) {
                 IconButton(onClick = onEditClick) {
-                    Icon(Icons.Default.Edit, contentDescription = null)
+                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.action_edit))
                 }
             }
         }

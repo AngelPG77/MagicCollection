@@ -51,5 +51,6 @@ data class MainUiState(
     val isUpdatingIndex: Boolean = false,
     val indexProgress: Float = 0f,
     val isForceScanning: Boolean = false,
+    val pendingSyncLanguages: List<String> = emptyList(),
     val topBarTitle: String? = null
 )

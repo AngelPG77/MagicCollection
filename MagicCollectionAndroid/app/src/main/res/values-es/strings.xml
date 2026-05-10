@@ -16,6 +16,14 @@
     
     <string name="action_back">Volver</string>
     <string name="action_settings">Opciones</string>
+    <string name="action_clear">Limpiar</string>
+    <string name="action_edit">Editar</string>
+    <string name="action_decrement_quantity">Reducir cantidad</string>
+    <string name="action_increment_quantity">Aumentar cantidad</string>
+    <string name="action_remove">Eliminar</string>
+    <string name="action_search">Buscar</string>
+    <string name="action_sort_direction">Cambiar dirección de ordenación</string>
+    <string name="action_show_password">Mostrar/ocultar contraseña</string>
     
     <string name="recent_cards_title">Últimas cartas visitadas</string>
     <string name="recent_cards_empty">No has visitado ninguna carta aún.</string>
@@ -31,7 +39,8 @@
     <string name="settings_app_language">Idioma de la app</string>
     <string name="settings_section_appearance">Apariencia</string>
     <string name="settings_dark_theme">Modo oscuro</string>
-    <string name="settings_theme_color">Color del tema</string>
+    <string name="settings_theme_color">Tema de guild</string>
+    <string name="settings_dynamic_color">Superficies Material You</string>
     <string name="settings_grid_size">Columnas en la galería</string>
     <string name="settings_grid_size_columns">%1$d columnas</string>
     <string name="settings_grid_size_preview">Vista previa</string>
@@ -189,6 +198,9 @@
     <string name="msg_sync_started_server">Escaneo de Scryfall iniciado en el servidor. Las nuevas cartas aparecerán pronto.</string>
     <string name="msg_sync_completed">Sincronización completada con éxito.</string>
     <string name="msg_sync_error">Error al solicitar escaneo: %1$s</string>
+    <string name="msg_sync_already_up_to_date">Ya estás al día. No es necesario descargar nada.</string>
+    <string name="msg_sync_server_updating">El servidor está obteniendo nuevas cartas de Scryfall. Inténtalo de nuevo en un momento.</string>
+    <string name="msg_sync_status_check_failed">No se pudo comprobar el estado de sincronización. Inténtalo más tarde.</string>
     <string name="msg_syncing_progress">Sincronizando… %1$d%%</string>
     <string name="msg_session_expired">Tu sesión ha expirado. Por favor, inicia sesión de nuevo.</string>
     <string name="msg_profile_synced">Perfil sincronizado correctamente</string>

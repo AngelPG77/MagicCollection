@@ -107,7 +107,7 @@ fun CollectionAddCardScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
-                    Icon(Icons.Default.Search, contentDescription = null)
+                    Icon(Icons.Default.Search, contentDescription = stringResource(R.string.action_search))
                 }
             }
         }
@@ -163,11 +163,11 @@ fun CollectionAddCardScreen(
                                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                                 trailingIcon = {
                                     if (localQuery.isNotEmpty()) {
-                                        IconButton(onClick = { 
+                                        IconButton(onClick = {
                                             localQuery = ""
-                                            viewModel.onClearQuery() 
+                                            viewModel.onClearQuery()
                                         }) {
-                                            Icon(Icons.Default.Close, contentDescription = null)
+                                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_clear))
                                         }
                                     }
                                 },
@@ -213,7 +213,7 @@ fun CollectionAddCardScreen(
                             IconButton(onClick = { viewModel.onSortAscendingChanged(!uiState.sortAscending) }) {
                                 Icon(
                                     imageVector = if (uiState.sortAscending) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
-                                    contentDescription = null
+                                    contentDescription = stringResource(R.string.action_sort_direction)
                                 )
                             }
                         }

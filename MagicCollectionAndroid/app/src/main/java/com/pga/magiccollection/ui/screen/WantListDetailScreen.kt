@@ -31,6 +31,7 @@ import coil.size.Precision
 import com.pga.magiccollection.R
 import com.pga.magiccollection.data.local.entities.WantListCardEntity
 import com.pga.magiccollection.domain.model.enums.CardCondition
+import com.pga.magiccollection.ui.component.EmptyState
 import com.pga.magiccollection.ui.component.MagicCollectionSnackbarHost
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,27 +106,13 @@ fun WantListDetailScreen(
         )
         
         if (uiState.selectedWantListCards.isEmpty()) {
-            Box(
+            EmptyState(
+                title = stringResource(id = R.string.wantlist_detail_empty),
+                icon = Icons.Default.Add,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = stringResource(id = R.string.wantlist_detail_empty),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
-            }
+                    .padding(innerPadding)
+            )
         } else {
             LazyColumn(
                 modifier = Modifier
@@ -135,12 +122,14 @@ fun WantListDetailScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(uiState.selectedWantListCards, key = { it.localId }) { card ->
-                    WantListCardItem(
-                        card = card,
-                        onClick = { onNavigateToDetail(card.scryfallId) },
-                        onEdit = { viewModel.showEditCardModal(card) },
-                        onRemove = { viewModel.removeCard(card.localId) }
-                    )
+                    Box(modifier = Modifier.animateItem()) {
+                        WantListCardItem(
+                            card = card,
+                            onClick = { onNavigateToDetail(card.scryfallId) },
+                            onEdit = { viewModel.showEditCardModal(card) },
+                            onRemove = { viewModel.removeCard(card.localId) }
+                        )
+                    }
                 }
             }
         }

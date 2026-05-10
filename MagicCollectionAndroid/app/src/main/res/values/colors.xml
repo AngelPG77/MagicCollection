@@ -7,4 +7,11 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!--
+      Window background shown briefly during activity launch and beneath any unpainted
+      areas. Matches Material 3 light surface; dark variant lives in values-night/colors.xml
+      so the system day/night picker keeps the launch flash from clashing with Compose.
+    -->
+    <color name="window_background">#FFFFFBFE</color>
 </resources>

@@ -12,6 +12,7 @@ data class AppPreferences(
     val searchLanguage: String,
     val appLanguage: String,
     val themeColor: String,
+    val dynamicColor: Boolean,
     val downloadedLanguages: Set<String>,
     val lastIndexUpdate: String?
 )
@@ -28,6 +29,7 @@ class GetAppPreferencesUseCase @Inject constructor(
             preferenceManager.searchLanguage,
             preferenceManager.appLanguage,
             preferenceManager.themeColor,
+            preferenceManager.dynamicColor,
             preferenceManager.downloadedLanguages,
             preferenceManager.lastIndexUpdate
         ) { values: Array<Any?> ->
@@ -38,8 +40,9 @@ class GetAppPreferencesUseCase @Inject constructor(
                 searchLanguage = values[3] as String,
                 appLanguage = values[4] as String,
                 themeColor = values[5] as String,
-                downloadedLanguages = values[6] as Set<String>,
-                lastIndexUpdate = values[7] as String?
+                dynamicColor = values[6] as Boolean,
+                downloadedLanguages = values[7] as Set<String>,
+                lastIndexUpdate = values[8] as String?
             )
         }
     }

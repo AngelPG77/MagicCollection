@@ -2,6 +2,7 @@ package com.pga.magiccollection.data.remote.api
 
 import com.pga.magiccollection.data.remote.dto.CardSuggestionDto
 import com.pga.magiccollection.data.remote.dto.CardMetadataIndexPageDto
+import com.pga.magiccollection.data.remote.dto.CardSyncStatusDto
 import com.pga.magiccollection.data.remote.dto.LanguageIndexDeltaDto
 import com.pga.magiccollection.data.remote.dto.LanguageIndexInfoDto
 import com.pga.magiccollection.data.remote.dto.LanguageIndexManifestDto
@@ -20,6 +21,9 @@ interface CardsApi {
 
     @GET("cards/index/version")
     suspend fun getIndexVersion(): IndexVersionDto
+
+    @GET("cards/index/sync-status")
+    suspend fun getSyncStatus(@Query("langs") langs: String? = null): CardSyncStatusDto
 
     @POST("cards/sync-full")
     suspend fun syncFullCatalog()
