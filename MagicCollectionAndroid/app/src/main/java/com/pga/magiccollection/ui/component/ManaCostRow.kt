@@ -1,5 +1,7 @@
 package com.pga.magiccollection.ui.component
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -13,29 +15,30 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.pga.magiccollection.R
 import com.pga.magiccollection.ui.theme.LocalAppSpacing
 import com.pga.magiccollection.ui.theme.LocalMtgSemanticColors
 
 /**
- * Renders an MTG mana cost string (e.g. `{2}{W}{U}`) as a row of colored pips.
+ * Renders an MTG mana cost string (e.g. `{2}{W}{U}`) as a row of mana symbols.
  *
- * Tokens recognized today:
- *  - Single-color symbols: `W`, `U`, `B`, `R`, `G`, `C`
- *  - Generic numeric: `0`–`20`, `X`
- *  - Anything else falls back to a neutral pip with the literal token text.
+ * Single-color tokens (W, U, B, R, G, C) render the official `ic_mana_*` drawable so the
+ * cost reads exactly as on a real card. Numeric and X/Y/Z tokens render as a neutral
+ * colorless pip with the digit/letter inscribed.
  *
- * Hybrid (`W/U`) and Phyrexian (`W/P`) symbols render as the neutral fallback for now —
- * a future iteration can split-color the pip the same way [GuildBadge] does.
+ * Hybrid (`W/U`) and Phyrexian (`W/P`) tokens fall back to the colorless pip with the raw
+ * token text — a future pass can wire those to `ic_hybrid_*` for the ten Ravnica pairs.
  *
- * The whole row is exposed to accessibility services as the original cost string so
- * screen readers don't have to walk the pips one by one.
+ * The whole row is exposed to accessibility services as the original cost string so screen
+ * readers don't have to walk the pips one by one.
  */
 @Composable
 fun ManaCostRow(
@@ -62,34 +65,25 @@ fun ManaCostRow(
 
 @Composable
 private fun ManaPip(token: String, size: Dp) {
-    val mtg = LocalMtgSemanticColors.current
-    val upper = token.uppercase()
-    val (bg, fg, label) = when (upper) {
-        "W" -> Triple(mtg.manaWhite, Color(0xFF1A1A1A), "W")
-        "U" -> Triple(mtg.manaBlue, Color.White, "U")
-        "B" -> Triple(mtg.manaBlack, Color.White, "B")
-        "R" -> Triple(mtg.manaRed, Color.White, "R")
-        "G" -> Triple(mtg.manaGreen, Color.White, "G")
-        "C" -> Triple(mtg.manaColorless, Color(0xFF1A1A1A), "C")
-        "X", "Y", "Z" -> Triple(mtg.manaColorless, Color(0xFF1A1A1A), upper)
-        else -> {
-            // Generic numeric cost — render the number on the colorless background.
-            val isNumeric = upper.toIntOrNull() != null
-            if (isNumeric) {
-                Triple(mtg.manaColorless, Color(0xFF1A1A1A), upper)
-            } else {
-                // Hybrid (e.g. "W/U") or unknown — fall back to a faint pill with the
-                // raw token text, so the cost is still readable.
-                Triple(mtg.manaColorless, Color(0xFF1A1A1A), upper)
-            }
-        }
+    val drawable = manaDrawableFor(token)
+    if (drawable != null) {
+        Image(
+            painter = painterResource(id = drawable),
+            contentDescription = null, // parent Row already exposes the full cost
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.size(size)
+        )
+        return
     }
 
+    // Generic / numeric / unknown token — neutral colorless pip with the raw text.
+    val mtg = LocalMtgSemanticColors.current
+    val upper = token.uppercase()
     Box(
         modifier = Modifier
             .size(size)
             .clip(CircleShape)
-            .background(bg)
+            .background(mtg.manaColorless)
             .border(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
@@ -98,8 +92,7 @@ private fun ManaPip(token: String, size: Dp) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = label,
-            color = fg,
+            text = upper,
             style = MaterialTheme.typography.labelLarge.copy(
                 fontSize = (size.value * 0.58f).sp,
                 fontWeight = FontWeight.Black,
@@ -107,6 +100,21 @@ private fun ManaPip(token: String, size: Dp) {
             )
         )
     }
+}
+
+/**
+ * Maps a single-letter MTG color/colorless token to its `ic_mana_*` drawable.
+ * Returns null for everything else so the caller can render a textual fallback.
+ */
+@DrawableRes
+internal fun manaDrawableFor(token: String): Int? = when (token.uppercase()) {
+    "W" -> R.drawable.ic_mana_w
+    "U" -> R.drawable.ic_mana_u
+    "B" -> R.drawable.ic_mana_b
+    "R" -> R.drawable.ic_mana_r
+    "G" -> R.drawable.ic_mana_g
+    "C" -> R.drawable.ic_mana_c
+    else -> null
 }
 
 /**

@@ -311,15 +311,18 @@ fun SearchScreen(
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             listOf("W", "U", "B", "R", "G", "C").forEach { color ->
                                 val selected = color in uiState.selectedColors
-                                val baseColor = mtgColors[color] ?: Color.Gray
                                 FilterChip(
                                     selected = selected,
                                     onClick = { viewModel.onColorToggled(color) },
-                                    label = { Text(color, color = if (color == "B") Color.White else Color.Unspecified) },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        containerColor = baseColor.copy(alpha = 0.6f),
-                                        selectedContainerColor = baseColor.copy(alpha = 1.0f)
-                                    )
+                                    label = {
+                                        com.pga.magiccollection.ui.component.manaDrawableFor(color)?.let { drawableId ->
+                                            androidx.compose.foundation.Image(
+                                                painter = androidx.compose.ui.res.painterResource(id = drawableId),
+                                                contentDescription = color,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        } ?: Text(color)
+                                    }
                                 )
                             }
                         }

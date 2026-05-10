@@ -1,6 +1,8 @@
 package com.pga.magiccollection.ui.theme
 
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color
+import com.pga.magiccollection.R
 
 /**
  * The five MTG mana colors in their canonical, brand-faithful values.
@@ -42,6 +44,25 @@ enum class Guild(
 
     /** Alias kept for callers that ask for `guild.guildName` rather than `displayName`. */
     val guildName: String get() = displayName
+
+    /**
+     * Hybrid mana symbol drawable for this guild. File names follow the canonical MTG
+     * "color1color2" abbreviation — e.g. Azorius (W+U) → `ic_hybrid_wu`. The lowercase
+     * order is the conventional one used by the WoTC style guide.
+     */
+    @get:DrawableRes
+    val hybridIconRes: Int get() = when (this) {
+        Azorius -> R.drawable.ic_hybrid_wu
+        Dimir -> R.drawable.ic_hybrid_ub
+        Rakdos -> R.drawable.ic_hybrid_br
+        Gruul -> R.drawable.ic_hybrid_rg
+        Selesnya -> R.drawable.ic_hybrid_gw
+        Orzhov -> R.drawable.ic_hybrid_wb
+        Izzet -> R.drawable.ic_hybrid_ur
+        Golgari -> R.drawable.ic_hybrid_bg
+        Boros -> R.drawable.ic_hybrid_rw
+        Simic -> R.drawable.ic_hybrid_gu
+    }
 
     /**
      * A more saturated/dark version of the guild colors, intended for text on light
