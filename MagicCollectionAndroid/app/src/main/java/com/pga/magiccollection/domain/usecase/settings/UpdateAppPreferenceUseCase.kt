@@ -12,4 +12,5 @@ class UpdateAppPreferenceUseCase @Inject constructor(
     suspend fun setSearchLanguage(lang: String) = preferenceManager.setSearchLanguage(lang)
     suspend fun setAppLanguage(lang: String) = preferenceManager.setAppLanguage(lang)
     suspend fun setThemeColor(color: String) = preferenceManager.setThemeColor(color)
+    suspend fun setDynamicColor(enabled: Boolean) = preferenceManager.setDynamicColor(enabled)
 }

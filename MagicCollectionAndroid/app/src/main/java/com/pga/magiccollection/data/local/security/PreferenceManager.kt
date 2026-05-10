@@ -18,6 +18,7 @@ class PreferenceManager(private val context: Context) {
         private val SEARCH_LANGUAGE = stringPreferencesKey("search_language")
         private val APP_LANGUAGE = stringPreferencesKey("app_language")
         private val THEME_COLOR = stringPreferencesKey("theme_color")
+        private val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
         private val DOWNLOADED_LANGS = stringPreferencesKey("downloaded_languages")
         private val LAST_INDEX_UPDATE = stringPreferencesKey("last_index_update")
     }
@@ -27,7 +28,8 @@ class PreferenceManager(private val context: Context) {
     val startScreen: Flow<String> = context.dataStore.data.map { it[START_SCREEN] ?: "home" }
     val searchLanguage: Flow<String> = context.dataStore.data.map { it[SEARCH_LANGUAGE] ?: "en" }
     val appLanguage: Flow<String> = context.dataStore.data.map { it[APP_LANGUAGE] ?: "es" }
-    val themeColor: Flow<String> = context.dataStore.data.map { it[THEME_COLOR] ?: "Purple" }
+    val themeColor: Flow<String> = context.dataStore.data.map { it[THEME_COLOR] ?: "Azorius" }
+    val dynamicColor: Flow<Boolean> = context.dataStore.data.map { it[DYNAMIC_COLOR] ?: true }
     val lastIndexUpdate: Flow<String?> = context.dataStore.data.map { it[LAST_INDEX_UPDATE] }
     val downloadedLanguages: Flow<Set<String>> = context.dataStore.data.map {
         val normalized = it[DOWNLOADED_LANGS]
@@ -47,6 +49,10 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun setThemeColor(color: String) {
         context.dataStore.edit { it[THEME_COLOR] = color }
+    }
+
+    suspend fun setDynamicColor(enabled: Boolean) {
+        context.dataStore.edit { it[DYNAMIC_COLOR] = enabled }
     }
 
     suspend fun setDarkTheme(enabled: Boolean) {

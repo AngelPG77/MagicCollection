@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -29,7 +31,9 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.pga.magiccollection.R
 import com.pga.magiccollection.domain.model.card.MtgLanguage
-import com.pga.magiccollection.ui.theme.ThemeColors
+import com.pga.magiccollection.ui.component.GuildBadge
+import com.pga.magiccollection.ui.theme.Guild
+import com.pga.magiccollection.ui.theme.LocalAppSpacing
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -350,6 +354,14 @@ fun SettingsScreen(
                     selectedColor = preferences!!.themeColor,
                     onColorSelected = { viewModel.updateThemeColor(it) }
                 )
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                    ToggleSettingsItem(
+                        title = stringResource(id = R.string.settings_dynamic_color),
+                        checked = preferences!!.dynamicColor,
+                        onCheckedChange = { viewModel.updateDynamicColor(it) },
+                        icon = Icons.Default.Palette
+                    )
+                }
                 TextSettingsItem(
                     title = stringResource(id = R.string.settings_grid_size),
                     subtitle = stringResource(id = R.string.settings_grid_size_columns, preferences!!.gridSize),
@@ -676,30 +688,53 @@ fun ToggleSettingsItem(title: String, checked: Boolean, onCheckedChange: (Boolea
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ColorSettingsItem(selectedColor: String, onColorSelected: (String) -> Unit) {
-    ListItem(
-        headlineContent = { Text(stringResource(id = R.string.settings_theme_color)) },
-        leadingContent = { Icon(Icons.Default.Favorite, contentDescription = null) },
-        trailingContent = {
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                ThemeColors.forEach { (name, color) ->
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
-                            .background(color)
-                            .border(
-                                width = if (selectedColor == name) 2.dp else 0.dp,
-                                color = if (selectedColor == name) MaterialTheme.colorScheme.onSurface else Color.Transparent,
-                                shape = CircleShape
-                            )
-                            .clickable { onColorSelected(name) }
-                    )
-                }
+    val spacing = LocalAppSpacing.current
+    val selectedGuild = Guild.fromPreferenceValue(selectedColor)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = spacing.lg, vertical = spacing.md),
+        verticalArrangement = Arrangement.spacedBy(spacing.sm)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Default.Favorite,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.width(spacing.lg))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(id = R.string.settings_theme_color),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = selectedGuild.displayName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
-    )
+        FlowRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = spacing.xxxl),
+            horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+            verticalArrangement = Arrangement.spacedBy(spacing.sm)
+        ) {
+            Guild.entries.forEach { guild ->
+                GuildBadge(
+                    guild = guild,
+                    selected = guild == selectedGuild,
+                    onClick = { onColorSelected(guild.name) }
+                )
+            }
+        }
+    }
 }
 
 @Composable

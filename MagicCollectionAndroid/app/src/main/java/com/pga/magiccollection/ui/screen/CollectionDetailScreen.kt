@@ -29,6 +29,7 @@ import coil.size.Precision
 import com.pga.magiccollection.R
 import com.pga.magiccollection.data.local.entities.CollectionCardEntity
 import com.pga.magiccollection.domain.model.enums.CardCondition
+import com.pga.magiccollection.ui.component.EmptyState
 import com.pga.magiccollection.ui.component.MagicCollectionSnackbarHost
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -121,7 +122,7 @@ fun CollectionDetailScreen(
                     trailingIcon = {
                         if (uiState.cardsSearchQuery.isNotEmpty()) {
                             IconButton(onClick = { viewModel.onCardsSearchQueryChanged("") }) {
-                                Icon(Icons.Default.Close, contentDescription = null)
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_clear))
                             }
                         }
                     },
@@ -130,25 +131,11 @@ fun CollectionDetailScreen(
             }
 
             if (uiState.collectionCards.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            Icons.Default.Search,
-                            contentDescription = null,
-                            modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = stringResource(id = R.string.collection_detail_empty),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                    }
-                }
+                EmptyState(
+                    title = stringResource(id = R.string.collection_detail_empty),
+                    icon = Icons.Default.Search,
+                    modifier = Modifier.fillMaxSize()
+                )
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -156,12 +143,14 @@ fun CollectionDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(uiState.filteredCollectionCards, key = { it.card.localId }) { item ->
-                        CollectionCardItem(
-                            item = item,
-                            onClick = { onNavigateToDetail(item.card.scryfallId) },
-                            onRemove = { viewModel.removeCard(item.card) },
-                            onQuantityChanged = { newQuantity -> viewModel.updateCardQuantity(item.card, newQuantity) }
-                        )
+                        Box(modifier = Modifier.animateItem()) {
+                            CollectionCardItem(
+                                item = item,
+                                onClick = { onNavigateToDetail(item.card.scryfallId) },
+                                onRemove = { viewModel.removeCard(item.card) },
+                                onQuantityChanged = { newQuantity -> viewModel.updateCardQuantity(item.card, newQuantity) }
+                            )
+                        }
                     }
                 }
             }
@@ -273,7 +262,7 @@ fun CollectionCardItem(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { if (card.quantity > 1) onQuantityChanged(card.quantity - 1) }, modifier = Modifier.size(24.dp)) {
-                        Icon(Icons.Default.Remove, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.action_decrement_quantity), modifier = Modifier.size(16.dp))
                     }
                     Text(
                         text = card.quantity.toString(),
@@ -282,7 +271,7 @@ fun CollectionCardItem(
                         modifier = Modifier.padding(horizontal = 4.dp)
                     )
                     IconButton(onClick = { onQuantityChanged(card.quantity + 1) }, modifier = Modifier.size(24.dp)) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.action_increment_quantity), modifier = Modifier.size(16.dp))
                     }
                 }
                 

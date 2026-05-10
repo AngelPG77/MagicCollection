@@ -23,6 +23,7 @@ import coil.request.ImageRequest
 import coil.size.Precision
 import com.pga.magiccollection.R
 import com.pga.magiccollection.data.local.entities.RecentCardEntity
+import com.pga.magiccollection.ui.component.EmptyState
 
 @Composable
 fun HomeScreen(
@@ -76,7 +77,6 @@ fun HomeScreen(
         UtilitiesSection(
             isLoggedIn = uiState.isLoggedIn,
             onRandomCard = { viewModel.getRandomCard() },
-            onCollections = onNavigateToCollections,
             onWishlist = onNavigateToWishlist,
             onRules = { /* WIP */ },
             onTrade = { /* WIP */ },
@@ -122,10 +122,9 @@ fun RecentCardsSection(
         )
         
         if (cards.isEmpty()) {
-            Text(
-                text = stringResource(id = R.string.recent_cards_empty),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.secondary
+            EmptyState(
+                title = stringResource(id = R.string.recent_cards_empty),
+                icon = Icons.Default.History
             )
         } else {
             LazyRow(
@@ -162,7 +161,6 @@ fun RecentCardsSection(
 fun UtilitiesSection(
     isLoggedIn: Boolean,
     onRandomCard: () -> Unit,
-    onCollections: () -> Unit,
     onWishlist: () -> Unit,
     onRules: () -> Unit,
     onTrade: () -> Unit,
@@ -175,18 +173,14 @@ fun UtilitiesSection(
             fontWeight = FontWeight.Bold
         )
 
+        // Collections is intentionally absent here — it lives in the bottom navigation
+        // bar, and surfacing it twice creates UX noise.
         val buttons = listOf(
             UtilityItem(stringResource(id = R.string.utility_random_card), Icons.Default.Refresh, onRandomCard, true),
             UtilityItem(
-                label = stringResource(id = R.string.title_collections), 
-                icon = Icons.Default.Folder, 
-                onClick = { if (isLoggedIn) onCollections() else onShowLoginDialog() }, 
-                enabled = true
-            ),
-            UtilityItem(
-                label = stringResource(id = R.string.utility_wishlist), 
-                icon = Icons.Default.Favorite, 
-                onClick = { if (isLoggedIn) onWishlist() else onShowLoginDialog() }, 
+                label = stringResource(id = R.string.utility_wishlist),
+                icon = Icons.Default.Favorite,
+                onClick = { if (isLoggedIn) onWishlist() else onShowLoginDialog() },
                 enabled = true
             ),
             UtilityItem(stringResource(id = R.string.utility_rules), Icons.Default.Info, onRules, true),

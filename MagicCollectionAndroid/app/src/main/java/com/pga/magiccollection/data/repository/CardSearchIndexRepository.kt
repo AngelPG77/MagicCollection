@@ -20,6 +20,7 @@ import com.pga.magiccollection.data.remote.dto.LanguageDeltaItemDto
 import com.pga.magiccollection.data.remote.dto.LanguageIndexManifestDto
 import com.pga.magiccollection.data.remote.dto.ScryfallCardDto
 import com.pga.magiccollection.data.remote.dto.IndexVersionDto
+import com.pga.magiccollection.data.remote.dto.LanguageSyncStatusDto
 import com.pga.magiccollection.domain.model.card.ColorMask
 import com.pga.magiccollection.domain.model.card.RarityRank
 import com.pga.magiccollection.domain.model.search.CardIndexQuery
@@ -64,15 +65,7 @@ class CardSearchIndexRepository @Inject constructor(
 
     fun observeCards(query: CardIndexQuery): Flow<List<IndexedCard>> {
         return cardSearchIndexDao.observeCards(buildSearchQuery(query, paged = false))
-            .map { rows ->
-                rows.map { row ->
-                    IndexedCard(
-                        scryfallId = row.scryfallId,
-                        name = row.name,
-                        imageUrl = row.imageUrl
-                    )
-                }
-            }
+            .map { rows -> rows.map { it.toIndexedCard() } }
     }
 
     fun observeCardsPaged(query: CardIndexQuery): Flow<PagingData<IndexedCard>> {
@@ -84,14 +77,26 @@ class CardSearchIndexRepository @Inject constructor(
             ),
             pagingSourceFactory = { cardSearchIndexDao.observeCardsPaged(buildSearchQuery(query, paged = true)) }
         ).flow.map { pagingData ->
-            pagingData.map { row ->
-                IndexedCard(
-                    scryfallId = row.scryfallId,
-                    name = row.name,
-                    imageUrl = row.imageUrl
-                )
-            }
+            pagingData.map { row -> row.toIndexedCard() }
         }
+    }
+
+    private fun com.pga.magiccollection.data.local.dao.CardSearchRow.toIndexedCard(): IndexedCard {
+        return IndexedCard(
+            scryfallId = scryfallId,
+            name = name,
+            imageUrl = imageUrl,
+            manaCost = manaCost,
+            rarity = rarityRankToRaw(rarityRank)
+        )
+    }
+
+    private fun rarityRankToRaw(rank: Int): String? = when (rank) {
+        1 -> "common"
+        2 -> "uncommon"
+        3 -> "rare"
+        4 -> "mythic"
+        else -> null
     }
 
     fun getAllSets(): Flow<List<MtgSetEntity>> = mtgSetDao.getAllSets()
@@ -123,6 +128,42 @@ class CardSearchIndexRepository @Inject constructor(
 
     suspend fun forceScanScryfall() {
         cardsApi.syncFullCatalog()
+    }
+
+    /**
+     * Asks the backend whether (a) it is in sync with Scryfall and (b) the per-language
+     * manifest, then compares each manifest with the local LanguageIndexState to determine
+     * which languages have actually drifted on this device.
+     *
+     * If [languages] is empty, the backend returns the status for all supported languages.
+     */
+    suspend fun computeSyncDrift(languages: Collection<String> = emptyList()): SyncDriftReport {
+        val normalized = languages.map { normalizeLanguage(it) }
+            .filter { it.isNotBlank() }
+            .distinct()
+        val csv = if (normalized.isEmpty()) null else normalized.joinToString(",")
+        val status = cardsApi.getSyncStatus(csv)
+
+        val drifted = mutableListOf<String>()
+        for (lang in status.languages) {
+            val local = languageIndexStateDao.getState(lang.languageCode)
+            val matches = local != null
+                && local.installedVersion == lang.version
+                && !local.checksum.isNullOrBlank()
+                && !lang.checksum.isNullOrBlank()
+                && local.checksum.equals(lang.checksum, ignoreCase = true)
+                && local.status == STATE_READY
+            if (!matches) {
+                drifted.add(lang.languageCode)
+            }
+        }
+
+        return SyncDriftReport(
+            backendInSyncWithScryfall = status.scryfallInSync,
+            catalogStateMissing = status.catalogStateMissing,
+            driftedLanguages = drifted.toList(),
+            languageStatuses = status.languages
+        )
     }
 
     suspend fun syncSets() {
@@ -428,7 +469,9 @@ class CardSearchIndexRepository @Inject constructor(
             SELECT
                 m.scryfallId AS scryfallId,
                 $displayNameExpr AS name,
-                m.imageUrl AS imageUrl
+                m.imageUrl AS imageUrl,
+                m.manaCost AS manaCost,
+                m.rarityRank AS rarityRank
             FROM master_cards m
             JOIN card_search_fts fts ON fts.card_id = m.scryfallId
             WHERE m.isDigital = 0 AND fts.language IN (?, 'en')
@@ -628,3 +671,13 @@ class CardSearchIndexRepository @Inject constructor(
 }
 
 class LanguageSnapshotChecksumException(message: String) : IllegalStateException(message)
+
+data class SyncDriftReport(
+    val backendInSyncWithScryfall: Boolean,
+    val catalogStateMissing: Boolean,
+    val driftedLanguages: List<String>,
+    val languageStatuses: List<LanguageSyncStatusDto>
+) {
+    val isUpToDate: Boolean
+        get() = backendInSyncWithScryfall && driftedLanguages.isEmpty() && !catalogStateMissing
+}

@@ -30,10 +30,13 @@ import com.pga.magiccollection.domain.model.search.IndexedCard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import com.pga.magiccollection.util.shimmerEffect
 
@@ -129,7 +132,7 @@ fun CardItem(
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxSize().shimmerEffect())
             }
-            
+
             AsyncImage(
                 model = ImageRequest.Builder(context)
                     .data(card.imageUrl)
@@ -143,6 +146,37 @@ fun CardItem(
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
+
+            // Mana cost — discreet pip strip top-left when grid is sparse enough.
+            // 5+ columns are too tight; 1–4 columns get the overlay.
+            if (gridSize <= 4 && !card.manaCost.isNullOrBlank() && !isLoading) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(6.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.Black.copy(alpha = 0.55f))
+                        .padding(horizontal = 6.dp, vertical = 4.dp)
+                ) {
+                    ManaCostRow(
+                        manaCost = card.manaCost,
+                        pipSize = if (gridSize <= 2) 18.dp else 14.dp
+                    )
+                }
+            }
+
+            // Rarity badge — bottom-right, only on lower densities where it fits.
+            if (gridSize <= 3 && !isLoading) {
+                CardRarity.fromRaw(card.rarity)?.let { rarity ->
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(6.dp)
+                    ) {
+                        RarityBadge(rarity = rarity)
+                    }
+                }
+            }
         }
         
         // Solo mostrar texto si la grid no es muy densa (> 4 columnas)

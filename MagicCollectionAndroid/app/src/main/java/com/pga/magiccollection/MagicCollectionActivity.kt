@@ -54,6 +54,7 @@ import com.pga.magiccollection.ui.screen.CardDetailViewModel
 import com.pga.magiccollection.ui.screen.CardDetailScreen
 import com.pga.magiccollection.ui.screen.WantListAddCardViewModel
 import com.pga.magiccollection.ui.screen.WantListAddCardScreen
+import com.pga.magiccollection.ui.theme.Guild
 import com.pga.magiccollection.ui.theme.MagicCollectionAppTheme
 import com.pga.magiccollection.ui.component.MagicCollectionSnackbarHost
 import com.pga.magiccollection.ui.screen.ALL_COLLECTIONS_LOCAL_ID
@@ -91,10 +92,22 @@ class MagicCollectionActivity : ComponentActivity() {
                 }
             }
 
+            // Tie the *system* status/navigation bar appearance to the user's Compose
+            // dark-mode preference. Without this, when the system is in light mode but
+            // the app is dark, the status bar icons stay dark-on-dark and the launch
+            // flash uses the light window_background color.
+            val isDark = preferences?.darkTheme ?: false
+            LaunchedEffect(isDark) {
+                val controller = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
+                controller.isAppearanceLightStatusBars = !isDark
+                controller.isAppearanceLightNavigationBars = !isDark
+            }
+
             CompositionLocalProvider(LocalContext provides localizedContext) {
                 MagicCollectionAppTheme(
-                    darkTheme = preferences?.darkTheme ?: false,
-                    themeColor = preferences?.themeColor ?: "Purple"
+                    guild = Guild.fromPreferenceValue(preferences?.themeColor),
+                    darkTheme = isDark,
+                    dynamicSurfaces = preferences?.dynamicColor ?: true
                 ) {
                     MainNavigation(viewModel)
                 }
@@ -300,7 +313,27 @@ fun MainNavigation(viewModel: MainViewModel) {
         NavHost(
             navController = navController,
             startDestination = startDestination,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
+            enterTransition = {
+                androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(220)) +
+                    androidx.compose.animation.slideInHorizontally(
+                        initialOffsetX = { it / 12 },
+                        animationSpec = androidx.compose.animation.core.tween(280)
+                    )
+            },
+            exitTransition = {
+                androidx.compose.animation.fadeOut(animationSpec = androidx.compose.animation.core.tween(180))
+            },
+            popEnterTransition = {
+                androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(220))
+            },
+            popExitTransition = {
+                androidx.compose.animation.fadeOut(animationSpec = androidx.compose.animation.core.tween(180)) +
+                    androidx.compose.animation.slideOutHorizontally(
+                        targetOffsetX = { it / 12 },
+                        animationSpec = androidx.compose.animation.core.tween(280)
+                    )
+            }
         ) {
             composable(Screen.Home.route) {
                 HomeScreen(

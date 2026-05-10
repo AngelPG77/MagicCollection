@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.MagicCollectionApp" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <!-- Status bar and navigation bar are handled by Compose enableEdgeToEdge -->
+    <!--
+      Pure-platform theme without an action bar. The activity is a plain Compose
+      ComponentActivity (no AppCompat dependency in the activity hierarchy), so we don't
+      need an AppCompat parent — and avoiding it removes the residual title bar that
+      AppCompat draws on some OEM/skin combinations.
+
+      enableEdgeToEdge() in MagicCollectionActivity turns the system bars transparent;
+      Compose draws everything else.
+    -->
+    <style name="Theme.MagicCollectionApp" parent="@android:style/Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@color/window_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 </resources>

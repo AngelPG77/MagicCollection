@@ -38,31 +38,46 @@ class SyncCatalogWorker @AssistedInject constructor(
             val serverVersion = cardSearchIndexRepository.getIndexVersion()
             val downloadedLangs = preferenceManager.downloadedLanguages.first().ifEmpty { setOf("en") }
 
-            val extraLanguages = downloadedLangs
-                .map { it.trim().lowercase() }
-                .filter { it.isNotBlank() && it != "en" }
-                .distinct()
-            val totalSteps = 1 + extraLanguages.size
-            var currentStep = 0
+            val targetLanguages = inputData.getString(KEY_LANGUAGES)
+                ?.split(",")
+                ?.map { it.trim().lowercase() }
+                ?.filter { it.isNotBlank() }
+                ?.distinct()
+                ?.takeIf { it.isNotEmpty() }
+                ?: (listOf("en") + downloadedLangs.map { it.trim().lowercase() }
+                    .filter { it.isNotBlank() && it != "en" }
+                    .distinct())
 
-            cardSearchIndexRepository.bootstrapIndex("en") { progress ->
-                val globalProgress = (currentStep.toFloat() + progress) / totalSteps.toFloat()
-                setProgress(workDataOf(KEY_PROGRESS to globalProgress))
-                setForeground(createForegroundInfo(globalProgress))
+            val includesEn = targetLanguages.any { it == "en" }
+            val extraLanguages = targetLanguages.filter { it != "en" }
+            val totalSteps = (if (includesEn) 1 else 0) + extraLanguages.size
+
+            if (totalSteps == 0) {
+                return Result.success(workDataOf(KEY_STEPS to 0))
             }
 
-            languageIndexStateDao.upsert(
-                LanguageIndexStateEntity(
-                    languageCode = "en",
-                    installedVersion = serverVersion.version,
-                    checksum = serverVersion.checksum,
-                    status = "READY",
-                    lastSyncAt = System.currentTimeMillis(),
-                    rowCount = serverVersion.totalRows
-                )
-            )
+            var currentStep = 0
 
-            currentStep++
+            if (includesEn) {
+                cardSearchIndexRepository.bootstrapIndex("en") { progress ->
+                    val globalProgress = (currentStep.toFloat() + progress) / totalSteps.toFloat()
+                    setProgress(workDataOf(KEY_PROGRESS to globalProgress))
+                    setForeground(createForegroundInfo(globalProgress))
+                }
+
+                languageIndexStateDao.upsert(
+                    LanguageIndexStateEntity(
+                        languageCode = "en",
+                        installedVersion = serverVersion.version,
+                        checksum = serverVersion.checksum,
+                        status = "READY",
+                        lastSyncAt = System.currentTimeMillis(),
+                        rowCount = serverVersion.totalRows
+                    )
+                )
+
+                currentStep++
+            }
 
             extraLanguages.forEach { lang ->
                 cardSearchIndexRepository.downloadLanguage(lang) { progress ->
@@ -122,6 +137,7 @@ class SyncCatalogWorker @AssistedInject constructor(
         const val KEY_PROGRESS = "progress"
         const val KEY_ERROR = "error"
         const val KEY_STEPS = "steps"
+        const val KEY_LANGUAGES = "languages"
         const val WORK_NAME = "sync_catalog_work"
         private const val NOTIFICATION_CHANNEL_ID = "catalog_sync"
         private const val NOTIFICATION_ID = 1003

@@ -20,6 +20,9 @@ import pga.magiccollectionspring.card.domain.ICardCatalogSyncStateRepository;
 import pga.magiccollectionspring.card.domain.ICardLocalizationRepository;
 import pga.magiccollectionspring.card.domain.IMtgSetRepository;
 import pga.magiccollectionspring.card.domain.ICardRepository;
+import pga.magiccollectionspring.card.api.dto.CardSyncStatusDTO;
+import pga.magiccollectionspring.card.api.dto.LanguageIndexManifestDTO;
+import pga.magiccollectionspring.card.api.dto.LanguageSyncStatusDTO;
 import pga.magiccollectionspring.card.domain.port.ScryfallPort;
 import pga.magiccollectionspring.card.infrastructure.dto.BulkDataDTO;
 import pga.magiccollectionspring.card.infrastructure.dto.CardScryfallDTO;
@@ -31,6 +34,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -79,6 +83,95 @@ public class CardCatalogSyncService {
 
     public void syncFullCatalog() {
         syncFullCatalog(false);
+    }
+
+    /**
+     * Read-only check that compares the backend's stored Scryfall bulk tokens against the
+     * current Scryfall bulk-data tokens, and returns the per-language manifest (version +
+     * checksum) so clients can decide whether they need to download anything.
+     * <p>
+     * Never mutates state. If Scryfall is unreachable, returns scryfallInSync=false so the
+     * client falls back to the regular sync flow.
+     */
+    public CardSyncStatusDTO getSyncStatus(List<String> requestedLanguages) {
+        boolean scryfallInSync = false;
+        boolean catalogStateMissing = true;
+        LocalDateTime lastSyncedAt = null;
+        String defaultCardsRemoteToken = null;
+        String allCardsRemoteToken = null;
+
+        try {
+            List<BulkDataDTO> bulkInfos = scryfallPort.getBulkDataInfo().get();
+            BulkDataDTO defaultCards = bulkInfos.stream()
+                    .filter(b -> "default_cards".equals(b.getType()))
+                    .findFirst()
+                    .orElse(null);
+            BulkDataDTO allCards = bulkInfos.stream()
+                    .filter(b -> "all_cards".equals(b.getType()))
+                    .findFirst()
+                    .orElse(null);
+
+            defaultCardsRemoteToken = toRemoteVersionToken(defaultCards);
+            allCardsRemoteToken = toRemoteVersionToken(allCards);
+
+            Optional<CardCatalogSyncState> defaultState =
+                    cardCatalogSyncStateRepository.findByBulkType("default_cards");
+            Optional<CardCatalogSyncState> allState =
+                    cardCatalogSyncStateRepository.findByBulkType("all_cards");
+            catalogStateMissing = defaultState.isEmpty() && allState.isEmpty();
+
+            boolean defaultMatches = defaultCards != null
+                    && defaultState.map(s -> Objects.equals(s.getRemoteVersionToken(), toRemoteVersionToken(defaultCards)))
+                            .orElse(false);
+            boolean allMatches;
+            if (allCards == null) {
+                // Scryfall didn't expose all_cards; treat as not-relevant rather than mismatch.
+                allMatches = true;
+            } else {
+                allMatches = allState
+                        .map(s -> Objects.equals(s.getRemoteVersionToken(), toRemoteVersionToken(allCards)))
+                        .orElse(false);
+            }
+
+            scryfallInSync = defaultMatches && allMatches;
+            lastSyncedAt = defaultState.map(CardCatalogSyncState::getLastSyncedAt)
+                    .orElseGet(() -> allState.map(CardCatalogSyncState::getLastSyncedAt).orElse(null));
+        } catch (Exception ex) {
+            log.warn("No se pudo verificar el estado de sincronización con Scryfall: {}", ex.getMessage());
+        }
+
+        List<String> normalizedLanguages = (requestedLanguages == null || requestedLanguages.isEmpty())
+                ? cardLanguageSupport.getSupportedLanguages()
+                : requestedLanguages.stream()
+                        .map(cardLanguageSupport::normalize)
+                        .filter(cardLanguageSupport::isSupported)
+                        .distinct()
+                        .toList();
+
+        List<LanguageSyncStatusDTO> languageStatuses = new ArrayList<>(normalizedLanguages.size());
+        for (String lang : normalizedLanguages) {
+            try {
+                LanguageIndexManifestDTO manifest = languageIndexBuildService.getManifest(lang);
+                languageStatuses.add(new LanguageSyncStatusDTO(
+                        manifest.languageCode(),
+                        manifest.version(),
+                        manifest.checksum(),
+                        manifest.totalRows(),
+                        manifest.status()
+                ));
+            } catch (Exception ex) {
+                log.warn("No se pudo obtener manifest del idioma {}: {}", lang, ex.getMessage());
+            }
+        }
+
+        return new CardSyncStatusDTO(
+                scryfallInSync,
+                catalogStateMissing,
+                lastSyncedAt,
+                defaultCardsRemoteToken,
+                allCardsRemoteToken,
+                languageStatuses
+        );
     }
 
     public void syncFullCatalog(boolean force) {

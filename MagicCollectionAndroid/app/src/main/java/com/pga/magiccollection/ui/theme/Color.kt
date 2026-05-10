@@ -1,11 +1,17 @@
 package com.pga.magiccollection.ui.theme
 
-import androidx.compose.ui.graphics.Color
+// Brand and semantic colors live in:
+//  - Guild.kt            → MtgManaColor (canonical W/U/B/R/G hex values)
+//  - GuildSchemes.kt     → derived ColorScheme per guild (primary/secondary/tertiary)
+//  - MtgSemanticColors.kt → mana, rarity, success/warning, foil tokens
+//
+// Top-level aliases used across screens (kept for compatibility with code that imports
+// them directly without going through CompositionLocal). Prefer
+// LocalMtgSemanticColors.current.manaWhite at new call sites — these aliases will follow.
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val ManaWhite = MtgManaColor.White
+val ManaBlue = MtgManaColor.Blue
+val ManaBlack = MtgManaColor.Black
+val ManaRed = MtgManaColor.Red
+val ManaGreen = MtgManaColor.Green
+val ManaColorless = MtgManaColor.Colorless

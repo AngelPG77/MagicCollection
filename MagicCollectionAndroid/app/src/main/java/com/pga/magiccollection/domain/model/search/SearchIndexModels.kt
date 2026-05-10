@@ -36,5 +36,7 @@ data class CardIndexQuery(
 data class IndexedCard(
     val scryfallId: String,
     val name: String,
-    val imageUrl: String?
+    val imageUrl: String?,
+    val manaCost: String? = null,
+    val rarity: String? = null
 )
