@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import com.pga.magiccollection.R
 import com.pga.magiccollection.data.local.entities.WantListEntity
 import com.pga.magiccollection.ui.component.EmptyState
+import com.pga.magiccollection.ui.component.GuildSearchBar
 import com.pga.magiccollection.ui.component.MagicCollectionSnackbarHost
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -123,30 +124,12 @@ fun WantListScreen(
                 )
         ) {
             if (isLoggedIn) {
-                // Search Bar
-                Surface(
-                    tonalElevation = 2.dp,
-                    shadowElevation = 2.dp,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = uiState.searchQuery,
-                        onValueChange = { viewModel.onSearchQueryChanged(it) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 16.dp, end = 16.dp, bottom = 8.dp, top = 0.dp),
-                        placeholder = { Text(stringResource(id = R.string.wantlist_name_hint)) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        trailingIcon = {
-                            if (uiState.searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
-                                    Icon(Icons.Default.Close, contentDescription = null)
-                                }
-                            }
-                        },
-                        singleLine = true
-                    )
-                }
+                GuildSearchBar(
+                    value = uiState.searchQuery,
+                    onValueChange = viewModel::onSearchQueryChanged,
+                    placeholder = stringResource(id = R.string.wantlist_name_hint),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                )
 
                 if (uiState.wantLists.isEmpty()) {
                     EmptyState(

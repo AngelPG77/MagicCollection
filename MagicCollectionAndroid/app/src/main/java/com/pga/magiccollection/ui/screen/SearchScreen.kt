@@ -156,43 +156,25 @@ fun SearchScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            OutlinedTextField(
+                            com.pga.magiccollection.ui.component.GuildSearchBar(
                                 value = localQuery,
-                                onValueChange = { 
-                                    localQuery = it 
+                                onValueChange = {
+                                    localQuery = it
                                     viewModel.onQueryChanged(it)
                                 },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .onFocusChanged { state ->
-                                        if (!state.isFocused) {
-                                            viewModel.onQueryConfirmed(localQuery)
-                                        }
-                                    },
-                                placeholder = { Text(stringResource(id = R.string.search_name_hint_placeholder)) },
-                                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                                trailingIcon = {
-                                    if (localQuery.isNotEmpty()) {
-                                        IconButton(onClick = {
-                                            localQuery = ""
-                                            viewModel.onClearQuery()
-                                        }) {
-                                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_clear))
-                                        }
-                                    }
+                                placeholder = stringResource(id = R.string.search_name_hint_placeholder),
+                                modifier = Modifier.weight(1f),
+                                onFocusChange = { focused ->
+                                    if (!focused) viewModel.onQueryConfirmed(localQuery)
                                 },
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(
-                                    autoCorrectEnabled = false,
-                                    keyboardType = KeyboardType.Password,
-                                    imeAction = ImeAction.Search
-                                ),
-                                keyboardActions = KeyboardActions(
-                                    onSearch = {
-                                        viewModel.onQueryChanged(localQuery)
-                                        viewModel.performSearch()
-                                    }
-                                )
+                                onSearch = {
+                                    viewModel.onQueryChanged(localQuery)
+                                    viewModel.performSearch()
+                                },
+                                onClear = {
+                                    localQuery = ""
+                                    viewModel.onClearQuery()
+                                }
                             )
 
                             LanguageDropdown(

@@ -30,6 +30,7 @@ import com.pga.magiccollection.R
 import com.pga.magiccollection.data.local.entities.CollectionCardEntity
 import com.pga.magiccollection.domain.model.enums.CardCondition
 import com.pga.magiccollection.ui.component.EmptyState
+import com.pga.magiccollection.ui.component.GuildSearchBar
 import com.pga.magiccollection.ui.component.MagicCollectionSnackbarHost
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,30 +106,12 @@ fun CollectionDetailScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Cards Search Bar
-            Surface(
-                tonalElevation = 2.dp,
-                shadowElevation = 2.dp,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                OutlinedTextField(
-                    value = uiState.cardsSearchQuery,
-                    onValueChange = viewModel::onCardsSearchQueryChanged,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, bottom = 8.dp, top = 8.dp),
-                    placeholder = { Text(stringResource(id = R.string.collection_card_search_hint)) },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    trailingIcon = {
-                        if (uiState.cardsSearchQuery.isNotEmpty()) {
-                            IconButton(onClick = { viewModel.onCardsSearchQueryChanged("") }) {
-                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_clear))
-                            }
-                        }
-                    },
-                    singleLine = true
-                )
-            }
+            GuildSearchBar(
+                value = uiState.cardsSearchQuery,
+                onValueChange = viewModel::onCardsSearchQueryChanged,
+                placeholder = stringResource(id = R.string.collection_card_search_hint),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+            )
 
             if (uiState.collectionCards.isEmpty()) {
                 EmptyState(

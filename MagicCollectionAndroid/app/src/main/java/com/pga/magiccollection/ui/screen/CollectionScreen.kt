@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import com.pga.magiccollection.R
 import com.pga.magiccollection.data.local.entities.CollectionEntity
 import com.pga.magiccollection.ui.component.EmptyState
+import com.pga.magiccollection.ui.component.GuildSearchBar
 import com.pga.magiccollection.ui.component.MagicCollectionSnackbarHost
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -138,7 +139,15 @@ fun CollectionScreen(
                 )
         ) {
             if (isLoggedIn) {
-                // Separate option for "All Collections"
+                // Search bar — first, so the user can filter immediately on entering the screen
+                GuildSearchBar(
+                    value = uiState.collectionsSearchQuery,
+                    onValueChange = viewModel::onCollectionsSearchQueryChanged,
+                    placeholder = stringResource(id = R.string.collection_search_hint),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                )
+
+                // "All collections" shortcut
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -177,31 +186,6 @@ fun CollectionScreen(
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
-
-                // Search Bar for specific collections
-                Surface(
-                    tonalElevation = 2.dp,
-                    shadowElevation = 2.dp,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = uiState.collectionsSearchQuery,
-                        onValueChange = viewModel::onCollectionsSearchQueryChanged,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 16.dp, end = 16.dp, bottom = 8.dp, top = 8.dp),
-                        placeholder = { Text(stringResource(id = R.string.collection_search_hint)) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        trailingIcon = {
-                            if (uiState.collectionsSearchQuery.isNotEmpty()) {
-                                IconButton(onClick = { viewModel.onCollectionsSearchQueryChanged("") }) {
-                                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.action_clear))
-                                }
-                            }
-                        },
-                        singleLine = true
-                    )
-                }
 
                 if (uiState.collections.isEmpty()) {
                     EmptyState(
