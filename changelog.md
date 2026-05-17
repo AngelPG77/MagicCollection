@@ -1,5 +1,50 @@
 # Changelog
 
+## [Unreleased] - 2026-05-17
+
+### Alcance de este corte
+Continuación del [Unreleased] del 2026-05-10. Cubre las suites de tests añadidas en ambos proyectos, la migración de Dokka al API V2 y la limpieza de código muerto en el lado Android.
+
+### Added
+
+#### Backend — Suite de tests unitarios e integración
+- **`AuthControllerTest`** (`@WebMvcTest`): 4 tests de contrato REST (login 200, login 401, register 200, register 409). Usa `MockMvc` + `@MockitoBean` (Spring Boot 3.4+).
+- **`LoginServiceTest`**: 3 tests unitarios del servicio de login (credenciales válidas, usuario inexistente, contraseña incorrecta).
+- **`UpdatePasswordServiceTest`**: 2 tests (contraseña actualizada, contraseña actual incorrecta).
+- **`CardMapperTest`**: 2 tests de mapeo entidad → DTO con `SoftAssertions` para validar todos los campos en un solo assert.
+- **`CardCatalogSyncServiceTest`**: 3 tests de la lógica de sincronización con Scryfall (flag reset tras excepción, omisión si ya hay sync en progreso, reset tras completar).
+- **`ColorMaskCodecTest`**: 3 tests del codec de máscara de colores MTG (codificación, decodificación, round-trip).
+- **`AddCardToCollectionServiceTest`**: 5 tests de dominio (añadir carta, variante merging, colección inexistente, etc.) con `ArgumentCaptor` para verificar comandos.
+- **`CollectionOwnershipTest`**: 4 tests de validación de ownership (acceso propio, acceso ajeno, colección inexistente).
+- **`JwtServiceTest`**: 5 tests del servicio JWT (generación, validación, expiración, claims).
+- Directorio `src/test/resources/` con `application-test.properties` para configuración de tests.
+
+#### Android — Suite de tests unitarios e instrumentados
+- Tests unitarios en `src/test/` para ViewModels, UseCases y Mappers con `runTest` + `UnconfinedTestDispatcher` y Turbine para `Flow<T>`.
+- Tests instrumentados en `src/androidTest/` con `ComposeTestRule` + `@TestInstallIn` y Fakes para reemplazar módulos de producción.
+- Directorio `fake/` con implementaciones `FakeRepository` / `FakeUseCase` para tests instrumentados (sin mocks de framework).
+- Dependencias de test añadidas: `mockk`, `turbine`, `kotlinx-coroutines-test`, `work-testing`, `mockk-android`.
+
+### Changed
+
+#### Android — Dokka V2
+- Migrado al API experimental V2 de Dokka 2.0: `org.jetbrains.dokka.experimental.gradle.pluginMode=V2Enabled` en `gradle.properties`.
+- Bloque `dokka {}` en `app/build.gradle.kts` (reemplaza la sintaxis `tasks.dokkaHtml {}` del API V1 deprecado).
+- Comando actualizado: `.\gradlew.bat :app:dokkaGeneratePublicationHtml` (antes: `.\gradlew.bat dokkaHtml`).
+
+#### Backend — Modernización de tests
+- `@MockBean` → `@MockitoBean` (`org.springframework.test.context.bean.override.mockito`) en `AuthControllerTest`. `@MockBean` está deprecado desde Spring Boot 3.4.0 y marcado para eliminación.
+- `MagicCollectionsSpringApplicationTests` eliminado: el test de boilerplate `contextLoads()` requería una conexión MySQL activa y no verificaba ninguna lógica de negocio; la suite de slices existente cubre la capa web, JPA y dominio de forma aislada.
+- `LanguageIndexBuildServiceTest` eliminado: los tests de Testcontainers + MySQL real no son ejecutables en el entorno de desarrollo local sin configuración adicional de Docker; la lógica de `LanguageIndexBuildService` queda cubierta por los tests unitarios de servicio.
+
+### Removed
+
+#### Android — Código muerto
+- `SearchComponents.kt` eliminado completo: `SearchHeader` y `FilterSection` nunca fueron llamados desde ninguna pantalla tras el refactor de búsqueda al componente `GuildSearchBar`.
+- `ManaColorFilter` eliminado de `SearchFilters.kt`: solo era invocado desde `FilterSection` (código muerto). Los filtros de color usan `ManaColorToggle` en todas las pantallas activas.
+
+---
+
 ## [Unreleased] - 2026-05-10
 
 ### Alcance de este corte

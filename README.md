@@ -333,18 +333,39 @@ cd .\MagicCollectionSpring
 
 Abrir `MagicCollectionAndroid` en Android Studio y ejecutar en emulador.
 
-## Validación local recomendada
+## Tests
 
-Backend:
+### Backend (`MagicCollectionSpring`)
+
+Suite de 31 tests unitarios y de capa, sin necesidad de MySQL ni Docker:
 
 ```powershell
 cd .\MagicCollectionSpring
 .\mvnw.cmd test -q
 ```
 
-Android:
+| Clase | Tipo | Tests |
+|---|---|---|
+| `AuthControllerTest` | `@WebMvcTest` + MockMvc | 4 |
+| `LoginServiceTest` | Unit | 3 |
+| `UpdatePasswordServiceTest` | Unit | 2 |
+| `CardMapperTest` | Unit + SoftAssertions | 2 |
+| `CardCatalogSyncServiceTest` | Unit + mocks | 3 |
+| `ColorMaskCodecTest` | Unit | 3 |
+| `AddCardToCollectionServiceTest` | Unit + ArgumentCaptor | 5 |
+| `CollectionOwnershipTest` | Unit | 4 |
+| `JwtServiceTest` | Unit | 5 |
+
+### Android (`MagicCollectionAndroid`)
 
 ```powershell
 cd .\MagicCollectionAndroid
+# Tests unitarios (ViewModel, UseCase, Mapper)
 .\gradlew.bat testDebugUnitTest
+
+# Tests instrumentados (Compose UI, Hilt @TestInstallIn)
+.\gradlew.bat connectedDebugAndroidTest
+
+# Documentación (Dokka V2)
+.\gradlew.bat :app:dokkaGeneratePublicationHtml
 ```
