@@ -54,6 +54,14 @@ android {
     }
 }
 
+dokka {
+    moduleName.set("MagicCollection — Android")
+    dokkaSourceSets.main {
+        reportUndocumented.set(true)
+        skipEmptyPackages.set(true)
+    }
+}
+
 kapt {
     correctErrorTypes = true
     arguments {
@@ -117,9 +125,15 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
+    testImplementation(kotlin("test"))
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
+    testImplementation(libs.mockk)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.work.testing)
+    androidTestImplementation(libs.mockk.android)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
