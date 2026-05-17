@@ -55,7 +55,7 @@ fun EmptyState(
             .fillMaxWidth()
             .padding(spacing.xl),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(spacing.md)
+        verticalArrangement = Arrangement.spacedBy(spacing.md, Alignment.CenterVertically)
     ) {
         Icon(
             imageVector = icon,
@@ -105,7 +105,7 @@ fun ErrorState(
             .fillMaxWidth()
             .padding(spacing.xl),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(spacing.md)
+        verticalArrangement = Arrangement.spacedBy(spacing.md, Alignment.CenterVertically)
     ) {
         Icon(
             imageVector = Icons.Default.ErrorOutline,

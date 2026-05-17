@@ -20,7 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.text.input.ImeAction
@@ -60,15 +59,6 @@ fun SearchScreen(
     var localQuery by remember(uiState.query) { mutableStateOf(uiState.query) }
     var localType by remember(uiState.type) { mutableStateOf(uiState.type) }
     var isSetFieldFocused by remember { mutableStateOf(false) }
-
-    val mtgColors = mapOf(
-        "W" to ManaWhite,
-        "U" to ManaBlue,
-        "B" to ManaBlack,
-        "R" to ManaRed,
-        "G" to ManaGreen,
-        "C" to ManaColorless
-    )
 
     LaunchedEffect(Unit) {
         viewModel.navigateToDetailEvent.collect { cardIdentifier ->
@@ -222,7 +212,7 @@ fun SearchScreen(
                 }
             }
 
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.weight(1f)) {
                 if (isSuggestionMode || uiState.isSearchPerformed) {
                     Column(modifier = Modifier.fillMaxSize()) {
                         Row(
@@ -292,19 +282,10 @@ fun SearchScreen(
                         Text(stringResource(id = R.string.search_filter_colors), style = MaterialTheme.typography.titleSmall)
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             listOf("W", "U", "B", "R", "G", "C").forEach { color ->
-                                val selected = color in uiState.selectedColors
-                                FilterChip(
-                                    selected = selected,
-                                    onClick = { viewModel.onColorToggled(color) },
-                                    label = {
-                                        com.pga.magiccollection.ui.component.manaDrawableFor(color)?.let { drawableId ->
-                                            androidx.compose.foundation.Image(
-                                                painter = androidx.compose.ui.res.painterResource(id = drawableId),
-                                                contentDescription = color,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                        } ?: Text(color)
-                                    }
+                                com.pga.magiccollection.ui.component.ManaColorToggle(
+                                    color = color,
+                                    selected = color in uiState.selectedColors,
+                                    onClick = { viewModel.onColorToggled(color) }
                                 )
                             }
                         }

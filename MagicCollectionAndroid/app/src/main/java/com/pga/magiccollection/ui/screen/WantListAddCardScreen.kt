@@ -15,7 +15,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -56,15 +55,6 @@ fun WantListAddCardScreen(
     var localQuery by remember(uiState.query) { mutableStateOf(uiState.query) }
     var localType by remember(uiState.type) { mutableStateOf(uiState.type) }
     var isSetFieldFocused by remember { mutableStateOf(false) }
-
-    val mtgColors = mapOf(
-        "W" to Color(0xFFFFFBD5),
-        "U" to Color(0xFFAAE0FA),
-        "B" to Color(0xFF121212),
-        "R" to Color(0xFFF9AA8F),
-        "G" to Color(0xFF9BD3AE),
-        "C" to Color(0xFFCCCCCC)
-    )
 
     val hasActiveFilters = uiState.selectedColors.isNotEmpty() ||
             uiState.type.isNotBlank() ||
@@ -239,7 +229,7 @@ fun WantListAddCardScreen(
                 }
             }
 
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.weight(1f)) {
                 if (isSuggestionMode || uiState.isSearchPerformed) {
                     Column(modifier = Modifier.fillMaxSize()) {
                         Row(
@@ -313,19 +303,10 @@ fun WantListAddCardScreen(
                         Text(stringResource(id = R.string.search_filter_colors), style = MaterialTheme.typography.titleSmall)
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             listOf("W", "U", "B", "R", "G", "C").forEach { color ->
-                                val selected = color in uiState.selectedColors
-                                FilterChip(
-                                    selected = selected,
-                                    onClick = { viewModel.onColorToggled(color) },
-                                    label = {
-                                        com.pga.magiccollection.ui.component.manaDrawableFor(color)?.let { drawableId ->
-                                            androidx.compose.foundation.Image(
-                                                painter = androidx.compose.ui.res.painterResource(id = drawableId),
-                                                contentDescription = color,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                        } ?: Text(color)
-                                    }
+                                com.pga.magiccollection.ui.component.ManaColorToggle(
+                                    color = color,
+                                    selected = color in uiState.selectedColors,
+                                    onClick = { viewModel.onColorToggled(color) }
                                 )
                             }
                         }
