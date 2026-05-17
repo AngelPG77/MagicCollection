@@ -16,75 +16,6 @@ import com.pga.magiccollection.R
 import com.pga.magiccollection.domain.model.search.ColorMatchMode
 import com.pga.magiccollection.domain.model.search.SearchSortBy
 
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
-
-@Composable
-fun ManaColorFilter(
-    color: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    val resId = when (color) {
-        "W" -> R.drawable.ic_mana_w
-        "U" -> R.drawable.ic_mana_u
-        "B" -> R.drawable.ic_mana_b
-        "R" -> R.drawable.ic_mana_r
-        "G" -> R.drawable.ic_mana_g
-        "C" -> R.drawable.ic_mana_c
-        else -> null
-    }
-
-    Box(
-        modifier = Modifier
-            .size(44.dp)
-            .clip(CircleShape)
-            .clickable { onClick() }
-            .then(
-                if (isSelected) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-                else Modifier
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        if (resId != null) {
-            Image(
-                painter = painterResource(id = resId),
-                contentDescription = color,
-                modifier = Modifier
-                    .size(34.dp)
-                    .alpha(if (isSelected) 1f else 0.4f)
-                    .then(
-                        if (isSelected) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                        else Modifier
-                    )
-            )
-        } else {
-            Surface(
-                modifier = Modifier.size(34.dp),
-                shape = CircleShape,
-                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = color,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-    }
-}
-
 @Composable
 fun LanguageDropdown(
     activeLanguage: String,
@@ -119,6 +50,22 @@ fun ColorLogicDropdown(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
+
+    // Resolve labels in the parent composition. DropdownMenu renders inside a Popup
+    // whose composition does NOT inherit the activity-level LocalContext override
+    // that carries the user's preferred-language ContextWrapper, so a stringResource()
+    // call placed inside the popup would fall back to the system locale.
+    val exactlyLabel = stringResource(id = R.string.search_color_exactly)
+    val atMostLabel = stringResource(id = R.string.search_color_at_most)
+    val includingLabel = stringResource(id = R.string.search_color_including)
+    val labelFor: (ColorMatchMode) -> String = { mode ->
+        when (mode) {
+            ColorMatchMode.EXACTLY -> exactlyLabel
+            ColorMatchMode.AT_MOST -> atMostLabel
+            ColorMatchMode.INCLUDING -> includingLabel
+        }
+    }
+
     Box(modifier = modifier) {
         Surface(
             onClick = { expanded = true },
@@ -134,36 +81,26 @@ fun ColorLogicDropdown(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = when (selected) {
-                        ColorMatchMode.EXACTLY -> stringResource(id = R.string.search_color_exactly)
-                        ColorMatchMode.AT_MOST -> stringResource(id = R.string.search_color_at_most)
-                        ColorMatchMode.INCLUDING -> stringResource(id = R.string.search_color_including)
-                    },
+                    text = labelFor(selected),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Icon(
-                    Icons.Default.ArrowDropDown, 
+                    Icons.Default.ArrowDropDown,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
         }
         DropdownMenu(
-            expanded = expanded, 
+            expanded = expanded,
             onDismissRequest = { expanded = false },
             modifier = androidx.compose.ui.Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
         ) {
             listOf(ColorMatchMode.EXACTLY, ColorMatchMode.AT_MOST, ColorMatchMode.INCLUDING).forEach { mode ->
                 DropdownMenuItem(
-                    text = {
-                        Text(stringResource(id = when(mode) {
-                            ColorMatchMode.EXACTLY -> R.string.search_color_exactly
-                            ColorMatchMode.AT_MOST -> R.string.search_color_at_most
-                            ColorMatchMode.INCLUDING -> R.string.search_color_including
-                        }))
-                    },
+                    text = { Text(labelFor(mode)) },
                     onClick = {
                         expanded = false
                         onSelected(mode)
@@ -182,6 +119,19 @@ fun SortDropdown(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
+
+    // Resolve labels in the parent composition — see comment in ColorLogicDropdown.
+    val nameLabel = stringResource(id = R.string.search_sort_name)
+    val rarityLabel = stringResource(id = R.string.search_sort_rarity)
+    val cmcLabel = stringResource(id = R.string.search_sort_cmc)
+    val labelFor: (SearchSortBy) -> String = { sort ->
+        when (sort) {
+            SearchSortBy.NAME -> nameLabel
+            SearchSortBy.RARITY -> rarityLabel
+            SearchSortBy.CMC -> cmcLabel
+        }
+    }
+
     OutlinedCard(modifier = modifier, onClick = { expanded = true }) {
         Row(
             modifier = Modifier
@@ -190,24 +140,14 @@ fun SortDropdown(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = when (selected) {
-                SearchSortBy.NAME -> stringResource(id = R.string.search_sort_name)
-                SearchSortBy.RARITY -> stringResource(id = R.string.search_sort_rarity)
-                SearchSortBy.CMC -> stringResource(id = R.string.search_sort_cmc)
-            })
+            Text(text = labelFor(selected))
             Icon(Icons.Default.ArrowDropDown, contentDescription = null)
         }
     }
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
         listOf(SearchSortBy.NAME, SearchSortBy.RARITY, SearchSortBy.CMC).forEach { sort ->
             DropdownMenuItem(
-                text = {
-                    Text(stringResource(id = when(sort) {
-                        SearchSortBy.NAME -> R.string.search_sort_name
-                        SearchSortBy.RARITY -> R.string.search_sort_rarity
-                        SearchSortBy.CMC -> R.string.search_sort_cmc
-                    }))
-                },
+                text = { Text(labelFor(sort)) },
                 onClick = {
                     expanded = false
                     onSelected(sort)
