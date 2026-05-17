@@ -150,9 +150,13 @@ fun CardDetailEntryModal(
                     Column(modifier = Modifier.weight(0.6f), verticalArrangement = Arrangement.spacedBy(spacing.smallPadding)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(stringResource(id = R.string.wantlist_card_quantity_label))
-                            IconButton(onClick = { if (quantity > 1) onQuantityChanged(quantity - 1) }) { Icon(Icons.Default.Remove, contentDescription = null) }
+                            IconButton(onClick = { if (quantity > 1) onQuantityChanged(quantity - 1) }) {
+                                Icon(Icons.Default.Remove, contentDescription = stringResource(id = R.string.action_decrement_quantity))
+                            }
                             Text(quantity.toString(), fontWeight = FontWeight.Bold)
-                            IconButton(onClick = { onQuantityChanged(quantity + 1) }) { Icon(Icons.Default.Add, contentDescription = null) }
+                            IconButton(onClick = { onQuantityChanged(quantity + 1) }) {
+                                Icon(Icons.Default.Add, contentDescription = stringResource(id = R.string.action_increment_quantity))
+                            }
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Checkbox(checked = foil, onCheckedChange = onFoilChanged)
@@ -300,14 +304,14 @@ fun EditOwnedCardModal(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(stringResource(id = R.string.wantlist_card_quantity_label))
                             IconButton(onClick = { if (quantity > 1) onQuantityChanged(quantity - 1) }) {
-                                Icon(Icons.Default.Remove, contentDescription = null)
+                                Icon(Icons.Default.Remove, contentDescription = stringResource(id = R.string.action_decrement_quantity))
                             }
                             Text(
                                 text = quantity.toString(),
                                 fontWeight = FontWeight.Bold
                             )
                             IconButton(onClick = { onQuantityChanged(quantity + 1) }) {
-                                Icon(Icons.Default.Add, contentDescription = null)
+                                Icon(Icons.Default.Add, contentDescription = stringResource(id = R.string.action_increment_quantity))
                             }
                         }
 

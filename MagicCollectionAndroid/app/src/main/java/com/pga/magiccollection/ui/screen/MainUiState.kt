@@ -43,6 +43,8 @@ data class MainUiState(
     val selectedLanguageToDownload: String? = null,
     val downloadProgress: Float = 0f,
     val isDownloading: Boolean = false,
+    val downloadingLangCode: String? = null,
+    val downloadResult: DownloadResult? = null,
 
     // Index Update
     val showUpdateDialog: Boolean = false,
@@ -54,3 +56,14 @@ data class MainUiState(
     val pendingSyncLanguages: List<String> = emptyList(),
     val topBarTitle: String? = null
 )
+
+/**
+ * Terminal state of a language download surfaced briefly to the user
+ * as a top-right toast before auto-dismissal.
+ */
+sealed interface DownloadResult {
+    val langCode: String
+
+    data class Success(override val langCode: String) : DownloadResult
+    data class Failed(override val langCode: String, val error: String) : DownloadResult
+}

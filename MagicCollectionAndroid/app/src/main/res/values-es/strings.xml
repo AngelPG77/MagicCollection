@@ -24,7 +24,9 @@
     <string name="action_search">Buscar</string>
     <string name="action_sort_direction">Cambiar dirección de ordenación</string>
     <string name="action_show_password">Mostrar/ocultar contraseña</string>
-    
+    <string name="state_selected">Seleccionado</string>
+    <string name="state_not_selected">No seleccionado</string>
+
     <string name="recent_cards_title">Últimas cartas visitadas</string>
     <string name="recent_cards_empty">No has visitado ninguna carta aún.</string>
     <string name="utilities_title">Utilidades</string>
@@ -180,7 +182,7 @@
 
     <string name="search_name_hint">Buscar por nombre…</string>
     <string name="search_filter_name">Nombre de la carta</string>
-    <string name="search_name_hint_placeholder">ej: Black Lotus</string>
+    <string name="search_name_hint_placeholder">ej: Rayo</string>
     <string name="search_type_hint_placeholder">ej: Criatura</string>
     <string name="search_filter_edition_hint_placeholder">ej: Alpha</string>
     <string name="search_filter_colors">Colores</string>

@@ -24,7 +24,9 @@
     <string name="action_search">Search</string>
     <string name="action_sort_direction">Toggle sort direction</string>
     <string name="action_show_password">Toggle password visibility</string>
-    
+    <string name="state_selected">Selected</string>
+    <string name="state_not_selected">Not selected</string>
+
     <string name="recent_cards_title">Last visited cards</string>
     <string name="recent_cards_empty">You haven\'t visited any cards yet.</string>
     <string name="utilities_title">Utilities</string>

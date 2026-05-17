@@ -23,6 +23,7 @@ data class MtgSemanticColors(
     val manaRed: Color,
     val manaGreen: Color,
     val manaColorless: Color,
+    val onManaColorless: Color,
 
     // Rarities, modeled after the official MTG rarity gem palette
     val rarityCommon: Color,
@@ -48,6 +49,7 @@ private val LightSemanticColors = MtgSemanticColors(
     manaRed = MtgManaColor.Red,
     manaGreen = MtgManaColor.Green,
     manaColorless = MtgManaColor.Colorless,
+    onManaColorless = Color(0xFF1C1B1F),
     rarityCommon = Color(0xFF1F1F1F),
     rarityUncommon = Color(0xFF7C8B97),
     rarityRare = Color(0xFFB8A668),
@@ -67,6 +69,7 @@ private val DarkSemanticColors = MtgSemanticColors(
     manaRed = Color(0xFFE54B55),
     manaGreen = Color(0xFF39A06A),
     manaColorless = MtgManaColor.Colorless,
+    onManaColorless = Color(0xFF1C1B1F),
     rarityCommon = Color(0xFFD9D9D9),
     rarityUncommon = Color(0xFFB7C7D5),
     rarityRare = Color(0xFFE5D08F),

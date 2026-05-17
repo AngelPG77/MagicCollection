@@ -58,11 +58,14 @@ fun RarityBadge(
     )
 }
 
+private val OnRarityDark = Color(0xFF1A1A1A)
+private val OnRarityLight = Color.White
+
 private fun contrastingTextOn(background: Color): Color {
     // Quick luminance check: perceived brightness threshold ~0.55
     val r = background.red
     val g = background.green
     val b = background.blue
     val luminance = 0.299f * r + 0.587f * g + 0.114f * b
-    return if (luminance > 0.55f) Color(0xFF1A1A1A) else Color.White
+    return if (luminance > 0.55f) OnRarityDark else OnRarityLight
 }

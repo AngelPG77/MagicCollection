@@ -97,7 +97,7 @@ private fun ManaPip(token: String, size: Dp) {
                 fontSize = (size.value * 0.58f).sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 0.sp,
-                color = androidx.compose.ui.graphics.Color(0xFF1C1B1F)
+                color = mtg.onManaColorless
             )
         )
     }

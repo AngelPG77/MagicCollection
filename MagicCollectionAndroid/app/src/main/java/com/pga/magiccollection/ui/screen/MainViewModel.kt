@@ -458,41 +458,60 @@ class MainViewModel @Inject constructor(
             ExistingWorkPolicy.KEEP,
             workRequest
         )
-        
-        observeDownloadProgress(workName)
-        
+
+        observeDownloadProgress(langCode, workName)
+
         showDownloadDialog(false)
         _uiState.update { it.copy(
-            authMessageRes = R.string.lang_download_init,
-            authMessageArgs = listOf(langCode)
+            downloadingLangCode = langCode,
+            downloadProgress = 0f,
+            isDownloading = true,
+            downloadResult = null
         ) }
     }
 
-    private fun observeDownloadProgress(workName: String) {
+    /**
+     * Caller (UI overlay) invokes this after the success/failure toast has been
+     * displayed long enough for the user to read it.
+     */
+    fun clearDownloadResult() {
+        _uiState.update { it.copy(downloadResult = null) }
+    }
+
+    private fun observeDownloadProgress(langCode: String, workName: String) {
         downloadJob?.cancel()
         downloadJob = viewModelScope.launch {
             WorkManager.getInstance(context)
                 .getWorkInfosForUniqueWorkFlow(workName)
                 .collect { workInfos ->
-                    val workInfo = workInfos.firstOrNull()
-                    if (workInfo != null) {
-                        val progress = workInfo.progress.getFloat(DownloadLanguageWorker.KEY_PROGRESS, 0f)
-                        _uiState.update { it.copy(
-                            downloadProgress = progress,
-                            isDownloading = !workInfo.state.isFinished
-                        ) }
-                        
-                        if (workInfo.state.isFinished) {
-                            _uiState.update { it.copy(isDownloading = false, downloadProgress = 0f) }
-                            if (workInfo.state == WorkInfo.State.SUCCEEDED) {
-                                _uiState.update { it.copy(authMessageRes = R.string.lang_download_success) }
-                            } else if (workInfo.state == WorkInfo.State.FAILED) {
+                    val workInfo = workInfos.firstOrNull() ?: return@collect
+                    val progress = workInfo.progress.getFloat(DownloadLanguageWorker.KEY_PROGRESS, 0f)
+                    val finished = workInfo.state.isFinished
+
+                    _uiState.update { it.copy(
+                        downloadProgress = progress,
+                        isDownloading = !finished
+                    ) }
+
+                    if (finished) {
+                        when (workInfo.state) {
+                            WorkInfo.State.SUCCEEDED -> _uiState.update { it.copy(
+                                downloadingLangCode = null,
+                                downloadProgress = 0f,
+                                isDownloading = false,
+                                downloadResult = DownloadResult.Success(langCode)
+                            ) }
+                            WorkInfo.State.FAILED, WorkInfo.State.CANCELLED -> {
                                 val error = workInfo.outputData.getString(DownloadLanguageWorker.KEY_ERROR)
+                                    ?: context.getString(R.string.unknown_error)
                                 _uiState.update { it.copy(
-                                    authMessageRes = R.string.lang_download_error,
-                                    authMessageArgs = listOf(error ?: context.getString(R.string.unknown_error))
+                                    downloadingLangCode = null,
+                                    downloadProgress = 0f,
+                                    isDownloading = false,
+                                    downloadResult = DownloadResult.Failed(langCode, error)
                                 ) }
                             }
+                            else -> Unit
                         }
                     }
                 }

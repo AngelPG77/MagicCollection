@@ -36,7 +36,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import com.pga.magiccollection.util.shimmerEffect
 
@@ -155,7 +154,7 @@ fun CardItem(
                         .align(Alignment.TopStart)
                         .padding(6.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color.Black.copy(alpha = 0.55f))
+                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.55f))
                         .padding(horizontal = 6.dp, vertical = 4.dp)
                 ) {
                     ManaCostRow(

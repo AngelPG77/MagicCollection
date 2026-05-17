@@ -57,6 +57,7 @@ import com.pga.magiccollection.ui.screen.WantListAddCardScreen
 import com.pga.magiccollection.ui.theme.Guild
 import com.pga.magiccollection.ui.theme.MagicCollectionAppTheme
 import com.pga.magiccollection.ui.component.MagicCollectionSnackbarHost
+import com.pga.magiccollection.ui.component.DownloadStatusOverlay
 import com.pga.magiccollection.ui.screen.ALL_COLLECTIONS_LOCAL_ID
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
@@ -320,6 +321,7 @@ fun MainNavigation(viewModel: MainViewModel) {
             }
         }
     ) { innerPadding ->
+      Box(modifier = Modifier.fillMaxSize()) {
         NavHost(
             navController = navController,
             startDestination = startDestination,
@@ -492,6 +494,17 @@ fun MainNavigation(viewModel: MainViewModel) {
                 )
             }
         }
+
+        DownloadStatusOverlay(
+            downloadingLangCode = uiState.downloadingLangCode,
+            progress = uiState.downloadProgress,
+            result = uiState.downloadResult,
+            onDismissResult = viewModel::clearDownloadResult,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = innerPadding.calculateTopPadding())
+        )
+      }
     }
 }
 
