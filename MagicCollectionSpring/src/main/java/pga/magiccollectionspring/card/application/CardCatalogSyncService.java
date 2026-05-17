@@ -47,7 +47,7 @@ public class CardCatalogSyncService {
     private static final int CONNECT_TIMEOUT_MS = 30_000;
     private static final int READ_TIMEOUT_MS = 300_000;
     private static final int ALL_CARDS_MAX_RETRIES = 4;
-    private static final long ALL_CARDS_RETRY_BASE_DELAY_MS = 5_000L;
+    long allCardsRetryBaseDelayMs = 5_000L; // package-private for test override via ReflectionTestUtils
 
     private final AtomicBoolean syncInProgress = new AtomicBoolean(false);
 
@@ -441,7 +441,7 @@ public class CardCatalogSyncService {
                 if (!isRetryableBulkDownloadError(ex) || attempt == ALL_CARDS_MAX_RETRIES) {
                     throw ex;
                 }
-                long delayMs = ALL_CARDS_RETRY_BASE_DELAY_MS * attempt;
+                long delayMs = allCardsRetryBaseDelayMs * attempt;
                 log.warn("Fallo descargando/parsing all_cards (intento {}/{}). Reintentando en {} ms. Error: {}",
                         attempt, ALL_CARDS_MAX_RETRIES, delayMs, ex.getMessage());
                 sleepSafely(delayMs);
